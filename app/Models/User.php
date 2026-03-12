@@ -56,14 +56,20 @@ use App\Models\Showroom;
         return $this->belongsTo(CrmRole::class, 'iRoalId', 'iRoleId');
     }
 
+    public function userShowrooms()
+    {
+        return $this->hasMany(UserShowroom::class, 'UserId', 'id');
+    }
+
+    public function getFullNameAttribute()
+    {
+        return trim(($this->first_name ?? '') . ' ' . ($this->last_name ?? ''));
+    }
+
     public function showrooms()
     {
         return $this->belongsToMany(Showroom::class, 'user_showrooms', 'UserId', 'ShowRoomId', 'id', 'iShowroomId');
     }
-     public function getFullNameAttribute()
-     {
-         return "{$this->first_name} {$this->last_name}";
-     }
      public function getJWTIdentifier()
      {
          return $this->getKey();

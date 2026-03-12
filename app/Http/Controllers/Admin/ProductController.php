@@ -29,13 +29,9 @@ class ProductController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        return view('admin.product.index', compact('products'));
-    }
-
-    public function create()
-    {
         $categories = ProductCategory::orderBy('strCategoryName', 'asc')->get();
-        return view('admin.product.form', compact('categories'));
+
+        return view('admin.product.index', compact('products', 'categories'));
     }
 
     public function store(Request $request)
@@ -54,14 +50,6 @@ class ProductController extends Controller
 
         return redirect()->route('admin.product.index')
             ->with('success', 'Product added successfully.');
-    }
-
-    public function edit($id)
-    {
-        $product = Product::findOrFail($id);
-        $categories = ProductCategory::orderBy('strCategoryName', 'asc')->get();
-
-        return view('admin.product.form', compact('product', 'categories'));
     }
 
     public function update(Request $request, $id)

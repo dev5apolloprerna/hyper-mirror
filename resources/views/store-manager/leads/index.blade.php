@@ -71,7 +71,7 @@
                                         <td>
                                            
                                             <a href="{{ route('store.leads.quotation-view', $lead->iLeadId) }}" class="text-secondary me-2" title="View Quotation">
-                                                <i class="fas fa-eye"></i>
+                                                <i class="fas fa-file-invoice"></i>
                                             </a>
 
                                             <a href="javascript:void(0);" 

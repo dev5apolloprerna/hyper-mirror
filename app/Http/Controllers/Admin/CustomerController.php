@@ -22,14 +22,11 @@ class CustomerController extends Controller
             });
         }
 
-        $customers = $query->orderBy('iCustomerId', 'desc')->paginate(10)->withQueryString();
+        $customers = $query->orderBy('iCustomerId', 'desc')
+            ->paginate(10)
+            ->withQueryString();
 
         return view('admin.customer.index', compact('customers'));
-    }
-
-    public function create()
-    {
-        return view('admin.customer.form');
     }
 
     public function store(Request $request)
@@ -46,14 +43,8 @@ class CustomerController extends Controller
             'strAddress'  => $request->strAddress,
         ]);
 
-        return redirect()->route('admin.customer.index')->with('success', 'Customer added successfully.');
-    }
-
-    public function edit($id)
-    {
-        $customer = Customer::findOrFail($id);
-
-        return view('admin.customer.form', compact('customer'));
+        return redirect()->route('admin.customer.index')
+            ->with('success', 'Customer added successfully.');
     }
 
     public function update(Request $request, $id)
@@ -76,7 +67,8 @@ class CustomerController extends Controller
             'strAddress'  => $request->strAddress,
         ]);
 
-        return redirect()->route('admin.customer.index')->with('success', 'Customer updated successfully.');
+        return redirect()->route('admin.customer.index')
+            ->with('success', 'Customer updated successfully.');
     }
 
     public function destroy($id)
@@ -84,7 +76,8 @@ class CustomerController extends Controller
         $customer = Customer::findOrFail($id);
         $customer->delete();
 
-        return redirect()->route('admin.customer.index')->with('success', 'Customer deleted successfully.');
+        return redirect()->route('admin.customer.index')
+            ->with('success', 'Customer deleted successfully.');
     }
 
     public function bulkDelete(Request $request)

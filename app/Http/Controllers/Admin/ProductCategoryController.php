@@ -25,11 +25,6 @@ class ProductCategoryController extends Controller
         return view('admin.product-category.index', compact('categories'));
     }
 
-    public function create()
-    {
-        return view('admin.product-category.form');
-    }
-
     public function store(Request $request)
     {
         $request->validate([
@@ -42,12 +37,6 @@ class ProductCategoryController extends Controller
 
         return redirect()->route('admin.product-category.index')
             ->with('success', 'Product category added successfully.');
-    }
-
-    public function edit($id)
-    {
-        $category = ProductCategory::findOrFail($id);
-        return view('admin.product-category.form', compact('category'));
     }
 
     public function update(Request $request, $id)

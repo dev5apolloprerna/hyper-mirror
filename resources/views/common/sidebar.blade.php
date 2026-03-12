@@ -17,7 +17,6 @@
                         <p>Customer</p>
                     </a>
                 </li>
-
                 <li class="nav-item">
                     <a href="{{ route('admin.product-category.index') }}" class="nav-link {{ request()->is('admin/product-category*') ? 'active' : '' }}">
                         <i class="nav-icon fas fa-list"></i>
