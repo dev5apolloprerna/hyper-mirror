@@ -34,7 +34,7 @@
                                     <option value="">Select User</option>
                                     @foreach($users as $user)
                                         <option value="{{ $user->id }}" {{ old('UserId', $userShowroom->UserId ?? '') == $user->id ? 'selected' : '' }}>
-                                            {{ $user->name }}
+                                            {{ $user->first_name }}
                                         </option>
                                     @endforeach
                                 </select>

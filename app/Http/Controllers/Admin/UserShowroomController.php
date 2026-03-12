@@ -20,7 +20,11 @@ class UserShowroomController extends Controller
 
             $query->where(function ($q) use ($search) {
                 $q->whereHas('user', function ($sub) use ($search) {
-                    $sub->where('name', 'like', "%{$search}%");
+                    $sub->where('strUserName', 'like', "%{$search}%")
+                        ->orWhere('first_name', 'like', "%{$search}%")
+                        ->orWhere('last_name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('strUserMobile', 'like', "%{$search}%");
                 })->orWhereHas('showroom', function ($sub) use ($search) {
                     $sub->where('strShowRoomName', 'like', "%{$search}%");
                 });
@@ -31,22 +35,16 @@ class UserShowroomController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        return view('admin.user-showroom.index', compact('userShowrooms'));
-    }
-
-    public function create()
-    {
-        $users = User::orderBy('name', 'asc')->get();
+        $users = User::orderBy('strUserName', 'asc')->get();
         $showrooms = Showroom::orderBy('strShowRoomName', 'asc')->get();
 
-        return view('admin.user-showroom.form', compact('users', 'showrooms'));
+        return view('admin.user-showroom.index', compact('userShowrooms', 'users', 'showrooms'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'UserId' => 'required|exists:users,id',
-            'ShowRoomId' => 'required|exists:showrooms,iShowroomId',
             'ShowRoomId' => [
                 'required',
                 'exists:showrooms,iShowroomId',
@@ -66,15 +64,6 @@ class UserShowroomController extends Controller
 
         return redirect()->route('admin.user-showroom.index')
             ->with('success', 'User showroom added successfully.');
-    }
-
-    public function edit($id)
-    {
-        $userShowroom = UserShowroom::findOrFail($id);
-        $users = User::orderBy('name', 'asc')->get();
-        $showrooms = Showroom::orderBy('strShowRoomName', 'asc')->get();
-
-        return view('admin.user-showroom.form', compact('userShowroom', 'users', 'showrooms'));
     }
 
     public function update(Request $request, $id)
@@ -124,7 +113,7 @@ class UserShowroomController extends Controller
 
         return response()->json([
             'status' => true,
-            'message' => 'Selected records deleted successfully.'
+            'message' => 'Selected user showroom records deleted successfully.'
         ]);
     }
 }

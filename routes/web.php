@@ -68,21 +68,17 @@ Route::middleware('auth')->prefix('users')->name('users.')->group(function () {
 
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('customer', [CustomerController::class, 'index'])->name('customer.index');
-    Route::get('customer/create', [CustomerController::class, 'create'])->name('customer.create');
     Route::post('customer/store', [CustomerController::class, 'store'])->name('customer.store');
-    Route::get('customer/edit/{id}', [CustomerController::class, 'edit'])->name('customer.edit');
     Route::post('customer/update/{id}', [CustomerController::class, 'update'])->name('customer.update');
     Route::delete('customer/delete/{id}', [CustomerController::class, 'destroy'])->name('customer.delete');
     Route::post('customer/bulk-delete', [CustomerController::class, 'bulkDelete'])->name('customer.bulkDelete');
-});
 
+});
 
 
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('product-category', [ProductCategoryController::class, 'index'])->name('product-category.index');
-    Route::get('product-category/create', [ProductCategoryController::class, 'create'])->name('product-category.create');
     Route::post('product-category/store', [ProductCategoryController::class, 'store'])->name('product-category.store');
-    Route::get('product-category/edit/{id}', [ProductCategoryController::class, 'edit'])->name('product-category.edit');
     Route::post('product-category/update/{id}', [ProductCategoryController::class, 'update'])->name('product-category.update');
     Route::delete('product-category/delete/{id}', [ProductCategoryController::class, 'destroy'])->name('product-category.delete');
     Route::post('product-category/bulk-delete', [ProductCategoryController::class, 'bulkDelete'])->name('product-category.bulkDelete');
@@ -91,9 +87,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('product', [ProductController::class, 'index'])->name('product.index');
-    Route::get('product/create', [ProductController::class, 'create'])->name('product.create');
     Route::post('product/store', [ProductController::class, 'store'])->name('product.store');
-    Route::get('product/edit/{id}', [ProductController::class, 'edit'])->name('product.edit');
     Route::post('product/update/{id}', [ProductController::class, 'update'])->name('product.update');
     Route::delete('product/delete/{id}', [ProductController::class, 'destroy'])->name('product.delete');
     Route::post('product/bulk-delete', [ProductController::class, 'bulkDelete'])->name('product.bulkDelete');
@@ -102,9 +96,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('showroom', [ShowroomController::class, 'index'])->name('showroom.index');
-    Route::get('showroom/create', [ShowroomController::class, 'create'])->name('showroom.create');
     Route::post('showroom/store', [ShowroomController::class, 'store'])->name('showroom.store');
-    Route::get('showroom/edit/{id}', [ShowroomController::class, 'edit'])->name('showroom.edit');
     Route::post('showroom/update/{id}', [ShowroomController::class, 'update'])->name('showroom.update');
     Route::delete('showroom/delete/{id}', [ShowroomController::class, 'destroy'])->name('showroom.delete');
     Route::post('showroom/bulk-delete', [ShowroomController::class, 'bulkDelete'])->name('showroom.bulkDelete');
@@ -112,9 +104,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('user-showroom', [UserShowroomController::class, 'index'])->name('user-showroom.index');
-    Route::get('user-showroom/create', [UserShowroomController::class, 'create'])->name('user-showroom.create');
     Route::post('user-showroom/store', [UserShowroomController::class, 'store'])->name('user-showroom.store');
-    Route::get('user-showroom/edit/{id}', [UserShowroomController::class, 'edit'])->name('user-showroom.edit');
     Route::post('user-showroom/update/{id}', [UserShowroomController::class, 'update'])->name('user-showroom.update');
     Route::delete('user-showroom/delete/{id}', [UserShowroomController::class, 'destroy'])->name('user-showroom.delete');
     Route::post('user-showroom/bulk-delete', [UserShowroomController::class, 'bulkDelete'])->name('user-showroom.bulkDelete');

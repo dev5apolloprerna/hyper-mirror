@@ -25,11 +25,6 @@ class ShowroomController extends Controller
         return view('admin.showroom.index', compact('showrooms'));
     }
 
-    public function create()
-    {
-        return view('admin.showroom.form');
-    }
-
     public function store(Request $request)
     {
         $request->validate([
@@ -42,12 +37,6 @@ class ShowroomController extends Controller
 
         return redirect()->route('admin.showroom.index')
             ->with('success', 'Showroom added successfully.');
-    }
-
-    public function edit($id)
-    {
-        $showroom = Showroom::findOrFail($id);
-        return view('admin.showroom.form', compact('showroom'));
     }
 
     public function update(Request $request, $id)
