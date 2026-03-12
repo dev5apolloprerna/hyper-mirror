@@ -10,9 +10,14 @@ use Illuminate\Support\Facades\Hash;
 use Session;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Role;
-use App\Models\BlogCategory;
-use App\Models\Blog;
-use Carbon\Carbon;
+use App\Models\Customer;
+use App\Models\Product;
+use App\Models\ProductCategory;
+use App\Models\Showroom;
+use App\Models\UserShowroom;
+
+
+
 
 class HomeController extends Controller
 {
@@ -35,11 +40,14 @@ class HomeController extends Controller
     {
         try
         {
-    $categoryCount = BlogCategory::where('iStatus',1)->where('isDelete',0)->count();
-$blogCount = Blog::where('iStatus', 1)
-                 ->where('isDelete', 0)
-                 ->count();
-            return view('home',compact('categoryCount','blogCount'));
+            $customerCount = Customer::count();
+            $categoryCount = ProductCategory::count();
+            $productCount = Product::count();
+            $showroomCount = Showroom::count();
+            $userShowroomCount = UserShowroom::count();
+
+
+            return view('home', compact('customerCount','categoryCount', 'productCount','showroomCount','userShowroomCount'));
 
         } catch (\Exception $e) {
         report($e);
