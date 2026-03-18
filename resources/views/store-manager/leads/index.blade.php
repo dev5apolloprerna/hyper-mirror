@@ -70,7 +70,7 @@
                                         </td>
                                         <td>
                                            
-                                            <a href="{{ route('store.leads.quotation-view', $lead->iLeadId) }}" class="text-secondary me-2" title="View Quotation">
+                                            <a href="{{ route('store.leads.quotation', $lead->iLeadId) }}" class="text-secondary me-2" title="View Quotation">
                                                 <i class="fas fa-file-invoice"></i>
                                             </a>
 
@@ -90,7 +90,7 @@
                                             </a>
 
                                             <a href="{{ route('store.leads.payments.index', $lead->iLeadId) }}" class="text-dark me-2" title="Lead Payments">
-                                                <i class="fas fa-money-bill-wave"></i>
+                                                <i class="fas fa-inr"></i>
                                             </a>
 
                                         </td>
