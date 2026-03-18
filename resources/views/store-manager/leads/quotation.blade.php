@@ -13,10 +13,14 @@
                 <div class="col-12">
                     <div class="page-title-box d-sm-flex align-items-center justify-content-between">
                         <h4 class="mb-sm-0">Lead Quotation</h4>
-                        <div class="page-title-right">
-                            <a href="{{ route('store.leads.index') }}" class="btn btn-primary btn-sm">
+                         <div class="page-title-right">
+                             <a href="{{ route('store.leads.quotation-view', $lead->iLeadId) }}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-file"></i> View Quotation Detail
+                            </a>
+                            <a href="{{ route('store.leads.index') }}" class="btn btn-secondary btn-sm">
                                 <i class="fas fa-arrow-left"></i> Back
                             </a>
+                           
                         </div>
                     </div>
                 </div>
