@@ -12,54 +12,44 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="{{ route('admin.customer.index') }}" class="nav-link {{ request()->is('admin/customer*') ? 'active' : '' }}">
-                        <i class="nav-icon fas fa-users"></i>
-                        <p>Customer</p>
-                    </a>
-                </li>
-                <li class="nav-item">
                     <a href="{{ route('admin.product-category.index') }}" class="nav-link {{ request()->is('admin/product-category*') ? 'active' : '' }}">
                         <i class="nav-icon fas fa-list"></i>
-                        <p>Product Category</p>
+                        Product Category
                     </a>
                 </li>
 
                 <li class="nav-item">
                     <a href="{{ route('admin.product.index') }}" class="nav-link {{ request()->is('admin/product*') ? 'active' : '' }}">
                         <i class="nav-icon fas fa-box"></i>
-                        <p>Product</p>
+                        Product
                     </a>
                 </li>
                 <li class="nav-item">
                     <a href="{{ route('admin.showroom.index') }}" class="nav-link {{ request()->is('admin/showroom*') ? 'active' : '' }}">
                         <i class="nav-icon fas fa-store"></i>
-                        <p>Showroom</p>
+                        Showroom
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a href="{{ route('admin.user-showroom.index') }}" class="nav-link {{ request()->is('admin/user-showroom*') ? 'active' : '' }}">
-                        <i class="nav-icon fas fa-warehouse"></i>
-                        <p>User Showroom</p>
+                 <li class="nav-item">
+                    <a href="{{ route('admin.users.index') }}" class="nav-link {{ request()->is('admin/users*') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-user-cog"></i>
+                        Users
                     </a>
                 </li>
+                
                 <li class="nav-item">
                     <a href="{{ route('store.leads.index') }}" class="nav-link {{ request()->is('store-manager/leads*') ? 'active' : '' }}">
                         <i class="nav-icon fas fa-user-tag"></i>
-                        <p>Leads</p>
+                        Leads
                     </a>
                 </li>
 
-
-
-
-
-
-                             @if(auth()->user() && optional(auth()->user()->crmRole)->slug === 'storemanager')
-                              <li class="nav-item">
-                                                    <a class="nav-link menu-link {{ request()->routeIs('store.leads.*') ? 'active' : '' }}" href="{{ route('store.leads.index') }}">
+                @if(auth()->user() && optional(auth()->user()->crmRole)->slug === 'storemanager')
+                <li class="nav-item">
+                    <a class="nav-link menu-link {{ request()->routeIs('store.leads.*') ? 'active' : '' }}" href="{{ route('store.leads.index') }}">
                         <i class="mdi mdi-account-group"></i> <span>Lead Management</span>
                     </a>
-                              </li>
+                </li>
                 @endif
             </ul>
         </div>

@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\ProductCategoryController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ShowroomController;
 use App\Http\Controllers\Admin\UserShowroomController;
+use App\Http\Controllers\Admin\CrmUserController;
 
 
 use App\Http\Controllers\StoreManager\LeadController;
@@ -149,3 +150,8 @@ Route::prefix('store-manager')->name('store.')->group(function () {
     Route::post('leads/{lead}/payments/bulk-delete', [LeadPaymentController::class, 'bulkDelete'])->name('leads.payments.bulk-delete');
 });
 
+
+Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
+    Route::get('users', [CrmUserController::class, 'index'])->name('users.index');
+    Route::post('users/store', [CrmUserController::class, 'store'])->name('users.store');
+});
