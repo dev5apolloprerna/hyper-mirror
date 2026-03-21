@@ -85,13 +85,14 @@
                                 @endif
                             </div>
 
-                            <div class="col-md-6 mb-4 quotation-date-box">
-                                <label class="form-label">Quotation Date</label>
-                                <input type="date" name="quotation_date" class="form-control" value="{{ old('quotation_date') }}">
-                                @if($errors->has('quotation_date'))
-                                    <span class="text-danger">{{ $errors->first('quotation_date') }}</span>
+                             <div class="col-md-6 mb-4 quotation-date-box">
+                                <label class="form-label">In Design Follow Up Date</label>
+                                <input type="date" name="design_followup_date" class="form-control" value="{{ old('design_followup_date') }}">
+                                @if($errors->has('design_followup_date'))
+                                    <span class="text-danger">{{ $errors->first('design_followup_date') }}</span>
                                 @endif
                             </div>
+
 
                             <div class="col-md-12">
                                 <button type="submit" class="btn btn-primary">Submit</button>

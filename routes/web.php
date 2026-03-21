@@ -112,7 +112,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 });
 
 
-Route::prefix('store-manager')->name('store.')->group(function () {
+Route::middleware('auth')->prefix('store-manager')->name('store.')->group(function () {
     Route::get('leads', [LeadController::class, 'index'])->name('leads.index');
     Route::get('leads/create', [LeadController::class, 'create'])->name('leads.create');
     Route::post('leads/store', [LeadController::class, 'store'])->name('leads.store');
@@ -142,7 +142,7 @@ Route::prefix('store-manager')->name('store.')->group(function () {
 });
 
 
-Route::prefix('store-manager')->name('store.')->group(function () {
+Route::middleware('auth')->prefix('store-manager')->name('store.')->group(function () {
     Route::get('leads/{lead}/payments', [LeadPaymentController::class, 'index'])->name('leads.payments.index');
     Route::post('leads/{lead}/payments/store', [LeadPaymentController::class, 'store'])->name('leads.payments.store');
     Route::post('leads/{lead}/payments/{payment}/update', [LeadPaymentController::class, 'update'])->name('leads.payments.update');
@@ -154,4 +154,7 @@ Route::prefix('store-manager')->name('store.')->group(function () {
 Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::get('users', [CrmUserController::class, 'index'])->name('users.index');
     Route::post('users/store', [CrmUserController::class, 'store'])->name('users.store');
+    Route::post('users/update/{user}', [CrmUserController::class, 'update'])->name('users.update');
+    Route::post('users/password-update/{user}', [CrmUserController::class, 'updatePassword'])->name('users.password.update');
+    Route::delete('users/delete/{user}', [CrmUserController::class, 'destroy'])->name('users.destroy');
 });
