@@ -1,150 +1,138 @@
 <?php
-
-namespace App\Http\Controllers\StoreManager;
-
-use App\Http\Controllers\Controller;
-use App\Models\Lead;
-use App\Models\LeadHistory;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-
-class LeadHistoryController extends Controller
-{
-    public function index(Lead $lead)
+ 
+ namespace App\Http\Controllers\StoreManager;
+ 
+ use App\Http\Controllers\Controller;
+ use App\Models\Lead;
+ use App\Models\LeadHistory;
+use App\Support\LeadWorkflow;
+ use Illuminate\Http\Request;
+ use Illuminate\Support\Facades\DB;
+ 
+ class LeadHistoryController extends Controller
+ {
+    public function __construct()
     {
-        $histories = LeadHistory::with('user')
-            ->where('iLeadId', $lead->iLeadId)
-            ->orderBy('id', 'desc')
-            ->paginate(15);
-
-        return view('store-manager.lead-histories.index', compact('lead', 'histories'));
+        $this->middleware('auth');
     }
 
-    public function store(Request $request, Lead $lead)
-    {
-        $request->validate([
-            'iStatus' => 'required|string|max:50',
-            'NetFolloupwdate' => 'nullable|date',
-            'strComments' => 'nullable|string',
-        ]);
+     public function index(Lead $lead)
+     {
+        abort_unless(LeadWorkflow::canAccessLead(auth()->user(), $lead) || optional(auth()->user()->crmRole)->slug === 'storemanager', 403);
 
-        DB::beginTransaction();
-
-        try {
-            LeadHistory::create([
-                'iLeadId' => $lead->iLeadId,
-                'strComments' => $request->strComments,
-                'NetFolloupwdate' => $request->NetFolloupwdate,
-                'iStatus' => $request->iStatus,
-                'iEnterBy' => auth()->id(),
-                'EntryDate' => now(),
-            ]);
-
-            $lead->update([
-                'iCurrentLeadStatus' => $request->iStatus,
-                'NetFollowupdate' => $request->NetFolloupwdate,
-            ]);
-
-            DB::commit();
-
-            return redirect()->route('store.leads.histories.index', $lead->iLeadId)
-                ->with('success', 'Lead history added successfully.');
-        } catch (\Throwable $th) {
-            DB::rollBack();
-            return back()->withInput()->with('error', $th->getMessage());
-        }
-    }
-
-    public function update(Request $request, Lead $lead, LeadHistory $history)
-    {
-        if ($history->iLeadId != $lead->iLeadId) {
-            abort(404);
+         $histories = LeadHistory::with('user')
+             ->where('iLeadId', $lead->iLeadId)
+             ->orderBy('id', 'desc')
+             ->paginate(15);
+ 
+        $allowedStatuses = LeadWorkflow::allowedTransitionsFor(auth()->user(), $lead);
+        if (optional(auth()->user()->crmRole)->slug === 'storemanager') {
+            $allowedStatuses = LeadWorkflow::allStatuses();
         }
 
-        $request->validate([
-            'iStatus' => 'required|string|max:50',
-            'NetFolloupwdate' => 'nullable|date',
-            'strComments' => 'nullable|string',
-        ]);
+        return view('store-manager.lead-histories.index', compact('lead', 'histories', 'allowedStatuses'));
+     }
+ 
+     public function store(Request $request, Lead $lead)
+     {
+        abort_unless(LeadWorkflow::canAccessLead(auth()->user(), $lead) || optional(auth()->user()->crmRole)->slug === 'storemanager', 403);
 
-        DB::beginTransaction();
+         $request->validate([
+            'iStatus' => 'required|string|in:' . implode(',', LeadWorkflow::allStatuses()),
+             'NetFolloupwdate' => 'nullable|date',
+            'strComments' => 'required|string',
+         ]);
+ 
+        $allowedStatuses = optional(auth()->user()->crmRole)->slug === 'storemanager'
+            ? LeadWorkflow::allStatuses()
+            : LeadWorkflow::allowedTransitionsFor(auth()->user(), $lead);
 
-        try {
-            $history->update([
-                'strComments' => $request->strComments,
-                'NetFolloupwdate' => $request->NetFolloupwdate,
-                'iStatus' => $request->iStatus,
-            ]);
-
-            $latestHistory = LeadHistory::where('iLeadId', $lead->iLeadId)
-                ->orderBy('id', 'desc')
-                ->first();
-
-            if ($latestHistory) {
-                $lead->update([
-                    'iCurrentLeadStatus' => $latestHistory->iStatus,
-                    'NetFollowupdate' => $latestHistory->NetFolloupwdate,
-                ]);
-            }
-
-            DB::commit();
-
-            return redirect()->route('store.leads.histories.index', $lead->iLeadId)
-                ->with('success', 'Lead history updated successfully.');
-        } catch (\Throwable $th) {
-            DB::rollBack();
-            return back()->withInput()->with('error', $th->getMessage());
-        }
-    }
-
-    public function destroy(Lead $lead, LeadHistory $history)
-    {
-        if ($history->iLeadId != $lead->iLeadId) {
-            abort(404);
+        if (! in_array($request->iStatus, $allowedStatuses, true)) {
+            return back()->withInput()->with('error', 'Selected status is not allowed for your role.');
         }
 
-        $history->delete();
-
-        $latestHistory = LeadHistory::where('iLeadId', $lead->iLeadId)
-            ->orderBy('id', 'desc')
-            ->first();
-
-        if ($latestHistory) {
-            $lead->update([
-                'iCurrentLeadStatus' => $latestHistory->iStatus,
-                'NetFollowupdate' => $latestHistory->NetFolloupwdate,
-            ]);
+        if (in_array($request->iStatus, LeadWorkflow::followupRequiredStatuses(), true) && ! $request->NetFolloupwdate) {
+            return back()->withInput()->withErrors(['NetFolloupwdate' => 'Next follow up date is required for the selected status.']);
         }
 
-        return redirect()->route('store.leads.histories.index', $lead->iLeadId)
-            ->with('success', 'Lead history deleted successfully.');
-    }
+         DB::beginTransaction();
+ 
+         try {
+             LeadHistory::create([
+                 'iLeadId' => $lead->iLeadId,
+                 'strComments' => $request->strComments,
+                 'NetFolloupwdate' => $request->NetFolloupwdate,
+                 'iStatus' => $request->iStatus,
+                 'iEnterBy' => auth()->id(),
+                 'EntryDate' => now(),
+             ]);
+ 
+             $lead->update([
+                 'iCurrentLeadStatus' => $request->iStatus,
+                 'NetFollowupdate' => $request->NetFolloupwdate,
+             ]);
+ 
+             DB::commit();
+ 
+             return redirect()->route('store.leads.histories.index', $lead->iLeadId)
+                 ->with('success', 'Lead history added successfully.');
+         } catch (\Throwable $th) {
+             DB::rollBack();
+             return back()->withInput()->with('error', $th->getMessage());
+         }
+     }
+ 
+     public function update(Request $request, Lead $lead, LeadHistory $history)
+     {
+        abort(403);
+     }
+ 
+     public function destroy(Lead $lead, LeadHistory $history)
+     {
+        abort_unless(optional(auth()->user()->crmRole)->slug === 'storemanager', 403);
 
-    public function bulkDelete(Request $request, Lead $lead)
-    {
-        $request->validate([
-            'ids' => 'required|array',
-            'ids.*' => 'required|integer|exists:lead_histories,id',
-        ]);
+         if ($history->iLeadId != $lead->iLeadId) {
+             abort(404);
+         }
+ 
+        $this->syncLeadWithLatestHistory($lead);
+ 
+         return redirect()->route('store.leads.histories.index', $lead->iLeadId)
+             ->with('success', 'Lead history deleted successfully.');
+     }
+ 
+     public function bulkDelete(Request $request, Lead $lead)
+     {
+        abort_unless(optional(auth()->user()->crmRole)->slug === 'storemanager', 403);
 
-        LeadHistory::where('iLeadId', $lead->iLeadId)
-            ->whereIn('id', $request->ids)
-            ->delete();
-
-        $latestHistory = LeadHistory::where('iLeadId', $lead->iLeadId)
-            ->orderBy('id', 'desc')
-            ->first();
-
-        if ($latestHistory) {
-            $lead->update([
-                'iCurrentLeadStatus' => $latestHistory->iStatus,
-                'NetFollowupdate' => $latestHistory->NetFolloupwdate,
-            ]);
-        }
+         $request->validate([
+             'ids' => 'required|array',
+             'ids.*' => 'required|integer|exists:lead_histories,id',
+         ]);
+ 
+         LeadHistory::where('iLeadId', $lead->iLeadId)
+             ->whereIn('id', $request->ids)
+             ->delete();
+ 
+        $this->syncLeadWithLatestHistory($lead);
 
         return response()->json([
             'status' => true,
             'message' => 'Selected lead histories deleted successfully.'
         ]);
     }
+
+    private function syncLeadWithLatestHistory(Lead $lead): void
+    {
+         $latestHistory = LeadHistory::where('iLeadId', $lead->iLeadId)
+             ->orderBy('id', 'desc')
+             ->first();
+ 
+         if ($latestHistory) {
+             $lead->update([
+                 'iCurrentLeadStatus' => $latestHistory->iStatus,
+                 'NetFollowupdate' => $latestHistory->NetFolloupwdate,
+             ]);
+         }
+     }
 }
