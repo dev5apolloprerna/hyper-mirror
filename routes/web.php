@@ -158,3 +158,19 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::post('users/password-update/{user}', [CrmUserController::class, 'updatePassword'])->name('users.password.update');
     Route::delete('users/delete/{user}', [CrmUserController::class, 'destroy'])->name('users.destroy');
 });
+
+
+Route::middleware(['auth', 'crmrole:storemanager,measurement,production,dispatch,fitting,account'])
+    ->group(function () {
+
+        // View lead detail page
+        Route::get('/leads/{leadId}', [
+            \App\Http\Controllers\LeadStatusController::class, 'show'
+        ])->name('leads.show');
+
+        // Submit status change
+        Route::patch('/leads/{leadId}/status', [
+            \App\Http\Controllers\LeadStatusController::class, 'updateStatus'
+        ])->name('leads.updateStatus');
+
+    });

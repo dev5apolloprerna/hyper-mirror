@@ -204,8 +204,8 @@
             );
  
              $lead->update([
-                 'iQuotationId' => $quotation->iQuotationId,
-                'iLeadAmount' => $amount  $fittingCharges,
+                'iQuotationId' => $quotation->iQuotationId,
+                'iLeadAmount' => $amount + $fittingCharges,
                 'iCurrentLeadStatus' => LeadWorkflow::STATUS_QUOTATION_SENT,
                 'NetFollowupdate' => $data['followup_date'],
                 'isFittingRequired' => $data['is_fitting_charge_extra'],
