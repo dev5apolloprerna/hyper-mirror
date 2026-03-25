@@ -50,7 +50,8 @@ use Illuminate\Validation\Rule;
         DB::transaction(function () use ($data) {
             $user = User::create([
                 'first_name' => $data['strUserName'],
-                'email' => $data['strUserMobile'] . '@crm.local',
+                'email'           => $data['email'],
+                //'email' => $data['strUserMobile'] . '@crm.local',
                 'password' => Hash::make($data['password']),
                 'mobile_number' => $data['strUserMobile'],
                 'strUserName' => $data['strUserName'],
@@ -66,28 +67,34 @@ use Illuminate\Validation\Rule;
 
         return redirect()->route('admin.users.index')->with('success', 'CRM user created successfully with showroom access.');
     }
-
     public function update(Request $request, User $user)
     {
         $data = $request->validate($this->userRules($user->id), $this->userMessages());
-
-        DB::transaction(function () use ($data, $user) {
+    
+        $status = $request->boolean('status') ? 1 : 0;
+    
+        DB::transaction(function () use ($data, $user, $status) {
             $user->update([
-                'first_name' => $data['strUserName'],
-                'email' => $data['strUserMobile'] . '@crm.local',
-                'mobile_number' => $data['strUserMobile'],
-                'strUserName' => $data['strUserName'],
-                'strUserMobile' => $data['strUserMobile'],
-                'strUserAddress' => $data['strUserAddress'] ?? null,
-                'iRoalId' => $data['iRoalId'],
-                'status' => $request->boolean('status') ? 1 : 0,
+                'first_name'      => $data['strUserName'],
+                'email'           => $data['email'],
+                //'email' => $data['strUserMobile'] . '@crm.local',
+                'mobile_number'   => $data['strUserMobile'],
+                'strUserName'     => $data['strUserName'],
+                'strUserMobile'   => $data['strUserMobile'],
+                'strUserAddress'  => $data['strUserAddress'] ?? null,
+                'iRoalId'         => $data['iRoalId'],
+                'status'          => $status,
             ]);
-
+    
             $user->showrooms()->sync($data['showrooms']);
         });
-
-        return redirect()->route('admin.users.index')->with('success', 'CRM user updated successfully.');
+    
+        return redirect()
+            ->route('admin.users.index')
+            ->with('success', 'CRM user updated successfully.');
     }
+
+
 
     public function updatePassword(Request $request, User $user)
      {
@@ -116,10 +123,17 @@ use Illuminate\Validation\Rule;
         return redirect()->route('admin.users.index')->with('success', 'CRM user deleted successfully.');
     }
  
-    protected function userRules(?int $userId = null): array
+   protected function userRules(?int $userId = null): array
     {
         $rules = [
             'strUserName' => 'required|string|max:50',
+            'email' => [
+                'required',
+                'string',
+                'email',
+                'max:255',
+                Rule::unique('users', 'email')->ignore($userId),
+            ],
             'strUserMobile' => [
                 'required',
                 'string',
@@ -142,8 +156,11 @@ use Illuminate\Validation\Rule;
     protected function userMessages(): array
     {
         return [
+            'email.required' => 'Email is required.',
+            'email.email' => 'Please enter a valid email address.',
+            'email.unique' => 'This email is already in use.',
             'showrooms.required' => 'Please select at least one showroom.',
             'showrooms.min' => 'Please select at least one showroom.',
         ];
-     }
+    }
  }

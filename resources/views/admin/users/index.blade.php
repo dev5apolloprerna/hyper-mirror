@@ -376,6 +376,7 @@
 
                 $('#editUserForm').attr('action', button.data('action'));
                 $('#edit_strUserName').val(button.data('name'));
+                $('#edit_email').val(button.data('email'));
                 $('#edit_strUserMobile').val(button.data('mobile'));
                 $('#edit_iRoalId').val(String(button.data('role')));
                 $('#edit_strUserAddress').val(button.data('address'));
