@@ -1,395 +1,585 @@
 @extends('layouts.app')
-@section('title', 'CRM Users')
+
+@section('title', 'Lead Workflow')
+
 @section('content')
 <div class="main-content">
     <div class="page-content">
         <div class="container-fluid">
-            <div class="row">
+            @include('common.alert')
+
+            {{-- Page Header --}}
+            <div class="row mb-4">
                 <div class="col-12">
-                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                        <h4 class="mb-sm-0">Admin Users</h4>
+                    <div class="workflow-header-card">
+                        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+                            <div>
+                                <div class="d-flex align-items-center flex-wrap gap-2 mb-2">
+                                    <h4 class="mb-0 fw-bold text-dark">Lead Workflow</h4>
+                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2">
+                                        Lead No: {{ $lead->strLeadNo }}
+                                    </span>
+                                    <span class="badge bg-warning-subtle text-dark border border-warning-subtle px-3 py-2">
+                                        Current Status: {{ $lead->iCurrentLeadStatus }}
+                                    </span>
+                                </div>
+                                <p class="text-muted mb-0">
+                                    Manage lead summary, follow-ups, customer discussions, and history in one place.
+                                </p>
+                            </div>
+
+                            <div class="d-flex flex-wrap gap-2">
+                                @if($lead->quotation)
+                                    <a href="{{ route('store.leads.quotation-view', $lead->iLeadId) }}" class="btn btn-info btn-sm px-3">
+                                        <i class="fas fa-file-invoice me-1"></i> Quotation
+                                    </a>
+                                @endif
+
+                                @if(in_array(optional(auth()->user()->crmRole)->slug, ['storemanager', 'account']))
+                                    <a href="{{ route('store.leads.payments.index', $lead->iLeadId) }}" class="btn btn-dark btn-sm px-3">
+                                        <i class="fas fa-money-bill-wave me-1"></i> Payments
+                                    </a>
+                                @endif
+
+                                <a href="{{ route('store.leads.index') }}" class="btn btn-secondary btn-sm px-3">
+                                    <i class="fas fa-arrow-left me-1"></i> Back
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            @if (session('success'))
-                <div class="alert alert-success">{{ session('success') }}</div>
-            @endif
-
-            @if (session('error'))
-                <div class="alert alert-danger">{{ session('error') }}</div>
-            @endif
-
-            @if ($errors->any())
-                <div class="alert alert-danger">
-                    <ul class="mb-0 ps-3">
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
-
-            <div class="row g-4">
-                <div class="col-xl-4">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="card-title mb-0">Create User</h5>
+            {{-- Summary Cards --}}
+            <div class="row g-3 mb-4">
+                <div class="col-xl-3 col-md-6">
+                    <div class="summary-card summary-card-primary h-100">
+                        <div class="summary-icon">
+                            <i class="fas fa-user"></i>
                         </div>
-                        <div class="card-body">
-                            <form method="POST" action="{{ route('admin.users.store') }}">
-                                @csrf
-
-                                <div class="mb-3">
-                                    <label class="form-label">User Name</label>
-                                    <input type="text" name="strUserName" value="{{ old('strUserName') }}" class="form-control" placeholder="Enter user name" required>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label">Mobile Number</label>
-                                    <input type="text" name="strUserMobile" value="{{ old('strUserMobile') }}" class="form-control" placeholder="Enter mobile number" required>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label">User Email</label>
-                                    <input type="email" name="email" value="{{ old('email') }}" class="form-control" placeholder="Enter user email" required>
-                                </div>
-
-
-                                <div class="mb-3">
-                                    <label class="form-label">Role</label>
-                                    <select name="iRoalId" class="form-select" required>
-                                        <option value="">Select role</option>
-                                        @foreach ($roles as $role)
-                                            <option value="{{ $role->iRoleId }}" @selected(old('iRoalId') == $role->iRoleId)>
-                                                {{ $role->strRole }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label">Assign Showrooms</label>
-                                    <select name="showrooms[]" id="create-showroom-select2" class="form-select showroom-select2" multiple required>
-                                        @foreach ($showrooms as $showroom)
-                                            <option value="{{ $showroom->iShowroomId }}" @selected(collect(old('showrooms', []))->contains($showroom->iShowroomId))>
-                                                {{ $showroom->strShowRoomName }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    <small class="text-muted">Search and select multiple showrooms using the checkbox list.</small>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label">Address</label>
-                                    <textarea name="strUserAddress" class="form-control" rows="3" placeholder="Enter address">{{ old('strUserAddress') }}</textarea>
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Password</label>
-                                        <input type="password" name="password" class="form-control" placeholder="Enter password" required>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Confirm Password</label>
-                                        <input type="password" name="password_confirmation" class="form-control" placeholder="Confirm password" required>
-                                    </div>
-                                </div>
-
-                                <button type="submit" class="btn btn-primary w-100">Create User</button>
-                            </form>
+                        <div>
+                            <div class="summary-label">Customer</div>
+                            <div class="summary-value">{{ $lead->customer->strCustomer ?? '-' }}</div>
+                            <div class="summary-subtext">{{ $lead->customer->strMobile ?? '-' }}</div>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-xl-8">
-                    <div class="card">
-                        <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
-                            <h5 class="card-title mb-0">User List</h5>
-                            <form method="GET" action="{{ route('admin.users.index') }}" class="d-flex gap-2">
-                                <input type="text" name="search" value="{{ request('search') }}" class="form-control" placeholder="Search users, roles, showrooms">
-                                <button type="submit" class="btn btn-primary">Search</button>
-                                <a href="{{ route('admin.users.index') }}" class="btn btn-secondary">Reset</a>
-                            </form>
+                <div class="col-xl-3 col-md-6">
+                    <div class="summary-card summary-card-success h-100">
+                        <div class="summary-icon">
+                            <i class="fas fa-rupee-sign"></i>
+                        </div>
+                        <div>
+                            <div class="summary-label">Lead Amount</div>
+                            <div class="summary-value">₹ {{ number_format((float) $lead->iLeadAmount, 2) }}</div>
+                            <div class="summary-subtext">Fitting: ₹ {{ number_format((float) $lead->iFittingCharges, 2) }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6">
+                    <div class="summary-card summary-card-warning h-100">
+                        <div class="summary-icon">
+                            <i class="fas fa-ruler-combined"></i>
+                        </div>
+                        <div>
+                            <div class="summary-label">Measurement</div>
+                            <div class="summary-value">
+                                {{ $lead->IsMeasureMentRequired ? 'Required' : 'Not Required' }}
+                            </div>
+                            <div class="summary-subtext">
+                                Date: {{ $lead->MeasurementVisitDate ?: '-' }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6">
+                    <div class="summary-card summary-card-info h-100">
+                        <div class="summary-icon">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <div>
+                            <div class="summary-label">Next Follow Up</div>
+                            <div class="summary-value">{{ $lead->NetFollowupdate ?: '-' }}</div>
+                            <div class="summary-subtext">Track next action clearly</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Top Section --}}
+            <div class="row g-4 mb-4">
+                {{-- Left Side: Lead Summary --}}
+                <div class="col-xl-4">
+                    <div class="card custom-card shadow-sm border-0 h-100">
+                        <div class="card-header bg-white border-bottom-0 pb-0">
+                            <h5 class="mb-0 fw-semibold">Lead Summary</h5>
                         </div>
                         <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table table-bordered align-middle mb-0">
+                            <div class="info-list">
+                                <div class="info-item">
+                                    <span class="info-title">Customer</span>
+                                    <span class="info-text">{{ $lead->customer->strCustomer ?? '-' }}</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-title">Mobile</span>
+                                    <span class="info-text">{{ $lead->customer->strMobile ?? '-' }}</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-title">Lead Amount</span>
+                                    <span class="info-text">₹ {{ number_format((float) $lead->iLeadAmount, 2) }}</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-title">Measurement Required</span>
+                                    <span class="info-text">{{ $lead->IsMeasureMentRequired ? 'Yes' : 'No' }}</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-title">Measurement Date</span>
+                                    <span class="info-text">{{ $lead->MeasurementVisitDate ?: '-' }}</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-title">Next Followup</span>
+                                    <span class="info-text">{{ $lead->NetFollowupdate ?: '-' }}</span>
+                                </div>
+                                <div class="info-item border-0 pb-0 mb-0">
+                                    <span class="info-title">Fitting Charges</span>
+                                    <span class="info-text">₹ {{ number_format((float) $lead->iFittingCharges, 2) }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Right Side: Form --}}
+                <div class="col-xl-8">
+                    @if(!empty($allowedStatuses))
+                        <div class="card custom-card shadow-sm border-0 h-100">
+                            <div class="card-header bg-white border-bottom-0 pb-0">
+                                <h5 class="mb-0 fw-semibold">Add New Status / Discussion</h5>
+                            </div>
+                            <div class="card-body">
+                                <form action="{{ route('store.leads.histories.store', $lead->iLeadId) }}" method="POST">
+                                    @csrf
+
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">Next Status <span class="text-danger">*</span></label>
+                                        <select name="iStatus" id="iStatus" class="form-select custom-input">
+                                            <option value="">Select Status</option>
+                                            @foreach($allowedStatuses as $status)
+                                                <option value="{{ $status }}" {{ old('iStatus') === $status ? 'selected' : '' }}>
+                                                    {{ $status }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        @error('iStatus')
+                                            <small class="text-danger">{{ $message }}</small>
+                                        @enderror
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">Next Follow Up Date</label>
+                                        <input
+                                            type="date"
+                                            name="NetFolloupwdate"
+                                            id="NetFolloupwdate"
+                                            class="form-control custom-input"
+                                            value="{{ old('NetFolloupwdate') }}"
+                                        >
+                                        <small class="text-muted">Required for followup-based statuses.</small>
+                                        @error('NetFolloupwdate')
+                                            <small class="text-danger d-block">{{ $message }}</small>
+                                        @enderror
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">Discussion / Comments <span class="text-danger">*</span></label>
+                                        <textarea
+                                            name="strComments"
+                                            class="form-control custom-input"
+                                            rows="8"
+                                            placeholder="Enter discussion with customer, visit note, or status update"
+                                        >{{ old('strComments') }}</textarea>
+                                        @error('strComments')
+                                            <small class="text-danger">{{ $message }}</small>
+                                        @enderror
+                                    </div>
+
+                                    <button type="submit" class="btn btn-primary w-100 btn-save-discussion">
+                                        <i class="fas fa-save me-1"></i> Save Discussion
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+            {{-- Bottom Full Width: History --}}
+            <div class="row">
+                <div class="col-12">
+                    <div class="card custom-card shadow-sm border-0">
+                        <div class="card-header bg-white border-bottom d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+                            <div>
+                                <h5 class="mb-0 fw-semibold">Lead Discussion History</h5>
+                                <small class="text-muted">All previous lead updates, comments, and follow-up records.</small>
+                            </div>
+
+                            @if(optional(auth()->user()->crmRole)->slug === 'storemanager')
+                                <button type="button" class="btn btn-danger btn-sm px-3" id="bulkDeleteBtn">
+                                    <i class="fas fa-trash me-1"></i> Bulk Delete
+                                </button>
+                            @endif
+                        </div>
+
+                        <div class="card-body p-0">
+                            <div class="table-responsive custom-table-wrap">
+                                <table class="table table-hover align-middle mb-0 custom-history-table">
                                     <thead>
                                         <tr>
-                                            <th>#</th>
-                                            <th>User Name</th>
-                                            <th>Mobile</th>
-                                            <th>Email</th>
-                                            <th>Role</th>
-                                            <th>Showrooms</th>
+                                            @if(optional(auth()->user()->crmRole)->slug === 'storemanager')
+                                                <th width="5%">
+                                                    <input type="checkbox" id="selectAll">
+                                                </th>
+                                            @endif
                                             <th>Status</th>
-                                            <th class="text-center">Actions</th>
+                                            <th>Next Follow Up Date</th>
+                                            <th>Comments</th>
+                                            <th>Entered By</th>
+                                            <th>Entry Date</th>
+                                            @if(optional(auth()->user()->crmRole)->slug === 'storemanager')
+                                                <th width="8%">Action</th>
+                                            @endif
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @forelse ($users as $user)
+                                        @forelse($histories as $history)
                                             <tr>
-                                                <td>{{ $users->firstItem() + $loop->index }}</td>
-                                                <td>{{ $user->strUserName ?: $user->first_name }}</td>
-                                                <td>{{ $user->strUserMobile ?: $user->mobile_number }}</td>
-                                                <td>{{ $user->email ?: $user->email }}</td>
-                                                <td>{{ optional($user->crmRole)->strRole ?? '-' }}</td>
+                                                @if(optional(auth()->user()->crmRole)->slug === 'storemanager')
+                                                    <td>
+                                                        <input type="checkbox" class="record-checkbox" value="{{ $history->id }}">
+                                                    </td>
+                                                @endif
+
                                                 <td>
-                                                    @forelse ($user->showrooms as $showroom)
-                                                        <span class="badge bg-primary-subtle text-primary me-1 mb-1">{{ $showroom->strShowRoomName }}</span>
-                                                    @empty
-                                                        <span class="text-muted">No showroom assigned</span>
-                                                    @endforelse
+                                                    <span class="status-pill">
+                                                        {{ $history->iStatus }}
+                                                    </span>
                                                 </td>
+
                                                 <td>
-                                                    @if ((int) $user->status === 1)
-                                                        <span class="badge bg-success">Active</span>
-                                                    @else
-                                                        <span class="badge bg-danger">Inactive</span>
-                                                    @endif
+                                                    <span class="text-nowrap">
+                                                        {{ $history->NetFolloupwdate ?: '-' }}
+                                                    </span>
                                                 </td>
-                                                <td class="text-center">
-                                                    <button
-                                                        type="button"
-                                                        class="btn btn-sm btn-info text-white mb-1 edit-user-btn"
-                                                        data-bs-toggle="modal"
-                                                        data-bs-target="#editUserModal"
-                                                        data-action="{{ route('admin.users.update', $user) }}"
-                                                        data-name="{{ $user->strUserName ?: $user->first_name }}"
-                                                        data-mobile="{{ $user->strUserMobile ?: $user->mobile_number }}"
-                                                        data-email="{{ $user->email ?: $user->email }}"
-                                                        data-role="{{ $user->iRoalId }}"
-                                                        data-address="{{ $user->strUserAddress }}"
-                                                        data-status="{{ (int) $user->status }}"
-                                                        data-showrooms='@json($user->showrooms->pluck("iShowroomId")->all())'>
-                                                        Edit
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        class="btn btn-sm btn-warning text-white mb-1 password-user-btn"
-                                                        data-bs-toggle="modal"
-                                                        data-bs-target="#passwordModal"
-                                                        data-action="{{ route('admin.users.password.update', $user) }}"
-                                                        data-username="{{ $user->strUserName ?: $user->first_name }}">
-                                                        Change Password
-                                                    </button>
-                                                    <form method="POST" action="{{ route('admin.users.destroy', $user) }}" class="d-inline-block" onsubmit="return confirm('Are you sure you want to delete this user?');">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" class="btn btn-sm btn-danger mb-1" {{ auth()->id() === $user->id ? 'disabled' : '' }}>
-                                                            Delete
-                                                        </button>
-                                                    </form>
+
+                                                <td style="min-width: 250px;">
+                                                    <div class="comment-box">
+                                                        {{ $history->strComments }}
+                                                    </div>
                                                 </td>
+
+                                                <td>
+                                                    {{ $history->user->full_name ?: ($history->user->first_name ?? $history->user->email ?? '-') }}
+                                                </td>
+
+                                                <td>
+                                                    <span class="text-nowrap">{{ $history->EntryDate }}</span>
+                                                </td>
+
+                                                @if(optional(auth()->user()->crmRole)->slug === 'storemanager')
+                                                    <td>
+                                                        <a href="javascript:void(0);" class="btn btn-sm btn-light-danger delete-record" data-id="{{ $history->id }}" title="Delete">
+                                                            <i class="fas fa-trash"></i>
+                                                        </a>
+                                                        <form id="delete-form-{{ $history->id }}" action="{{ route('store.leads.histories.delete', [$lead->iLeadId, $history->id]) }}" method="POST" style="display:none;">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                        </form>
+                                                    </td>
+                                                @endif
                                             </tr>
                                         @empty
                                             <tr>
-                                                <td colspan="7" class="text-center text-muted">No admin users found.</td>
+                                                <td colspan="{{ optional(auth()->user()->crmRole)->slug === 'storemanager' ? 7 : 5 }}" class="text-center py-5 text-muted">
+                                                    No history found.
+                                                </td>
                                             </tr>
                                         @endforelse
                                     </tbody>
                                 </table>
                             </div>
 
-                            <div class="mt-3">
-                                {{ $users->links() }}
-                            </div>
+                            @if($histories->hasPages())
+                                <div class="p-3 border-top">
+                                    <div class="d-flex justify-content-center">
+                                        {{ $histories->links() }}
+                                    </div>
+                                </div>
+                            @endif
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-</div>
 
-<div class="modal fade" id="editUserModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Edit User</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form method="POST" action="" id="editUserForm">
-                @csrf
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">User Name</label>
-                            <input type="text" name="strUserName" id="edit_strUserName" class="form-control" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Mobile Number</label>
-                            <input type="text" name="strUserMobile" id="edit_strUserMobile" class="form-control" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Email</label>
-                            <input type="email" name="email" id="edit_email" class="form-control" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Role</label>
-                            <select name="iRoalId" id="edit_iRoalId" class="form-select" required>
-                                <option value="">Select role</option>
-                                @foreach ($roles as $role)
-                                    <option value="{{ $role->iRoleId }}">{{ $role->strRole }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label d-block">Status</label>
-                            <div class="form-check form-switch mt-2">
-                                <input class="form-check-input" type="checkbox" name="status" value="1" id="edit_status">
-                                <label class="form-check-label" for="edit_status">Active user</label>
-                            </div>
-                        </div>
-                        <div class="col-12 mb-3">
-                            <label class="form-label">Assign Showrooms</label>
-                            <select name="showrooms[]" id="edit_showrooms" class="form-select showroom-select2" multiple required data-dropdown-parent="#editUserModal">
-                                @foreach ($showrooms as $showroom)
-                                    <option value="{{ $showroom->iShowroomId }}">{{ $showroom->strShowRoomName }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-12 mb-3">
-                            <label class="form-label">Address</label>
-                            <textarea name="strUserAddress" id="edit_strUserAddress" class="form-control" rows="3"></textarea>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Update User</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="passwordModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Change Password</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form method="POST" action="" id="passwordForm">
-                @csrf
-                <div class="modal-body">
-                    <p class="mb-3 text-muted">Update password for <strong id="password_user_name"></strong>.</p>
-                    <div class="mb-3">
-                        <label class="form-label">New Password</label>
-                        <input type="password" name="password" class="form-control" placeholder="Enter new password" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Confirm Password</label>
-                        <input type="password" name="password_confirmation" class="form-control" placeholder="Confirm new password" required>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-warning text-white">Update Password</button>
-                </div>
-            </form>
         </div>
     </div>
 </div>
 @endsection
 
+@section('styles')
+<style>
+    .workflow-header-card {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 22px 24px;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+        border: 1px solid #e9edf5;
+    }
+
+    .custom-card {
+        border-radius: 16px;
+        overflow: hidden;
+    }
+
+    .summary-card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 20px;
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        border: 1px solid #edf1f7;
+        box-shadow: 0 6px 20px rgba(15, 23, 42, 0.05);
+        transition: all 0.2s ease;
+    }
+
+    .summary-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+    }
+
+    .summary-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        flex-shrink: 0;
+    }
+
+    .summary-card-primary .summary-icon {
+        background: rgba(13, 110, 253, 0.12);
+        color: #0d6efd;
+    }
+
+    .summary-card-success .summary-icon {
+        background: rgba(25, 135, 84, 0.12);
+        color: #198754;
+    }
+
+    .summary-card-warning .summary-icon {
+        background: rgba(255, 193, 7, 0.16);
+        color: #d39e00;
+    }
+
+    .summary-card-info .summary-icon {
+        background: rgba(13, 202, 240, 0.14);
+        color: #0dcaf0;
+    }
+
+    .summary-label {
+        font-size: 13px;
+        color: #6c757d;
+        margin-bottom: 5px;
+    }
+
+    .summary-value {
+        font-size: 20px;
+        font-weight: 700;
+        color: #1f2937;
+        line-height: 1.3;
+    }
+
+    .summary-subtext {
+        font-size: 13px;
+        color: #7b8794;
+        margin-top: 4px;
+    }
+
+    .info-list .info-item {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 12px 0;
+        border-bottom: 1px dashed #e5e7eb;
+    }
+
+    .info-title {
+        color: #6b7280;
+        font-weight: 600;
+        min-width: 140px;
+    }
+
+    .info-text {
+        color: #111827;
+        font-weight: 500;
+        text-align: right;
+    }
+
+    .custom-input {
+        border-radius: 10px;
+        border: 1px solid #dbe3ef;
+        padding: 10px 12px;
+        box-shadow: none !important;
+    }
+
+    .custom-input:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.15rem rgba(13, 110, 253, 0.12) !important;
+    }
+
+    .btn-save-discussion {
+        border-radius: 10px;
+        padding: 11px 16px;
+        font-weight: 600;
+    }
+
+    .custom-history-table thead th {
+        background: #0b5aa2;
+        color: #fff;
+        border-color: #0b5aa2;
+        font-size: 13px;
+        font-weight: 600;
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+
+    .custom-history-table tbody td {
+        vertical-align: middle;
+        font-size: 14px;
+        color: #374151;
+    }
+
+    .custom-history-table tbody tr:hover {
+        background: #f8fbff;
+    }
+
+    .status-pill {
+        display: inline-block;
+        background: rgba(13, 110, 253, 0.12);
+        color: #0d6efd;
+        border-radius: 999px;
+        padding: 6px 12px;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .comment-box {
+        color: #374151;
+        line-height: 1.5;
+        white-space: normal;
+        word-break: break-word;
+    }
+
+    .btn-light-danger {
+        background: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+        border-radius: 8px;
+        border: none;
+    }
+
+    .btn-light-danger:hover {
+        background: #dc3545;
+        color: #fff;
+    }
+
+    .bg-primary-subtle {
+        background: rgba(13, 110, 253, 0.12);
+    }
+
+    .bg-warning-subtle {
+        background: rgba(255, 193, 7, 0.16);
+    }
+
+    .custom-table-wrap {
+        overflow-x: auto;
+    }
+
+    @media (max-width: 1199.98px) {
+        .info-text {
+            text-align: left;
+        }
+    }
+
+    @media (max-width: 991.98px) {
+        .workflow-header-card {
+            padding: 18px;
+        }
+
+        .summary-value {
+            font-size: 18px;
+        }
+
+        .info-list .info-item {
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .info-text {
+            text-align: left;
+        }
+    }
+</style>
+@endsection
+
 @section('scripts')
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+$(document).ready(function () {
+    $('#selectAll').on('click', function () {
+        $('.record-checkbox').prop('checked', $(this).prop('checked'));
+    });
 
-    <style>
-        .select2-container--default .select2-results__option {
-            padding: 0;
+    $('.delete-record').on('click', function () {
+        let id = $(this).data('id');
+        if (confirm('Are you sure you want to delete this history?')) {
+            $('#delete-form-' + id).submit();
         }
+    });
 
-        .select2-container--default .showroom-option .form-check {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.55rem 0.85rem;
-            margin: 0;
-        }
-
-        .select2-container--default .showroom-option .form-check-input {
-            margin-top: 0;
-            pointer-events: none;
-        }
-
-        .select2-container--default .select2-selection--multiple {
-            min-height: 38px;
-        }
-
-        .select2-container--default .select2-selection--multiple .select2-selection__rendered {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.35rem;
-            padding: 0.35rem;
-        }
-    </style>
-
-    <script>
-        $(function () {
-            function showroomTemplate(option) {
-                if (!option.id) {
-                    return option.text;
-                }
-
-                const isSelected = option.element && option.element.selected;
-                const $option = $(
-                    '<div class="showroom-option">' +
-                        '<div class="form-check">' +
-                            '<input type="checkbox" class="form-check-input" ' + (isSelected ? 'checked' : '') + '>' +
-                            '<label class="form-check-label"></label>' +
-                        '</div>' +
-                    '</div>'
-                );
-
-                $option.find('.form-check-label').text(option.text);
-                return $option;
-            }
-
-            $('.showroom-select2').each(function () {
-                const $select = $(this);
-                const parentSelector = $select.data('dropdown-parent');
-
-                $select.select2({
-                    placeholder: 'Select showroom',
-                    closeOnSelect: false,
-                    allowClear: true,
-                    width: '100%',
-                    dropdownParent: parentSelector ? $(parentSelector) : null,
-                    templateResult: showroomTemplate,
-                    templateSelection: function (option) {
-                        return option.text || option.id;
-                    },
-                    escapeMarkup: function (markup) {
-                        return markup;
-                    }
-                });
-            });
-
-            $('.edit-user-btn').on('click', function () {
-                const button = $(this);
-                const selectedShowrooms = button.data('showrooms') || [];
-
-                $('#editUserForm').attr('action', button.data('action'));
-                $('#edit_strUserName').val(button.data('name'));
-                $('#edit_email').val(button.data('email'));
-                $('#edit_strUserMobile').val(button.data('mobile'));
-                $('#edit_iRoalId').val(String(button.data('role')));
-                $('#edit_strUserAddress').val(button.data('address'));
-                $('#edit_status').prop('checked', Number(button.data('status')) === 1);
-                $('#edit_showrooms').val(selectedShowrooms).trigger('change');
-            });
-
-            $('.password-user-btn').on('click', function () {
-                const button = $(this);
-                $('#passwordForm').attr('action', button.data('action'));
-                $('#password_user_name').text(button.data('username'));
-                $('#passwordForm')[0].reset();
-            });
+    $('#bulkDeleteBtn').on('click', function () {
+        let ids = [];
+        $('.record-checkbox:checked').each(function () {
+            ids.push($(this).val());
         });
-    </script>
- @endsection
+
+        if (ids.length === 0) {
+            alert('Please select at least one record.');
+            return;
+        }
+
+        if (confirm('Are you sure you want to delete selected histories?')) {
+            $.ajax({
+                url: "{{ route('store.leads.histories.bulk-delete', $lead->iLeadId) }}",
+                type: "POST",
+                data: {
+                    _token: "{{ csrf_token() }}",
+                    ids: ids
+                },
+                success: function (response) {
+                    if (response.status) {
+                        location.reload();
+                    }
+                },
+                error: function () {
+                    alert('Something went wrong.');
+                }
+            });
+        }
+    });
+});
+</script>
+@endsection

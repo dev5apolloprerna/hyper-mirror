@@ -84,61 +84,75 @@
          return response()->json($customer);
      }
  
-     public function store(Request $request)
-     {
+    public function store(Request $request)
+    {
         abort_unless(optional(auth()->user()->crmRole)->slug === 'storemanager', 403);
 
-         $data = $request->validate([
-             'strMobile' => 'required|digits:10',
-             'strCustomer' => 'required|string|max:100',
-             'strAddress' => 'nullable|string',
-             'SiteAddress' => 'nullable|string',
-             'IsMeasureMentRequired' => 'required|in:0,1',
-             'MeasurementVisitDate' => 'nullable|date|required_if:IsMeasureMentRequired,1',
+        $data = $request->validate([
+            'strMobile' => 'required|digits:10',
+            'strCustomer' => 'required|string|max:100',
+            'strAddress' => 'nullable|string',
+            'SiteAddress' => 'nullable|string',
+
+            'IsOnlyFittingQuotation' => 'required|in:0,1',
+            'isFittingRequired' => 'nullable|in:0,1',
+            'isFittingChargeIncluded' => 'nullable|in:0,1',
+
+            'IsMeasureMentRequired' => 'required|in:0,1',
+            'MeasurementVisitDate' => 'nullable|date|required_if:IsMeasureMentRequired,1',
             'design_followup_date' => 'nullable|date|required_if:IsMeasureMentRequired,0',
-         ]);
- 
-         DB::beginTransaction();
- 
-         try {
-             $customer = Customer::firstOrCreate(
-                 ['strMobile' => $data['strMobile']],
-                 [
-                     'strCustomer' => $data['strCustomer'],
-                     'strAddress' => $data['strAddress'] ?? null,
-                 ]
-             );
- 
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            $customer = Customer::firstOrCreate(
+                ['strMobile' => $data['strMobile']],
+                [
+                    'strCustomer' => $data['strCustomer'],
+                    'strAddress' => $data['strAddress'] ?? null,
+                ]
+            );
+
             if (! $customer->wasRecentlyCreated) {
-                 $customer->update([
-                     'strCustomer' => $data['strCustomer'],
-                     'strAddress' => $data['strAddress'] ?? null,
-                 ]);
-             }
- 
-             $fy = now()->format('y') . now()->addYear()->format('y');
-             $leadCount = Lead::where('iCurrentYearLeadId', $fy)->count() + 1;
-             $leadNo = $fy . '-' . str_pad($leadCount, 4, '0', STR_PAD_LEFT);
-             $isMeasurementRequired = (int) $data['IsMeasureMentRequired'] === 1;
+                $customer->update([
+                    'strCustomer' => $data['strCustomer'],
+                    'strAddress' => $data['strAddress'] ?? null,
+                ]);
+            }
+
+            $fy = now()->format('y') . now()->addYear()->format('y');
+            $leadCount = Lead::where('iCurrentYearLeadId', $fy)->count() + 1;
+            $leadNo = $fy . '-' . str_pad($leadCount, 4, '0', STR_PAD_LEFT);
+
+            $isMeasurementRequired = (int) $data['IsMeasureMentRequired'] === 1;
+            $isOnlyFittingQuotation = (int) $data['IsOnlyFittingQuotation'] === 1;
+            $isFittingRequired = $isOnlyFittingQuotation ? 1 : (int) ($data['isFittingRequired'] ?? 0);
+            $isFittingChargeIncluded = $isFittingRequired ? (int) ($data['isFittingChargeIncluded'] ?? 0) : 0;
 
             $status = $isMeasurementRequired ? LeadWorkflow::STATUS_IN_MEASUREMENT : LeadWorkflow::STATUS_IN_DESIGN;
-             $nextFollowDate = $isMeasurementRequired
-                 ? ($data['MeasurementVisitDate'] ?? null)
+
+            $nextFollowDate = $isMeasurementRequired
+                ? ($data['MeasurementVisitDate'] ?? null)
                 : ($data['design_followup_date'] ?? null);
- 
+
             $lead = Lead::create([
-                 'iCustomerId' => $customer->iCustomerId,
-                 'iCurrentYearLeadId' => $fy,
-                 'strLeadNo' => $leadNo,
-                 'IsMeasureMentRequired' => $data['IsMeasureMentRequired'],
-                 'MeasurementVisitDate' => $data['MeasurementVisitDate'] ?? null,
-                 'SiteAddress' => $data['SiteAddress'] ?? null,
-                 'CreatedDate' => now(),
-                 'iCurrentLeadStatus' => $status,
-                 'NetFollowupdate' => $nextFollowDate,
-                 'iCreatedBy' => auth()->id(),
-             ]);
- 
+                'iCustomerId' => $customer->iCustomerId,
+                'iCurrentYearLeadId' => $fy,
+                'strLeadNo' => $leadNo,
+                'IsMeasureMentRequired' => $data['IsMeasureMentRequired'],
+                'MeasurementVisitDate' => $data['MeasurementVisitDate'] ?? null,
+                'SiteAddress' => $data['SiteAddress'] ?? null,
+                'CreatedDate' => now(),
+                'iCurrentLeadStatus' => $status,
+                'NetFollowupdate' => $nextFollowDate,
+                'iCreatedBy' => auth()->id(),
+
+                'IsOnlyFittingQuotation' => $data['IsOnlyFittingQuotation'],
+                'isFittingRequired' => $isFittingRequired,
+                'isFittingChargeIncluded' => $isFittingChargeIncluded,
+            ]);
+
             LeadHistory::create([
                 'iLeadId' => $lead->iLeadId,
                 'strComments' => 'Lead created.',
@@ -148,15 +162,14 @@
                 'EntryDate' => now(),
             ]);
 
-             DB::commit();
- 
-             return redirect()->route('store.leads.index')->with('success', 'Lead created successfully.');
-         } catch (\Throwable $th) {
-             DB::rollBack();
- 
-             return back()->withInput()->with('error', $th->getMessage());
-         }
-     }
+            DB::commit();
+
+            return redirect()->route('store.leads.index')->with('success', 'Lead created successfully.');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return back()->withInput()->with('error', $th->getMessage());
+        }
+    }
  
      public function quotationForm(Lead $lead)
      {
@@ -169,47 +182,74 @@
      }
  
      public function saveQuotation(Request $request, Lead $lead)
-     {
+    {
         abort_unless(optional(auth()->user()->crmRole)->slug === 'storemanager', 403);
 
-         $data = $request->validate([
-             'iProductCategoryId' => 'required|exists:product_categories,iCategoryId',
-             'iProductId' => 'required|exists:products,iProductId',
-             'decHeight' => 'required|numeric|min:0',
-             'decWidth' => 'required|numeric|min:0',
-             'decRatePerSqft' => 'required|numeric|min:0',
+        $requiresManualFittingCharge = (int) $lead->isFittingRequired === 1 && (int) $lead->isFittingChargeIncluded === 0;
+
+        $rules = [
+            'iProductCategoryId' => 'required|exists:product_categories,iCategoryId',
+            'iProductIds' => 'required|array|min:1',
+            'iProductIds.*' => 'required|exists:products,iProductId',
+
+            'items' => 'required|array|min:1',
+            'items.*.iProductId' => 'required|exists:products,iProductId',
+            'items.*.decHeight' => 'required|numeric|min:0',
+            'items.*.decWidth' => 'required|numeric|min:0',
+            'items.*.decRatePerSqft' => 'required|numeric|min:0',
+
             'followup_date' => 'required|date',
-            'is_fitting_charge_extra' => 'required|in:0,1',
-            'iFittingCharges' => 'nullable|numeric|min:0|required_if:is_fitting_charge_extra,1',
-         ]);
- 
-         DB::beginTransaction();
- 
-         try {
-             $sqft = $data['decHeight'] * $data['decWidth'];
-             $amount = $sqft * $data['decRatePerSqft'];
-            $fittingCharges = (float) ($data['iFittingCharges'] ?? 0);
- 
-            $quotation = LeadQuotation::updateOrCreate(
-                ['iLeadId' => $lead->iLeadId],
-                [
+        ];
+
+        if ($requiresManualFittingCharge) {
+            $rules['iFittingCharges'] = 'required|numeric|min:0';
+        } else {
+            $rules['iFittingCharges'] = 'nullable|numeric|min:0';
+        }
+
+        $data = $request->validate($rules);
+
+        DB::beginTransaction();
+
+        try {
+            $subtotal = 0;
+            $firstQuotation = null;
+
+            LeadQuotation::where('iLeadId', $lead->iLeadId)->delete();
+
+            foreach ($data['items'] as $item) {
+                $sqft = (float) $item['decHeight'] * (float) $item['decWidth'];
+                $amount = $sqft * (float) $item['decRatePerSqft'];
+
+                $quotation = LeadQuotation::create([
+                    'iLeadId' => $lead->iLeadId,
                     'iProductCategoryId' => $data['iProductCategoryId'],
-                    'iProductId' => $data['iProductId'],
-                    'decHeight' => $data['decHeight'],
-                    'decWidth' => $data['decWidth'],
-                    'decRatePerSqft' => $data['decRatePerSqft'],
+                    'iProductId' => $item['iProductId'],
+                    'decHeight' => $item['decHeight'],
+                    'decWidth' => $item['decWidth'],
+                    'decRatePerSqft' => $item['decRatePerSqft'],
                     'decTotalSqft' => $sqft,
                     'iAmount' => $amount,
-                ]
-            );
- 
-             $lead->update([
-                'iQuotationId' => $quotation->iQuotationId,
-                'iLeadAmount' => $amount + $fittingCharges,
+                ]);
+
+                if (! $firstQuotation) {
+                    $firstQuotation = $quotation;
+                }
+
+                $subtotal += $amount;
+            }
+
+            $fittingCharges = $requiresManualFittingCharge
+                ? (float) ($data['iFittingCharges'] ?? 0)
+                : 0;
+
+            $grandTotal = $subtotal + $fittingCharges;
+
+            $lead->update([
+                'iQuotationId' => $firstQuotation ? $firstQuotation->iQuotationId : null,
+                'iLeadAmount' => $grandTotal,
                 'iCurrentLeadStatus' => LeadWorkflow::STATUS_QUOTATION_SENT,
                 'NetFollowupdate' => $data['followup_date'],
-                'isFittingRequired' => $data['is_fitting_charge_extra'],
-                'isFittingChargeIncluded' => $data['is_fitting_charge_extra'],
                 'iFittingCharges' => $fittingCharges,
             ]);
 
@@ -220,17 +260,17 @@
                 'iStatus' => LeadWorkflow::STATUS_QUOTATION_SENT,
                 'iEnterBy' => auth()->id(),
                 'EntryDate' => now(),
-             ]);
- 
-             DB::commit();
- 
-            return redirect()->route('store.leads.histories.index', $lead->iLeadId)->with('success', 'Quotation generated successfully.');
-         } catch (\Throwable $th) {
-             DB::rollBack();
- 
-             return back()->withInput()->with('error', $th->getMessage());
-         }
-     }
+            ]);
+
+            DB::commit();
+
+            return redirect()->route('store.leads.histories.index', $lead->iLeadId)
+                ->with('success', 'Quotation generated successfully.');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return back()->withInput()->with('error', $th->getMessage());
+        }
+    }
  
      public function updateStatus(Request $request, Lead $lead)
      {

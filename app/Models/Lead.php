@@ -51,6 +51,10 @@ class Lead extends Model
     {
         return $this->belongsTo(LeadQuotation::class, 'iQuotationId', 'iQuotationId');
     }
+    public function quotations()
+    {
+        return $this->hasMany(LeadQuotation::class, 'iLeadId', 'iLeadId');
+    }
     public function designs()
     {
         return $this->hasMany(LeadDesign::class, 'iLeadId', 'iLeadId');

@@ -98,20 +98,32 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <tr>
-                                            <td>{{ $lead->quotation->category->strCategoryName ?? '' }}</td>
-                                            <td>{{ $lead->quotation->product->strProductName ?? '' }}</td>
-                                            <td>{{ $lead->quotation->decHeight ?? '' }}</td>
-                                            <td>{{ $lead->quotation->decWidth ?? '' }}</td>
-                                            <td>{{ number_format((float)($lead->quotation->decRatePerSqft ?? 0), 2) }}</td>
-                                            <td>{{ number_format((float)($lead->quotation->decTotalSqft ?? 0), 2) }}</td>
-                                            <td>{{ number_format((float)($lead->quotation->iAmount ?? 0), 2) }}</td>
-                                        </tr>
+                                         @foreach($lead->quotations as $quotationItem)
+                                            <tr>
+                                                <td>{{ $quotationItem->category->strCategoryName ?? '' }}</td>
+                                                <td>{{ $quotationItem->product->strProductName ?? '' }}</td>
+                                                <td>{{ $quotationItem->decHeight ?? '' }}</td>
+                                                <td>{{ $quotationItem->decWidth ?? '' }}</td>
+                                                <td>{{ number_format((float)($quotationItem->decRatePerSqft ?? 0), 2) }}</td>
+                                                <td>{{ number_format((float)($quotationItem->decTotalSqft ?? 0), 2) }}</td>
+                                                <td>{{ number_format((float)($quotationItem->iAmount ?? 0), 2) }}</td>
+                                            </tr>
+                                        @endforeach
                                     </tbody>
                                     <tfoot>
                                         <tr>
                                             <th colspan="6" class="text-end">Total Amount</th>
-                                            <th>{{ number_format((float)($lead->quotation->iAmount ?? 0), 2) }}</th>
+                                             <th>{{ number_format((float) $lead->quotations->sum('iAmount'), 2) }}</th>
+                                        </tr>
+                                        @if((float)($lead->iFittingCharges ?? 0) > 0)
+                                            <tr>
+                                                <th colspan="6" class="text-end">Fitting Charges</th>
+                                                <th>{{ number_format((float)($lead->iFittingCharges ?? 0), 2) }}</th>
+                                            </tr>
+                                        @endif
+                                        <tr>
+                                            <th colspan="6" class="text-end">Grand Total</th>
+                                            <th>{{ number_format((float)($lead->iLeadAmount ?? 0), 2) }}</th>
                                         </tr>
                                     </tfoot>
                                 </table>

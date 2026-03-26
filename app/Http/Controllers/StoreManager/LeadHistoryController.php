@@ -22,7 +22,8 @@ use App\Support\LeadWorkflow;
 
          $histories = LeadHistory::with('user')
              ->where('iLeadId', $lead->iLeadId)
-             ->orderBy('id', 'desc')
+             ->orderByDesc('EntryDate')
+             ->orderByDesc('id')
              ->paginate(15);
  
         $allowedStatuses = LeadWorkflow::allowedTransitionsFor(auth()->user(), $lead);
@@ -30,9 +31,13 @@ use App\Support\LeadWorkflow;
             $allowedStatuses = LeadWorkflow::allStatuses();
         }
 
-        return view('store-manager.lead-histories.index', compact('lead', 'histories', 'allowedStatuses'));
+        return view('store-manager.lead-histories.index', [
+            'lead' => $lead->loadMissing(['customer']),
+            'histories' => $histories,
+            'allowedStatuses' => $allowedStatuses,
+        ]);
      }
- 
+
      public function store(Request $request, Lead $lead)
      {
         abort_unless(LeadWorkflow::canAccessLead(auth()->user(), $lead) || optional(auth()->user()->crmRole)->slug === 'storemanager', 403);
@@ -94,7 +99,8 @@ use App\Support\LeadWorkflow;
          if ($history->iLeadId != $lead->iLeadId) {
              abort(404);
          }
- 
+         $history->delete();
+         
         $this->syncLeadWithLatestHistory($lead);
  
          return redirect()->route('store.leads.histories.index', $lead->iLeadId)
