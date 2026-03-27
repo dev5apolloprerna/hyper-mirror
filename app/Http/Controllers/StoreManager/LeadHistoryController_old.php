@@ -5,7 +5,7 @@
  use App\Http\Controllers\Controller;
  use App\Models\Lead;
  use App\Models\LeadHistory;
- use App\Support\LeadWorkflow;
+use App\Support\LeadWorkflow;
  use Illuminate\Http\Request;
  use Illuminate\Support\Facades\DB;
  
@@ -18,78 +18,63 @@
 
      public function index(Lead $lead)
      {
-        abort_unless(
-            LeadWorkflow::canAccessLead(auth()->user(), $lead) ||
-            optional(auth()->user()->crmRole)->slug === 'storemanager',
-            403
-        );
+        abort_unless(LeadWorkflow::canAccessLead(auth()->user(), $lead) || optional(auth()->user()->crmRole)->slug === 'storemanager', 403);
 
          $histories = LeadHistory::with('user')
              ->where('iLeadId', $lead->iLeadId)
-             ->orderBy('id', 'desc')
+             ->orderByDesc('EntryDate')
+             ->orderByDesc('id')
              ->paginate(15);
-
-        // Determine allowed statuses for the status-change form
-        $roleSlug = optional(auth()->user()->crmRole)->slug;
-
-        if ($roleSlug === 'storemanager') {
+ 
+        $allowedStatuses = LeadWorkflow::allowedTransitionsFor(auth()->user(), $lead);
+        if (optional(auth()->user()->crmRole)->slug === 'storemanager') {
             $allowedStatuses = LeadWorkflow::allStatuses();
-        } else {
-            $allowedStatuses = LeadWorkflow::allowedTransitionsFor(auth()->user(), $lead);
         }
 
-        $lead->load(['customer', 'quotation']);
-
-        return view('store-manager.lead-histories.index', compact('lead', 'histories', 'allowedStatuses'));
+        return view('store-manager.lead-histories.index', [
+            'lead' => $lead->loadMissing(['customer']),
+            'histories' => $histories,
+            'allowedStatuses' => $allowedStatuses,
+        ]);
      }
- 
+
      public function store(Request $request, Lead $lead)
      {
-        abort_unless(
-            LeadWorkflow::canAccessLead(auth()->user(), $lead) ||
-            optional(auth()->user()->crmRole)->slug === 'storemanager',
-            403
-        );
+        abort_unless(LeadWorkflow::canAccessLead(auth()->user(), $lead) || optional(auth()->user()->crmRole)->slug === 'storemanager', 403);
 
          $request->validate([
-            'iStatus'        => 'required|string|in:' . implode(',', LeadWorkflow::allStatuses()),
-            'NetFolloupwdate' => 'nullable|date',
-            'strComments'    => 'required|string|max:2000',
+            'iStatus' => 'required|string|in:' . implode(',', LeadWorkflow::allStatuses()),
+             'NetFolloupwdate' => 'nullable|date',
+            'strComments' => 'required|string',
          ]);
-
-        $roleSlug = optional(auth()->user()->crmRole)->slug;
-
-        // Determine which statuses this user can set
-        $allowedStatuses = $roleSlug === 'storemanager'
+ 
+        $allowedStatuses = optional(auth()->user()->crmRole)->slug === 'storemanager'
             ? LeadWorkflow::allStatuses()
             : LeadWorkflow::allowedTransitionsFor(auth()->user(), $lead);
 
-        if (!in_array($request->iStatus, $allowedStatuses, true)) {
+        if (! in_array($request->iStatus, $allowedStatuses, true)) {
             return back()->withInput()->with('error', 'Selected status is not allowed for your role.');
         }
 
-        // Followup date required check
-        if (in_array($request->iStatus, LeadWorkflow::followupRequiredStatuses(), true) && !$request->NetFolloupwdate) {
-            return back()->withInput()->withErrors([
-                'NetFolloupwdate' => 'Next follow up date is required for the selected status.'
-            ]);
+        if (in_array($request->iStatus, LeadWorkflow::followupRequiredStatuses(), true) && ! $request->NetFolloupwdate) {
+            return back()->withInput()->withErrors(['NetFolloupwdate' => 'Next follow up date is required for the selected status.']);
         }
 
          DB::beginTransaction();
  
          try {
              LeadHistory::create([
-                 'iLeadId'        => $lead->iLeadId,
-                 'strComments'    => $request->strComments,
+                 'iLeadId' => $lead->iLeadId,
+                 'strComments' => $request->strComments,
                  'NetFolloupwdate' => $request->NetFolloupwdate,
-                 'iStatus'        => $request->iStatus,
-                 'iEnterBy'       => auth()->id(),
-                 'EntryDate'      => now(),
+                 'iStatus' => $request->iStatus,
+                 'iEnterBy' => auth()->id(),
+                 'EntryDate' => now(),
              ]);
  
              $lead->update([
                  'iCurrentLeadStatus' => $request->iStatus,
-                 'NetFollowupdate'    => $request->NetFolloupwdate,
+                 'NetFollowupdate' => $request->NetFolloupwdate,
              ]);
  
              DB::commit();
@@ -114,9 +99,8 @@
          if ($history->iLeadId != $lead->iLeadId) {
              abort(404);
          }
-
-        $history->delete();
- 
+         $history->delete();
+         
         $this->syncLeadWithLatestHistory($lead);
  
          return redirect()->route('store.leads.histories.index', $lead->iLeadId)
@@ -128,8 +112,8 @@
         abort_unless(optional(auth()->user()->crmRole)->slug === 'storemanager', 403);
 
          $request->validate([
-             'ids'    => 'required|array',
-             'ids.*'  => 'required|integer|exists:lead_histories,id',
+             'ids' => 'required|array',
+             'ids.*' => 'required|integer|exists:lead_histories,id',
          ]);
  
          LeadHistory::where('iLeadId', $lead->iLeadId)
@@ -139,7 +123,7 @@
         $this->syncLeadWithLatestHistory($lead);
 
         return response()->json([
-            'status'  => true,
+            'status' => true,
             'message' => 'Selected lead histories deleted successfully.'
         ]);
     }
@@ -153,7 +137,7 @@
          if ($latestHistory) {
              $lead->update([
                  'iCurrentLeadStatus' => $latestHistory->iStatus,
-                 'NetFollowupdate'    => $latestHistory->NetFolloupwdate,
+                 'NetFollowupdate' => $latestHistory->NetFolloupwdate,
              ]);
          }
      }

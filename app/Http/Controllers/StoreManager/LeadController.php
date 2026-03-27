@@ -9,7 +9,8 @@
  use App\Models\LeadQuotation;
  use App\Models\Product;
  use App\Models\ProductCategory;
- use Carbon\Carbon;
+ use App\Models\ProductShape;
+ use App\Models\ProductFeature;
  use App\Support\LeadWorkflow;
  use Illuminate\Http\Request;
  use Illuminate\Support\Facades\DB;
@@ -21,167 +22,172 @@
         $this->middleware('auth');
     }
 
-     public function index(Request $request)
-     {
+    // ── Index / Queue ────────────────────────────────────────────────────────
+    public function index(Request $request)
+    {
         $roleSlug = optional(auth()->user()->crmRole)->slug;
-         $query = Lead::with(['customer', 'quotation'])->latest('iLeadId');
- 
+        $query    = Lead::with(['customer', 'quotation'])->latest('iLeadId');
+
+        // Scope to role's queue unless store manager
         if ($roleSlug !== 'storemanager') {
             $query->whereIn('iCurrentLeadStatus', LeadWorkflow::roleQueueStatuses($roleSlug));
         }
 
+        // Status filter
         if ($request->filled('status')) {
             $query->where('iCurrentLeadStatus', $request->status);
         }
 
+        // Follow-up bucket filter
         if ($request->filled('followup') && in_array($request->followup, ['today', 'overdue'], true)) {
             $today = now()->toDateString();
             if ($request->followup === 'today') {
                 $query->whereDate('NetFollowupdate', $today);
-            }
-
-            if ($request->followup === 'overdue') {
+            } elseif ($request->followup === 'overdue') {
                 $query->whereDate('NetFollowupdate', '<', $today);
             }
         }
 
-         if ($request->filled('search')) {
-             $search = trim($request->search);
- 
-             $query->where(function ($q) use ($search) {
-                 $q->where('strLeadNo', 'like', "%{$search}%")
-                     ->orWhere('iCurrentLeadStatus', 'like', "%{$search}%")
-                     ->orWhereHas('customer', function ($sub) use ($search) {
-                         $sub->where('strCustomer', 'like', "%{$search}%")
-                             ->orWhere('strMobile', 'like', "%{$search}%");
-                     });
-             });
-         }
- 
-         $leads = $query->paginate(15)->withQueryString();
+        // Free-text search
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+            $query->where(function ($q) use ($search) {
+                $q->where('strLeadNo', 'like', "%{$search}%")
+                  ->orWhere('iCurrentLeadStatus', 'like', "%{$search}%")
+                  ->orWhereHas('customer', function ($sub) use ($search) {
+                      $sub->where('strCustomer', 'like', "%{$search}%")
+                          ->orWhere('strMobile', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        $leads         = $query->paginate(15)->withQueryString();
         $statusOptions = LeadWorkflow::dashboardStatuses($roleSlug);
- 
+
         return view('store-manager.leads.index', compact('leads', 'statusOptions', 'roleSlug'));
-     }
- 
-     public function create()
-     {
+    }
+
+    // ── Create ───────────────────────────────────────────────────────────────
+    public function create()
+    {
+        abort_unless(optional(auth()->user()->crmRole)->slug === 'storemanager', 403);
+        return view('store-manager.leads.create');
+    }
+
+    // ── Check customer by mobile ─────────────────────────────────────────────
+    public function checkCustomer(Request $request)
+    {
         abort_unless(optional(auth()->user()->crmRole)->slug === 'storemanager', 403);
 
-         return view('store-manager.leads.create');
-     }
- 
-     public function checkCustomer(Request $request)
-     {
-        abort_unless(optional(auth()->user()->crmRole)->slug === 'storemanager', 403);
+        $request->validate(['mobile' => 'required|digits:10']);
+        $customer = Customer::where('strMobile', $request->mobile)->first();
 
-         $request->validate([
-             'mobile' => 'required|digits:10',
-         ]);
- 
-         $customer = Customer::where('strMobile', $request->mobile)->first();
- 
-         return response()->json($customer);
-     }
- 
+        return response()->json($customer);
+    }
+
+    // ── Store new lead ───────────────────────────────────────────────────────
     public function store(Request $request)
     {
         abort_unless(optional(auth()->user()->crmRole)->slug === 'storemanager', 403);
 
         $data = $request->validate([
-            'strMobile' => 'required|digits:10',
-            'strCustomer' => 'required|string|max:100',
-            'strAddress' => 'nullable|string',
-            'SiteAddress' => 'nullable|string',
-
-            'IsOnlyFittingQuotation' => 'required|in:0,1',
-            'isFittingRequired' => 'nullable|in:0,1',
-            'isFittingChargeIncluded' => 'nullable|in:0,1',
-
+            'strMobile'             => 'required|digits:10',
+            'strCustomer'           => 'required|string|max:100',
+            'strAddress'            => 'nullable|string',
+            'SiteAddress'           => 'nullable|string',
             'IsMeasureMentRequired' => 'required|in:0,1',
-            'MeasurementVisitDate' => 'nullable|date|required_if:IsMeasureMentRequired,1',
-            'design_followup_date' => 'nullable|date|required_if:IsMeasureMentRequired,0',
+            // Measurement date required only if measurement is required
+            'MeasurementVisitDate'  => 'nullable|date|required_if:IsMeasureMentRequired,1',
+            // Design follow-up date required only if NO measurement
+            'design_followup_date'  => 'nullable|date|required_if:IsMeasureMentRequired,0',
         ]);
 
         DB::beginTransaction();
 
         try {
+            // Upsert customer
             $customer = Customer::firstOrCreate(
                 ['strMobile' => $data['strMobile']],
                 [
                     'strCustomer' => $data['strCustomer'],
-                    'strAddress' => $data['strAddress'] ?? null,
+                    'strAddress'  => $data['strAddress'] ?? null,
                 ]
             );
 
-            if (! $customer->wasRecentlyCreated) {
+            if (!$customer->wasRecentlyCreated) {
                 $customer->update([
                     'strCustomer' => $data['strCustomer'],
-                    'strAddress' => $data['strAddress'] ?? null,
+                    'strAddress'  => $data['strAddress'] ?? null,
                 ]);
             }
 
-            $fy = now()->format('y') . now()->addYear()->format('y');
+            // Generate lead number
+            $fy        = now()->format('y') . now()->addYear()->format('y');
             $leadCount = Lead::where('iCurrentYearLeadId', $fy)->count() + 1;
-            $leadNo = $fy . '-' . str_pad($leadCount, 4, '0', STR_PAD_LEFT);
+            $leadNo    = $fy . '-' . str_pad($leadCount, 4, '0', STR_PAD_LEFT);
 
             $isMeasurementRequired = (int) $data['IsMeasureMentRequired'] === 1;
-            $isOnlyFittingQuotation = (int) $data['IsOnlyFittingQuotation'] === 1;
-            $isFittingRequired = $isOnlyFittingQuotation ? 1 : (int) ($data['isFittingRequired'] ?? 0);
-            $isFittingChargeIncluded = $isFittingRequired ? (int) ($data['isFittingChargeIncluded'] ?? 0) : 0;
 
-            $status = $isMeasurementRequired ? LeadWorkflow::STATUS_IN_MEASUREMENT : LeadWorkflow::STATUS_IN_DESIGN;
+            // Initial status based on measurement requirement
+            $status = $isMeasurementRequired
+                ? LeadWorkflow::STATUS_IN_MEASUREMENT
+                : LeadWorkflow::STATUS_IN_DESIGN;
 
+            // Next follow-up date
             $nextFollowDate = $isMeasurementRequired
                 ? ($data['MeasurementVisitDate'] ?? null)
                 : ($data['design_followup_date'] ?? null);
 
             $lead = Lead::create([
-                'iCustomerId' => $customer->iCustomerId,
-                'iCurrentYearLeadId' => $fy,
-                'strLeadNo' => $leadNo,
+                'iCustomerId'           => $customer->iCustomerId,
+                'iCurrentYearLeadId'    => $fy,
+                'strLeadNo'             => $leadNo,
                 'IsMeasureMentRequired' => $data['IsMeasureMentRequired'],
-                'MeasurementVisitDate' => $data['MeasurementVisitDate'] ?? null,
-                'SiteAddress' => $data['SiteAddress'] ?? null,
-                'CreatedDate' => now(),
-                'iCurrentLeadStatus' => $status,
-                'NetFollowupdate' => $nextFollowDate,
-                'iCreatedBy' => auth()->id(),
-
-                'IsOnlyFittingQuotation' => $data['IsOnlyFittingQuotation'],
-                'isFittingRequired' => $isFittingRequired,
-                'isFittingChargeIncluded' => $isFittingChargeIncluded,
+                'MeasurementVisitDate'  => $data['MeasurementVisitDate'] ?? null,
+                'SiteAddress'           => $data['SiteAddress'] ?? null,
+                'CreatedDate'           => now(),
+                'iCurrentLeadStatus'    => $status,
+                'NetFollowupdate'       => $nextFollowDate,
+                'iCreatedBy'            => auth()->id(),
             ]);
 
+            // Initial history entry
             LeadHistory::create([
-                'iLeadId' => $lead->iLeadId,
-                'strComments' => 'Lead created.',
+                'iLeadId'        => $lead->iLeadId,
+                'strComments'    => 'Lead created.',
                 'NetFolloupwdate' => $nextFollowDate,
-                'iStatus' => $status,
-                'iEnterBy' => auth()->id(),
-                'EntryDate' => now(),
+                'iStatus'        => $status,
+                'iEnterBy'       => auth()->id(),
+                'EntryDate'      => now(),
             ]);
 
             DB::commit();
 
-            return redirect()->route('store.leads.index')->with('success', 'Lead created successfully.');
+            return redirect()->route('store.leads.histories.index', $lead->iLeadId)
+                ->with('success', 'Lead created successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
             return back()->withInput()->with('error', $th->getMessage());
         }
     }
- 
-     public function quotationForm(Lead $lead)
-     {
+
+    // ── Quotation form ───────────────────────────────────────────────────────
+   public function quotationForm(Lead $lead)
+    {
         abort_unless(optional(auth()->user()->crmRole)->slug === 'storemanager', 403);
 
-         $categories = ProductCategory::orderBy('strCategoryName', 'asc')->get();
-         $products = Product::orderBy('strProductName', 'asc')->get();
- 
-         return view('store-manager.leads.quotation', compact('lead', 'categories', 'products'));
-     }
- 
-     public function saveQuotation(Request $request, Lead $lead)
+        $categories = ProductCategory::orderBy('strCategoryName', 'asc')->get();
+        $products = Product::orderBy('strProductName', 'asc')->get();
+        $shapes = ProductShape::where('iStatus', 1)->where('isDelete', 0)->orderBy('shape_title', 'asc')->get();
+        $features = ProductFeature::where('iStatus', 1)->where('isDelete', 0)->orderBy('feature_name', 'asc')->get();
+
+        $lead->load('quotations');
+
+        return view('store-manager.leads.quotation', compact('lead', 'categories', 'products', 'shapes', 'features'));
+    }
+
+    // ── Save quotation ───────────────────────────────────────────────────────
+    public function saveQuotation(Request $request, Lead $lead)
     {
         abort_unless(optional(auth()->user()->crmRole)->slug === 'storemanager', 403);
 
@@ -189,11 +195,14 @@
 
         $rules = [
             'iProductCategoryId' => 'required|exists:product_categories,iCategoryId',
-            'iProductIds' => 'required|array|min:1',
-            'iProductIds.*' => 'required|exists:products,iProductId',
 
             'items' => 'required|array|min:1',
             'items.*.iProductId' => 'required|exists:products,iProductId',
+            'items.*.unit_of_measurement' => 'required|in:inch,MM,Feet',
+            'items.*.shape_id' => 'required|exists:product_shape,shape_id',
+            'items.*.feature_id' => 'required|exists:product_feature,feature_id',
+            'items.*.remarks' => 'nullable|string|max:255',
+            'items.*.quantity' => 'required|integer|min:1',
             'items.*.decHeight' => 'required|numeric|min:0',
             'items.*.decWidth' => 'required|numeric|min:0',
             'items.*.decRatePerSqft' => 'required|numeric|min:0',
@@ -218,13 +227,19 @@
             LeadQuotation::where('iLeadId', $lead->iLeadId)->delete();
 
             foreach ($data['items'] as $item) {
+                $qty = (int) $item['quantity'];
                 $sqft = (float) $item['decHeight'] * (float) $item['decWidth'];
-                $amount = $sqft * (float) $item['decRatePerSqft'];
+                $amount = $qty * $sqft * (float) $item['decRatePerSqft'];
 
                 $quotation = LeadQuotation::create([
                     'iLeadId' => $lead->iLeadId,
                     'iProductCategoryId' => $data['iProductCategoryId'],
                     'iProductId' => $item['iProductId'],
+                    'unit_of_measurement' => $item['unit_of_measurement'],
+                    'shape_id' => $item['shape_id'],
+                    'feature_id' => $item['feature_id'],
+                    'remarks' => $item['remarks'] ?? null,
+                    'quantity' => $qty,
                     'decHeight' => $item['decHeight'],
                     'decWidth' => $item['decWidth'],
                     'decRatePerSqft' => $item['decRatePerSqft'],
@@ -232,7 +247,7 @@
                     'iAmount' => $amount,
                 ]);
 
-                if (! $firstQuotation) {
+                if (!$firstQuotation) {
                     $firstQuotation = $quotation;
                 }
 
@@ -271,70 +286,71 @@
             return back()->withInput()->with('error', $th->getMessage());
         }
     }
- 
-     public function updateStatus(Request $request, Lead $lead)
-     {
+
+    // ── Quotation view ───────────────────────────────────────────────────────
+    public function quotationView(Lead $lead)
+    {
+        abort_unless(
+            LeadWorkflow::canAccessLead(auth()->user(), $lead) ||
+            optional(auth()->user()->crmRole)->slug === 'storemanager',
+            403
+        );
+
+        $lead->load(['customer', 'quotation.category', 'quotation.product']);
+
+        if (!$lead->quotation) {
+            return redirect()->route('store.leads.index')->with('error', 'Quotation not found for this lead.');
+        }
+
+        return view('store-manager.leads.quotation-view', compact('lead'));
+    }
+
+    // ── Update status (legacy — kept for compatibility) ─────────────────────
+    public function updateStatus(Request $request, Lead $lead)
+    {
         abort_unless(LeadWorkflow::canAccessLead(auth()->user(), $lead), 403);
 
-         $data = $request->validate([
-            'iStatus' => 'required|string|in:' . implode(',', LeadWorkflow::allStatuses()),
+        $data = $request->validate([
+            'iStatus'         => 'required|string|in:' . implode(',', LeadWorkflow::allStatuses()),
             'NetFollowupdate' => 'nullable|date',
-            'strComments' => 'required|string',
-         ]);
- 
-        $roleSlug = optional(auth()->user()->crmRole)->slug;
-        $followupRequired = in_array($data['iStatus'], LeadWorkflow::followupRequiredStatuses(), true);
+            'strComments'     => 'required|string',
+        ]);
 
-        if ($followupRequired && empty($data['NetFollowupdate'])) {
+        $roleSlug       = optional(auth()->user()->crmRole)->slug;
+        $followupNeeded = in_array($data['iStatus'], LeadWorkflow::followupRequiredStatuses(), true);
+
+        if ($followupNeeded && empty($data['NetFollowupdate'])) {
             return back()->withInput()->withErrors(['NetFollowupdate' => 'Next follow up date is required for the selected status.']);
         }
 
-        if ($roleSlug !== 'storemanager' && ! in_array($data['iStatus'], LeadWorkflow::allowedTransitionsFor(auth()->user(), $lead), true)) {
+        if ($roleSlug !== 'storemanager' && !in_array($data['iStatus'], LeadWorkflow::allowedTransitionsFor(auth()->user(), $lead), true)) {
             return back()->withInput()->with('error', 'You cannot move this lead to the selected status.');
         }
 
-         DB::beginTransaction();
- 
-         try {
-             $lead->update([
-                 'iCurrentLeadStatus' => $data['iStatus'],
-                 'NetFollowupdate' => $data['NetFollowupdate'] ?? null,
-             ]);
- 
+        DB::beginTransaction();
+
+        try {
+            $lead->update([
+                'iCurrentLeadStatus' => $data['iStatus'],
+                'NetFollowupdate'    => $data['NetFollowupdate'] ?? null,
+            ]);
+
             LeadHistory::create([
-                 'iLeadId' => $lead->iLeadId,
-                'strComments' => $data['strComments'],
-                 'NetFolloupwdate' => $data['NetFollowupdate'] ?? null,
-                 'iStatus' => $data['iStatus'],
-                 'iEnterBy' => auth()->id(),
-                 'EntryDate' => now(),
-             ]);
- 
-             DB::commit();
- 
+                'iLeadId'        => $lead->iLeadId,
+                'strComments'    => $data['strComments'],
+                'NetFolloupwdate' => $data['NetFollowupdate'] ?? null,
+                'iStatus'        => $data['iStatus'],
+                'iEnterBy'       => auth()->id(),
+                'EntryDate'      => now(),
+            ]);
 
-            return redirect()->route('store.leads.histories.index', $lead->iLeadId)->with('success', 'Lead status updated successfully.');
-         } catch (\Throwable $th) {
-             DB::rollBack();
- 
-             return back()->with('error', $th->getMessage());
-         }
-     }
+            DB::commit();
 
-     public function quotationView(Lead $lead)
-     {
-        abort_unless(LeadWorkflow::canAccessLead(auth()->user(), $lead) || optional(auth()->user()->crmRole)->slug === 'storemanager', 403);
-
-         $lead->load([
-             'customer',
-             'quotation.category',
-             'quotation.product',
-         ]);
- 
-        if (! $lead->quotation) {
-             return redirect()->route('store.leads.index')->with('error', 'Quotation not found for this lead.');
-         }
- 
-         return view('store-manager.leads.quotation-view', compact('lead'));
-     }
- }
+            return redirect()->route('store.leads.histories.index', $lead->iLeadId)
+                ->with('success', 'Lead status updated to "' . $data['iStatus'] . '".');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return back()->with('error', $th->getMessage());
+        }
+    }
+}

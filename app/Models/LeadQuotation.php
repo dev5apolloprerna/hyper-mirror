@@ -12,10 +12,15 @@ class LeadQuotation extends Model
     protected $table = 'lead_quotations';
     protected $primaryKey = 'iQuotationId';
 
-    protected $fillable = [
+   protected $fillable = [
         'iLeadId',
         'iProductCategoryId',
         'iProductId',
+        'unit_of_measurement',
+        'shape_id',
+        'feature_id',
+        'remarks',
+        'quantity',
         'decHeight',
         'decWidth',
         'decRatePerSqft',
