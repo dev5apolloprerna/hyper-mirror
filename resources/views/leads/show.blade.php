@@ -5,9 +5,9 @@
 <div class="row g-3">
 
     {{-- ===================================================
-         LEFT: Lead Info + Status Change
+         TOP LEFT: Lead Info
     =================================================== --}}
-    <div class="col-lg-7">
+    <div class="col-lg-4">
 
         {{-- Success / Error alerts --}}
         @if(session('success'))
@@ -86,95 +86,15 @@
             </div>
         </div>
 
-        {{-- ===================================================
-             Status Change Form
-             Only shown if there are valid next statuses
-        =================================================== --}}
-        @if(!empty($nextStatuses) && !$lead->isRejected())
-        <div class="card border-0 shadow-sm mb-3">
-            <div class="card-header bg-white py-3">
-                <h6 class="mb-0 fw-bold"><i class="fa fa-exchange-alt me-2 text-primary"></i>Change Status</h6>
-            </div>
-            <div class="card-body">
-                <form method="POST"
-                      action="{{ route('leads.updateStatus', $lead->iLeadId) }}"
-                      id="statusChangeForm">
-                    @csrf
-                    @method('PATCH')
-
-                    {{-- Status Dropdown --}}
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold" for="new_status">New Status <span class="text-danger">*</span></label>
-                        <select name="new_status"
-                                id="new_status"
-                                class="form-select @error('new_status') is-invalid @enderror"
-                                required>
-                            <option value="">— Select new status —</option>
-                            @foreach($nextStatuses as $statusId)
-                                <option value="{{ $statusId }}"
-                                    {{ old('new_status') == $statusId ? 'selected' : '' }}>
-                                    {{ $statusLabels[$statusId] ?? $statusId }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('new_status')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    {{-- Dynamic Date Field (shown/hidden + label changed by JS) --}}
-                    <div class="mb-3" id="dateWrapper" style="display:none;">
-                        <label class="form-label fw-semibold" for="status_date" id="dateLabel">
-                            Date <span class="text-danger">*</span>
-                        </label>
-                        <input type="date"
-                               name="status_date"
-                               id="status_date"
-                               class="form-control @error('status_date') is-invalid @enderror"
-                               value="{{ old('status_date') }}"
-                               min="{{ date('Y-m-d') }}">
-                        @error('status_date')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    {{-- Comment --}}
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold" for="strComments">
-                            Comment <span class="text-danger">*</span>
-                        </label>
-                        <textarea name="strComments"
-                                  id="strComments"
-                                  rows="3"
-                                  class="form-control @error('strComments') is-invalid @enderror"
-                                  placeholder="Enter a comment for this status change..."
-                                  required>{{ old('strComments') }}</textarea>
-                        @error('strComments')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <button type="submit" class="btn btn-primary px-4">
-                        <i class="fa fa-check me-1"></i> Update Status
-                    </button>
-                </form>
-            </div>
-        </div>
-        @elseif($lead->isRejected())
-            <div class="alert alert-danger">This lead has been rejected. No further status changes are possible.</div>
-        @else
-            <div class="alert alert-secondary">No status transitions available for your role at this stage.</div>
-        @endif
-
     </div>
 
     {{-- ===================================================
-         RIGHT: History Timeline
+         TOP RIGHT: History Timeline
     =================================================== --}}
-    <div class="col-lg-5">
+    <div class="col-lg-8">
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white py-3">
-                <h6 class="mb-0 fw-bold"><i class="fa fa-history me-2 text-secondary"></i>Lead History</h6>
+                <h6 class="mb-0 fw-bold"><i class="fa fa-history me-2 text-secondary"></i>Lead Discussion History</h6>
             </div>
             <div class="card-body p-0" style="max-height:600px; overflow-y:auto;">
                 @forelse($histories as $history)
@@ -198,6 +118,84 @@
                 @endforelse
             </div>
         </div>
+    </div>
+
+    {{-- ===================================================
+         BOTTOM FULL WIDTH: Status Change Form
+    =================================================== --}}
+    <div class="col-12">
+        @if(!empty($nextStatuses) && !$lead->isRejected())
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-header bg-white py-3">
+                <h6 class="mb-0 fw-bold"><i class="fa fa-exchange-alt me-2 text-primary"></i>Add New Status / Discussion</h6>
+            </div>
+            <div class="card-body">
+                <form method="POST"
+                      action="{{ route('leads.updateStatus', $lead->iLeadId) }}"
+                      id="statusChangeForm">
+                    @csrf
+                    @method('PATCH')
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" for="new_status">New Status <span class="text-danger">*</span></label>
+                        <select name="new_status"
+                                id="new_status"
+                                class="form-select @error('new_status') is-invalid @enderror"
+                                required>
+                            <option value="">— Select new status —</option>
+                            @foreach($nextStatuses as $statusId)
+                                <option value="{{ $statusId }}"
+                                    {{ old('new_status') == $statusId ? 'selected' : '' }}>
+                                    {{ $statusLabels[$statusId] ?? $statusId }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('new_status')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="mb-3" id="dateWrapper" style="display:none;">
+                        <label class="form-label fw-semibold" for="status_date" id="dateLabel">
+                            Date <span class="text-danger">*</span>
+                        </label>
+                        <input type="date"
+                               name="status_date"
+                               id="status_date"
+                               class="form-control @error('status_date') is-invalid @enderror"
+                               value="{{ old('status_date') }}"
+                               min="{{ date('Y-m-d') }}">
+                        @error('status_date')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" for="strComments">
+                            Discussion / Comments <span class="text-danger">*</span>
+                        </label>
+                        <textarea name="strComments"
+                                  id="strComments"
+                                  rows="4"
+                                  class="form-control @error('strComments') is-invalid @enderror"
+                                  placeholder="Enter discussion with customer, visit note, or status update"
+                                  required>{{ old('strComments') }}</textarea>
+                        @error('strComments')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <button type="submit" class="btn btn-primary px-4">
+                        <i class="fa fa-check me-1"></i> Save Discussion
+                    </button>
+                </form>
+            </div>
+        </div>
+        @elseif($lead->isRejected())
+            <div class="alert alert-danger">This lead has been rejected. No further status changes are possible.</div>
+        @else
+            <div class="alert alert-secondary">No status transitions available for your role at this stage.</div>
+        @endif
     </div>
 
 </div>

@@ -66,7 +66,41 @@
                                 @endif
                             </div>
 
-                            <div class="col-md-6 mb-4">
+                            <div class="col-md-4 mb-4">
+                                <label class="form-label">Is Only Fitting Quotation? <span style="color:red;">*</span></label>
+                                <select name="IsOnlyFittingQuotation" id="IsOnlyFittingQuotation" class="form-control">
+                                    <option value="0" {{ old('IsOnlyFittingQuotation') == '0' ? 'selected' : '' }}>No</option>
+                                    <option value="1" {{ old('IsOnlyFittingQuotation') == '1' ? 'selected' : '' }}>Yes</option>
+                                </select>
+                                @if($errors->has('IsOnlyFittingQuotation'))
+                                    <span class="text-danger">{{ $errors->first('IsOnlyFittingQuotation') }}</span>
+                                @endif
+                            </div>
+
+                            <div class="col-md-4 mb-4 fitting-required-box">
+                                <label class="form-label">Fitting Required? <span style="color:red;">*</span></label>
+                                <select name="isFittingRequired" id="isFittingRequired" class="form-control">
+                                    <option value="0" {{ old('isFittingRequired') == '0' ? 'selected' : '' }}>No</option>
+                                    <option value="1" {{ old('isFittingRequired') == '1' ? 'selected' : '' }}>Yes</option>
+                                </select>
+                                @if($errors->has('isFittingRequired'))
+                                    <span class="text-danger">{{ $errors->first('isFittingRequired') }}</span>
+                                @endif
+                            </div>
+
+                            <div class="col-md-4 mb-4 fitting-charge-type-box">
+                                <label class="form-label">Fitting Charges Included or Extra? <span style="color:red;">*</span></label>
+                                <select name="isFittingChargeIncluded" id="isFittingChargeIncluded" class="form-control">
+                                    <option value="">Select Option</option>
+                                    <option value="0" {{ old('isFittingChargeIncluded') == '0' ? 'selected' : '' }}>Extra</option>
+                                    <option value="1" {{ old('isFittingChargeIncluded') == '1' ? 'selected' : '' }}>Included</option>
+                                </select>
+                                @if($errors->has('isFittingChargeIncluded'))
+                                    <span class="text-danger">{{ $errors->first('isFittingChargeIncluded') }}</span>
+                                @endif
+                            </div>
+
+                            <div class="col-md-6 mb-4 measurement-required-box">
                                 <label class="form-label">Measurement Required <span style="color:red;">*</span></label>
                                 <select name="IsMeasureMentRequired" id="IsMeasureMentRequired" class="form-control">
                                     <option value="0" {{ old('IsMeasureMentRequired') == '0' ? 'selected' : '' }}>No</option>
@@ -85,14 +119,13 @@
                                 @endif
                             </div>
 
-                             <div class="col-md-6 mb-4 quotation-date-box">
+                            <div class="col-md-6 mb-4 quotation-date-box">
                                 <label class="form-label">In Design Follow Up Date</label>
                                 <input type="date" name="design_followup_date" class="form-control" value="{{ old('design_followup_date') }}">
                                 @if($errors->has('design_followup_date'))
                                     <span class="text-danger">{{ $errors->first('design_followup_date') }}</span>
                                 @endif
                             </div>
-
 
                             <div class="col-md-12">
                                 <button type="submit" class="btn btn-primary">Submit</button>
@@ -112,22 +145,45 @@
 @section('scripts')
 <script>
     $(document).ready(function () {
-        function toggleDateFields() {
-            let value = $('#IsMeasureMentRequired').val();
+        function toggleLeadFields() {
+            let onlyFitting = $('#IsOnlyFittingQuotation').val();
+            let fittingRequired = $('#isFittingRequired').val();
+            let measurementRequired = $('#IsMeasureMentRequired').val();
 
-            if (value == '1') {
-                $('.measurement-date-box').show();
-                $('.quotation-date-box').hide();
-            } else {
+            if (onlyFitting == '1') {
+                $('.fitting-required-box').hide();
+                $('.fitting-charge-type-box').show();
+                $('.measurement-required-box').hide();
                 $('.measurement-date-box').hide();
                 $('.quotation-date-box').show();
+
+                $('#isFittingRequired').val('1');
+            } else {
+                $('.fitting-required-box').show();
+
+                if (fittingRequired == '1') {
+                    $('.fitting-charge-type-box').show();
+                } else {
+                    $('.fitting-charge-type-box').hide();
+                    $('#isFittingChargeIncluded').val('');
+                }
+
+                $('.measurement-required-box').show();
+
+                if (measurementRequired == '1') {
+                    $('.measurement-date-box').show();
+                    $('.quotation-date-box').hide();
+                } else {
+                    $('.measurement-date-box').hide();
+                    $('.quotation-date-box').show();
+                }
             }
         }
 
-        toggleDateFields();
+        toggleLeadFields();
 
-        $('#IsMeasureMentRequired').on('change', function () {
-            toggleDateFields();
+        $('#IsOnlyFittingQuotation, #isFittingRequired, #IsMeasureMentRequired').on('change', function () {
+            toggleLeadFields();
         });
 
         $('#checkCustomerBtn').on('click', function () {
