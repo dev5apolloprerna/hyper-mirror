@@ -7,14 +7,12 @@ use App\Http\Controllers\Auth\LoginController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
-
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\ProductCategoryController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ShowroomController;
 use App\Http\Controllers\Admin\UserShowroomController;
 use App\Http\Controllers\Admin\CrmUserController;
-
 
 use App\Http\Controllers\StoreManager\LeadController;
 use App\Http\Controllers\StoreManager\LeadDesignController;
@@ -23,17 +21,16 @@ use App\Http\Controllers\StoreManager\LeadPaymentController;
 
 
 Route::fallback(function () {
-     return view('errors.404');
+    return view('errors.404');
 });
 
 Route::get('/login', function () {
     return redirect()->route('login');
 });
 
-
 Auth::routes(['register' => false]);
 
-Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+Route::get('/home', [HomeController::class, 'index'])->name('home');
 
 // Profile Routes
 Route::prefix('profile')->name('profile.')->middleware('auth')->group(function () {
@@ -45,13 +42,11 @@ Route::prefix('profile')->name('profile.')->middleware('auth')->group(function (
 
 Route::get('logout', [LoginController::class, 'logout'])->name('logout');
 
-// Roles
+// Roles & Permissions
 Route::resource('roles', App\Http\Controllers\RolesController::class);
-
-// Permissions
 Route::resource('permissions', App\Http\Controllers\PermissionsController::class);
 
-// Users
+// Users (legacy)
 Route::middleware('auth')->prefix('users')->name('users.')->group(function () {
     Route::get('/', [UserController::class, 'index'])->name('index');
     Route::get('/create', [UserController::class, 'create'])->name('create');
@@ -66,17 +61,16 @@ Route::middleware('auth')->prefix('users')->name('users.')->group(function () {
     Route::get('export/', [UserController::class, 'export'])->name('export');
 });
 
-
+// Admin: Customers
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('customer', [CustomerController::class, 'index'])->name('customer.index');
     Route::post('customer/store', [CustomerController::class, 'store'])->name('customer.store');
     Route::post('customer/update/{id}', [CustomerController::class, 'update'])->name('customer.update');
     Route::delete('customer/delete/{id}', [CustomerController::class, 'destroy'])->name('customer.delete');
     Route::post('customer/bulk-delete', [CustomerController::class, 'bulkDelete'])->name('customer.bulkDelete');
-
 });
 
-
+// Admin: Product Categories
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('product-category', [ProductCategoryController::class, 'index'])->name('product-category.index');
     Route::post('product-category/store', [ProductCategoryController::class, 'store'])->name('product-category.store');
@@ -85,7 +79,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::post('product-category/bulk-delete', [ProductCategoryController::class, 'bulkDelete'])->name('product-category.bulkDelete');
 });
 
-
+// Admin: Products
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('product', [ProductController::class, 'index'])->name('product.index');
     Route::post('product/store', [ProductController::class, 'store'])->name('product.store');
@@ -94,7 +88,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::post('product/bulk-delete', [ProductController::class, 'bulkDelete'])->name('product.bulkDelete');
 });
 
-
+// Admin: Showrooms
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('showroom', [ShowroomController::class, 'index'])->name('showroom.index');
     Route::post('showroom/store', [ShowroomController::class, 'store'])->name('showroom.store');
@@ -103,6 +97,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::post('showroom/bulk-delete', [ShowroomController::class, 'bulkDelete'])->name('showroom.bulkDelete');
 });
 
+// Admin: User-Showroom mapping
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('user-showroom', [UserShowroomController::class, 'index'])->name('user-showroom.index');
     Route::post('user-showroom/store', [UserShowroomController::class, 'store'])->name('user-showroom.store');
@@ -111,19 +106,24 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::post('user-showroom/bulk-delete', [UserShowroomController::class, 'bulkDelete'])->name('user-showroom.bulkDelete');
 });
 
-
+// Store Manager: Leads
 Route::middleware('auth')->prefix('store-manager')->name('store.')->group(function () {
+
+    // Lead CRUD
     Route::get('leads', [LeadController::class, 'index'])->name('leads.index');
     Route::get('leads/create', [LeadController::class, 'create'])->name('leads.create');
     Route::post('leads/store', [LeadController::class, 'store'])->name('leads.store');
     Route::post('leads/check-customer', [LeadController::class, 'checkCustomer'])->name('leads.check-customer');
 
+    // Quotation
     Route::get('leads/{lead}/quotation', [LeadController::class, 'quotationForm'])->name('leads.quotation');
     Route::post('leads/{lead}/save-quotation', [LeadController::class, 'saveQuotation'])->name('leads.save-quotation');
     Route::get('leads/{lead}/quotation-view', [LeadController::class, 'quotationView'])->name('leads.quotation-view');
+    Route::get('leads/{lead}/quotation-pdf', [LeadController::class, 'quotationPdf'])->name('leads.quotation-pdf');
+
     Route::post('leads/{lead}/update-status', [LeadController::class, 'updateStatus'])->name('leads.update-status');
 
-
+    // Lead Designs
     Route::get('leads/{lead}/designs', [LeadDesignController::class, 'index'])->name('leads.designs.index');
     Route::get('leads/{lead}/designs/create', [LeadDesignController::class, 'create'])->name('leads.designs.create');
     Route::post('leads/{lead}/designs/store', [LeadDesignController::class, 'store'])->name('leads.designs.store');
@@ -132,16 +132,17 @@ Route::middleware('auth')->prefix('store-manager')->name('store.')->group(functi
     Route::delete('leads/{lead}/designs/{design}/delete', [LeadDesignController::class, 'destroy'])->name('leads.designs.delete');
     Route::post('leads/{lead}/designs/bulk-delete', [LeadDesignController::class, 'bulkDelete'])->name('leads.designs.bulk-delete');
 
-
-   Route::get('leads/{lead}/histories', [LeadHistoryController::class, 'index'])->name('leads.histories.index');
+    // Lead Histories
+    Route::get('leads/{lead}/histories', [LeadHistoryController::class, 'index'])->name('leads.histories.index');
     Route::post('leads/{lead}/histories/store', [LeadHistoryController::class, 'store'])->name('leads.histories.store');
+    // Update & delete are intentionally blocked (403)
     Route::post('leads/{lead}/histories/{history}/update', [LeadHistoryController::class, 'update'])->name('leads.histories.update');
     Route::delete('leads/{lead}/histories/{history}/delete', [LeadHistoryController::class, 'destroy'])->name('leads.histories.delete');
     Route::post('leads/{lead}/histories/bulk-delete', [LeadHistoryController::class, 'bulkDelete'])->name('leads.histories.bulk-delete');
 
 });
 
-
+// Store Manager: Payments (separate group for clarity)
 Route::middleware('auth')->prefix('store-manager')->name('store.')->group(function () {
     Route::get('leads/{lead}/payments', [LeadPaymentController::class, 'index'])->name('leads.payments.index');
     Route::post('leads/{lead}/payments/store', [LeadPaymentController::class, 'store'])->name('leads.payments.store');
@@ -150,7 +151,7 @@ Route::middleware('auth')->prefix('store-manager')->name('store.')->group(functi
     Route::post('leads/{lead}/payments/bulk-delete', [LeadPaymentController::class, 'bulkDelete'])->name('leads.payments.bulk-delete');
 });
 
-
+// Admin: CRM Users
 Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::get('users', [CrmUserController::class, 'index'])->name('users.index');
     Route::post('users/store', [CrmUserController::class, 'store'])->name('users.store');
@@ -158,19 +159,3 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::post('users/password-update/{user}', [CrmUserController::class, 'updatePassword'])->name('users.password.update');
     Route::delete('users/delete/{user}', [CrmUserController::class, 'destroy'])->name('users.destroy');
 });
-
-
-Route::middleware(['auth', 'crmrole:storemanager,measurement,production,dispatch,fitting,account'])
-    ->group(function () {
-
-        // View lead detail page
-        Route::get('/leads/{leadId}', [
-            \App\Http\Controllers\LeadStatusController::class, 'show'
-        ])->name('leads.show');
-
-        // Submit status change
-        Route::patch('/leads/{leadId}/status', [
-            \App\Http\Controllers\LeadStatusController::class, 'updateStatus'
-        ])->name('leads.updateStatus');
-
-    });

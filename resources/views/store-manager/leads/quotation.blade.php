@@ -4,18 +4,6 @@
 
 @section('styles')
 <style>
-    .quotation-row {
-        background: #fff;
-    }
-
-    .quotation-row .card-like {
-        border: 1px solid #e5e7eb;
-        border-radius: 10px;
-        padding: 15px;
-        margin-bottom: 15px;
-        background: #fafafa;
-    }
-
     .lineAmount,
     #subtotalAmount,
     #grandTotalAmount {
@@ -38,6 +26,24 @@
     .lead-info-box p {
         margin-bottom: 6px;
     }
+    .quotation-row {
+            background: #fff;
+        }
+
+        .quotation-row .card-like {
+            border: 1px solid #dbeafe;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 18px;
+            background: #fafafa;
+        }
+
+        .product-separator {
+            border-top: 2px dashed #cbd5e1;
+            margin-top: 12px;
+            padding-top: 4px;
+        }
+
 </style>
 @endsection
 
@@ -180,15 +186,15 @@
                         <div id="quotationRows">
                             @foreach($existingItems as $index => $item)
                                 <div class="quotation-row card-like" data-index="{{ $index }}">
-                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
                                         <strong>Product #<span class="row-number">{{ $index + 1 }}</span></strong>
                                         <button type="button" class="btn btn-danger btn-sm remove-row" {{ count($existingItems) === 1 ? 'disabled' : '' }}>
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </div>
 
-                                    <div class="row">
-                                        <div class="col-md-3 mb-3">
+                                    <div class="row g-2 align-items-end">
+                                        <div class="col-md-2">
                                             <label class="form-label">Product <span style="color:red;">*</span></label>
                                             <select name="items[{{ $index }}][iProductId]" class="form-control row-product-select" required>
                                                 <option value="">Select Product</option>
@@ -201,104 +207,80 @@
                                                     </option>
                                                 @endforeach
                                             </select>
-                                            @error('items.' . $index . '.iProductId')
-                                                <span class="text-danger d-block">{{ $message }}</span>
-                                            @enderror
                                         </div>
 
-                                        <div class="col-md-2 mb-3">
+                                        <div class="col-md-1">
                                             <label class="form-label">Unit <span style="color:red;">*</span></label>
                                             <select name="items[{{ $index }}][unit_of_measurement]" class="form-control unit-of-measurement" required>
-                                                <option value="">Select Unit</option>
+                                                <option value="">Unit</option>
                                                 <option value="inch" {{ ($item['unit_of_measurement'] ?? '') === 'inch' ? 'selected' : '' }}>Inch</option>
                                                 <option value="MM" {{ ($item['unit_of_measurement'] ?? '') === 'MM' ? 'selected' : '' }}>MM</option>
                                                 <option value="Feet" {{ ($item['unit_of_measurement'] ?? '') === 'Feet' ? 'selected' : '' }}>Feet</option>
                                             </select>
-                                            @error('items.' . $index . '.unit_of_measurement')
-                                                <span class="text-danger d-block">{{ $message }}</span>
-                                            @enderror
                                         </div>
 
-                                        <div class="col-md-2 mb-3">
+                                        <div class="col-md-1">
                                             <label class="form-label">Shape <span style="color:red;">*</span></label>
                                             <select name="items[{{ $index }}][shape_id]" class="form-control" required>
-                                                <option value="">Select Shape</option>
+                                                <option value="">Shape</option>
                                                 @foreach($shapes as $shape)
                                                     <option value="{{ $shape->shape_id }}" {{ (string)($item['shape_id'] ?? '') === (string)$shape->shape_id ? 'selected' : '' }}>
                                                         {{ $shape->shape_title }}
                                                     </option>
                                                 @endforeach
                                             </select>
-                                            @error('items.' . $index . '.shape_id')
-                                                <span class="text-danger d-block">{{ $message }}</span>
-                                            @enderror
                                         </div>
 
-                                        <div class="col-md-2 mb-3">
+                                        <div class="col-md-1">
                                             <label class="form-label">Feature <span style="color:red;">*</span></label>
                                             <select name="items[{{ $index }}][feature_id]" class="form-control" required>
-                                                <option value="">Select Feature</option>
+                                                <option value="">Feature</option>
                                                 @foreach($features as $feature)
                                                     <option value="{{ $feature->feature_id }}" {{ (string)($item['feature_id'] ?? '') === (string)$feature->feature_id ? 'selected' : '' }}>
                                                         {{ $feature->feature_name }}
                                                     </option>
                                                 @endforeach
                                             </select>
-                                            @error('items.' . $index . '.feature_id')
-                                                <span class="text-danger d-block">{{ $message }}</span>
-                                            @enderror
                                         </div>
 
-                                        <div class="col-md-3 mb-3">
-                                            <label class="form-label">Remarks</label>
-                                            <input type="text" name="items[{{ $index }}][remarks]" class="form-control" value="{{ $item['remarks'] ?? '' }}" placeholder="Enter remarks">
-                                            @error('items.' . $index . '.remarks')
-                                                <span class="text-danger d-block">{{ $message }}</span>
-                                            @enderror
-                                        </div>
-
-                                        <div class="col-md-2 mb-3">
-                                            <label class="form-label">Quantity <span style="color:red;">*</span></label>
+                                        <div class="col-md-1">
+                                            <label class="form-label">Qty <span style="color:red;">*</span></label>
                                             <input type="number" min="1" name="items[{{ $index }}][quantity]" class="form-control quantity" value="{{ $item['quantity'] ?? 1 }}" required>
-                                            @error('items.' . $index . '.quantity')
-                                                <span class="text-danger d-block">{{ $message }}</span>
-                                            @enderror
                                         </div>
 
-                                        <div class="col-md-2 mb-3">
+                                        <div class="col-md-1">
                                             <label class="form-label">Height <span style="color:red;">*</span></label>
                                             <input type="number" step="0.01" min="0" name="items[{{ $index }}][decHeight]" class="form-control decHeight" value="{{ $item['decHeight'] ?? '' }}" required>
-                                            @error('items.' . $index . '.decHeight')
-                                                <span class="text-danger d-block">{{ $message }}</span>
-                                            @enderror
                                         </div>
 
-                                        <div class="col-md-2 mb-3">
+                                        <div class="col-md-1">
                                             <label class="form-label">Width <span style="color:red;">*</span></label>
                                             <input type="number" step="0.01" min="0" name="items[{{ $index }}][decWidth]" class="form-control decWidth" value="{{ $item['decWidth'] ?? '' }}" required>
-                                            @error('items.' . $index . '.decWidth')
-                                                <span class="text-danger d-block">{{ $message }}</span>
-                                            @enderror
                                         </div>
 
-                                        <div class="col-md-2 mb-3">
+                                        <div class="col-md-1">
                                             <label class="form-label">Rate <span style="color:red;">*</span></label>
                                             <input type="number" step="0.01" min="0" name="items[{{ $index }}][decRatePerSqft]" class="form-control decRatePerSqft" value="{{ $item['decRatePerSqft'] ?? '' }}" required>
-                                            @error('items.' . $index . '.decRatePerSqft')
-                                                <span class="text-danger d-block">{{ $message }}</span>
-                                            @enderror
                                         </div>
 
-                                        <div class="col-md-2 mb-3">
+                                        <div class="col-md-1">
                                             <label class="form-label">Amount</label>
                                             <input type="text" name="items[{{ $index }}][iAmount]" class="form-control lineAmount" value="{{ $item['iAmount'] ?? '' }}" readonly>
                                         </div>
+
+                                        <div class="col-md-2">
+                                            <label class="form-label">Remarks</label>
+                                            <input type="text" name="items[{{ $index }}][remarks]" class="form-control" value="{{ $item['remarks'] ?? '' }}" placeholder="Enter remarks">
+                                        </div>
                                     </div>
+
+                                    <div class="product-separator mt-3"></div>
+                                </div>
                                 </div>
                             @endforeach
                         </div>
 
-                        <div class="row mt-2">
+                        <div class="row mt-2 card-body">
                             <div class="col-md-4 mb-4">
                                 <label class="form-label">Subtotal</label>
                                 <input type="text" id="subtotalAmount" class="form-control" readonly>
@@ -444,83 +426,86 @@
             const categoryId = $('#iProductCategoryId').val();
 
             const rowHtml = `
-                <div class="quotation-row card-like" data-index="${nextIndex}">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <strong>Product #<span class="row-number">${nextIndex + 1}</span></strong>
-                        <button type="button" class="btn btn-danger btn-sm remove-row">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
+    <div class="quotation-row card-like" data-index="${nextIndex}">
+        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+            <strong>Product #<span class="row-number">${nextIndex + 1}</span></strong>
+            <button type="button" class="btn btn-danger btn-sm remove-row">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
 
-                    <div class="row">
-                        <div class="col-md-3 mb-3">
-                            <label class="form-label">Product <span style="color:red;">*</span></label>
-                            <select name="items[${nextIndex}][iProductId]" class="form-control row-product-select" required>
-                                ${buildProductSelectOptions(categoryId, '')}
-                            </select>
-                        </div>
+        <div class="row g-2 align-items-end">
+            <div class="col-md-2">
+                <label class="form-label">Product <span style="color:red;">*</span></label>
+                <select name="items[${nextIndex}][iProductId]" class="form-control row-product-select" required>
+                    ${buildProductSelectOptions(categoryId, '')}
+                </select>
+            </div>
 
-                        <div class="col-md-2 mb-3">
-                            <label class="form-label">Unit <span style="color:red;">*</span></label>
-                            <select name="items[${nextIndex}][unit_of_measurement]" class="form-control unit-of-measurement" required>
-                                <option value="">Select Unit</option>
-                                <option value="inch">Inch</option>
-                                <option value="MM">MM</option>
-                                <option value="Feet">Feet</option>
-                            </select>
-                        </div>
+            <div class="col-md-1">
+                <label class="form-label">Unit <span style="color:red;">*</span></label>
+                <select name="items[${nextIndex}][unit_of_measurement]" class="form-control unit-of-measurement" required>
+                    <option value="">Unit</option>
+                    <option value="inch">Inch</option>
+                    <option value="MM">MM</option>
+                    <option value="Feet">Feet</option>
+                </select>
+            </div>
 
-                        <div class="col-md-2 mb-3">
-                            <label class="form-label">Shape <span style="color:red;">*</span></label>
-                            <select name="items[${nextIndex}][shape_id]" class="form-control" required>
-                                <option value="">Select Shape</option>
-                                @foreach($shapes as $shape)
-                                    <option value="{{ $shape->shape_id }}">{{ $shape->shape_title }}</option>
-                                @endforeach
-                            </select>
-                        </div>
+            <div class="col-md-1">
+                <label class="form-label">Shape <span style="color:red;">*</span></label>
+                <select name="items[${nextIndex}][shape_id]" class="form-control" required>
+                    <option value="">Shape</option>
+                    @foreach($shapes as $shape)
+                        <option value="{{ $shape->shape_id }}">{{ $shape->shape_title }}</option>
+                    @endforeach
+                </select>
+            </div>
 
-                        <div class="col-md-2 mb-3">
-                            <label class="form-label">Feature <span style="color:red;">*</span></label>
-                            <select name="items[${nextIndex}][feature_id]" class="form-control" required>
-                                <option value="">Select Feature</option>
-                                @foreach($features as $feature)
-                                    <option value="{{ $feature->feature_id }}">{{ $feature->feature_name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
+            <div class="col-md-1">
+                <label class="form-label">Feature <span style="color:red;">*</span></label>
+                <select name="items[${nextIndex}][feature_id]" class="form-control" required>
+                    <option value="">Feature</option>
+                    @foreach($features as $feature)
+                        <option value="{{ $feature->feature_id }}">{{ $feature->feature_name }}</option>
+                    @endforeach
+                </select>
+            </div>
 
-                        <div class="col-md-3 mb-3">
-                            <label class="form-label">Remarks</label>
-                            <input type="text" name="items[${nextIndex}][remarks]" class="form-control" placeholder="Enter remarks">
-                        </div>
+            <div class="col-md-1">
+                <label class="form-label">Qty <span style="color:red;">*</span></label>
+                <input type="number" min="1" name="items[${nextIndex}][quantity]" class="form-control quantity" value="1" required>
+            </div>
 
-                        <div class="col-md-2 mb-3">
-                            <label class="form-label">Quantity <span style="color:red;">*</span></label>
-                            <input type="number" min="1" name="items[${nextIndex}][quantity]" class="form-control quantity" value="1" required>
-                        </div>
+            <div class="col-md-1">
+                <label class="form-label">Height <span style="color:red;">*</span></label>
+                <input type="number" step="0.01" min="0" name="items[${nextIndex}][decHeight]" class="form-control decHeight" required>
+            </div>
 
-                        <div class="col-md-2 mb-3">
-                            <label class="form-label">Height <span style="color:red;">*</span></label>
-                            <input type="number" step="0.01" min="0" name="items[${nextIndex}][decHeight]" class="form-control decHeight" required>
-                        </div>
+            <div class="col-md-1">
+                <label class="form-label">Width <span style="color:red;">*</span></label>
+                <input type="number" step="0.01" min="0" name="items[${nextIndex}][decWidth]" class="form-control decWidth" required>
+            </div>
 
-                        <div class="col-md-2 mb-3">
-                            <label class="form-label">Width <span style="color:red;">*</span></label>
-                            <input type="number" step="0.01" min="0" name="items[${nextIndex}][decWidth]" class="form-control decWidth" required>
-                        </div>
+            <div class="col-md-1">
+                <label class="form-label">Rate <span style="color:red;">*</span></label>
+                <input type="number" step="0.01" min="0" name="items[${nextIndex}][decRatePerSqft]" class="form-control decRatePerSqft" required>
+            </div>
 
-                        <div class="col-md-2 mb-3">
-                            <label class="form-label">Rate <span style="color:red;">*</span></label>
-                            <input type="number" step="0.01" min="0" name="items[${nextIndex}][decRatePerSqft]" class="form-control decRatePerSqft" required>
-                        </div>
+            <div class="col-md-1">
+                <label class="form-label">Amount</label>
+                <input type="text" name="items[${nextIndex}][iAmount]" class="form-control lineAmount" readonly>
+            </div>
 
-                        <div class="col-md-2 mb-3">
-                            <label class="form-label">Amount</label>
-                            <input type="text" name="items[${nextIndex}][iAmount]" class="form-control lineAmount" readonly>
-                        </div>
-                    </div>
-                </div>
+            <div class="col-md-2">
+                <label class="form-label">Remarks</label>
+                <input type="text" name="items[${nextIndex}][remarks]" class="form-control" placeholder="Enter remarks">
+            </div>
+        </div>
+
+        <div class="product-separator mt-3"></div>
+    </div>
+
             `;
 
             $('#quotationRows').append(rowHtml);

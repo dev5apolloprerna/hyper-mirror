@@ -12,7 +12,7 @@ class LeadQuotation extends Model
     protected $table = 'lead_quotations';
     protected $primaryKey = 'iQuotationId';
 
-   protected $fillable = [
+    protected $fillable = [
         'iLeadId',
         'iProductCategoryId',
         'iProductId',
@@ -41,5 +41,15 @@ class LeadQuotation extends Model
     public function product()
     {
         return $this->belongsTo(Product::class, 'iProductId', 'iProductId');
+    }
+
+    public function shape()
+    {
+        return $this->belongsTo(ProductShape::class, 'shape_id', 'shape_id');
+    }
+
+    public function feature()
+    {
+        return $this->belongsTo(ProductFeature::class, 'feature_id', 'feature_id');
     }
 }
