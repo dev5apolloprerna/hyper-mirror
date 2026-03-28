@@ -21,6 +21,7 @@ class LeadWorkflow
     public const STATUS_DISPATCHED_DONE     = 'Dispatched Done';
     public const STATUS_FITTING_PENDING     = 'Fitting Pending';
     public const STATUS_FITTING_DONE        = 'Fitting Done';
+    public const STATUS_DEAL_DONE           = 'Deal Done';
 
     // ── All statuses in workflow order ──────────────────────────────────────
     public static function allStatuses(): array
@@ -39,10 +40,14 @@ class LeadWorkflow
             self::STATUS_DISPATCHED_DONE,
             self::STATUS_FITTING_PENDING,
             self::STATUS_FITTING_DONE,
+            self::STATUS_DEAL_DONE,
         ];
     }
 
-    // ── Statuses that REQUIRE a follow-up date ──────────────────────────────
+    /**
+     * Statuses that require a follow-up date.
+     * Note: Lead Rejected & Measurement Done do NOT require a follow-up date.
+     */
     public static function followupRequiredStatuses(): array
     {
         return [
@@ -58,12 +63,43 @@ class LeadWorkflow
         ];
     }
 
+    /**
+     * Statuses where the lead is considered "terminal" (no further movement).
+     */
+    public static function terminalStatuses(): array
+    {
+        return [
+            self::STATUS_LEAD_REJECTED,
+            self::STATUS_DEAL_DONE,
+        ];
+    }
+
+    /**
+     * Statuses that are "read-only" for the assigned role —
+     * the role can VIEW the lead but not change status further.
+     */
+    public static function readOnlyForRole(string $roleSlug, string $currentStatus): bool
+    {
+        // Production cannot change once "Ready to Dispatched"
+        if ($roleSlug === 'production' && $currentStatus === self::STATUS_READY_TO_DISPATCHED) {
+            return true;
+        }
+
+        // Dispatch cannot change once "Dispatched"
+        if ($roleSlug === 'dispatch' && $currentStatus === self::STATUS_DISPATCHED) {
+            return true;
+        }
+
+        return false;
+    }
+
     // ── Which statuses appear in each role's queue/list ─────────────────────
     public static function roleQueueStatuses(?string $roleSlug): array
     {
         return match ($roleSlug) {
             'measurement' => [
                 self::STATUS_IN_MEASUREMENT,
+                self::STATUS_MEASUREMENT_DONE,
             ],
             'production' => [
                 self::STATUS_ADVANCE_RECEIVED,
@@ -87,18 +123,18 @@ class LeadWorkflow
                 self::STATUS_ADVANCE_RECEIVED,
                 self::STATUS_LEAD_REJECTED,
                 self::STATUS_FITTING_DONE,
+                self::STATUS_DEAL_DONE,
             ],
             default => self::allStatuses(), // storemanager sees all
         };
     }
 
     // ── Full workflow transition map (from → allowed tos) ───────────────────
-    // This is the global pipeline — roles further restrict via allowedTransitionsFor()
     public static function transitionMap(): array
     {
         return [
             self::STATUS_IN_MEASUREMENT      => [self::STATUS_MEASUREMENT_DONE],
-            self::STATUS_MEASUREMENT_DONE    => [self::STATUS_IN_DESIGN, self::STATUS_QUOTATION_SENT],
+            self::STATUS_MEASUREMENT_DONE    => [self::STATUS_IN_DESIGN, self::STATUS_QUOTATION_SENT, self::STATUS_LEAD_REJECTED],
             self::STATUS_IN_DESIGN           => [self::STATUS_QUOTATION_SENT, self::STATUS_LEAD_REJECTED],
             self::STATUS_QUOTATION_SENT      => [self::STATUS_QUOTATION_APPROVED, self::STATUS_LEAD_REJECTED],
             self::STATUS_QUOTATION_APPROVED  => [self::STATUS_ADVANCE_RECEIVED, self::STATUS_LEAD_REJECTED],
@@ -108,54 +144,56 @@ class LeadWorkflow
             self::STATUS_DISPATCHED          => [self::STATUS_DISPATCHED_DONE],
             self::STATUS_DISPATCHED_DONE     => [self::STATUS_FITTING_PENDING, self::STATUS_FITTING_DONE],
             self::STATUS_FITTING_PENDING     => [self::STATUS_FITTING_DONE],
-            self::STATUS_FITTING_DONE        => [],
+            self::STATUS_FITTING_DONE        => [self::STATUS_DEAL_DONE],
             self::STATUS_LEAD_REJECTED       => [],
+            self::STATUS_DEAL_DONE           => [],
         ];
     }
 
     // ── Per-role transition overrides ────────────────────────────────────────
-    // What each role is ALLOWED to move to from the current status
     protected static function roleTransitionMap(): array
     {
         return [
-            // Measurement staff: can only move In Measurement → Measurement Done
             'measurement' => [
                 self::STATUS_IN_MEASUREMENT => [self::STATUS_MEASUREMENT_DONE],
+                // Measurement Done: no action needed — storemanager handles next step
             ],
+            'storemanager' => [],
 
-            // Store manager controls Measurement Done → next + all sales funnel steps
-            'storemanager' => [],  // handled separately — gets all transitions
-
-            // Production: accepts Advance Received, moves through to Ready to Dispatch
             'production' => [
                 self::STATUS_ADVANCE_RECEIVED    => [self::STATUS_PRODUCTION_ACCEPTED],
                 self::STATUS_PRODUCTION_ACCEPTED => [self::STATUS_READY_TO_DISPATCHED],
+                // Ready to Dispatched: read-only for production
             ],
 
-            // Dispatch: marks dispatched
             'dispatch' => [
                 self::STATUS_READY_TO_DISPATCHED => [self::STATUS_DISPATCHED],
                 self::STATUS_DISPATCHED          => [self::STATUS_DISPATCHED_DONE],
+                // Dispatched Done: handled by fitting
             ],
 
-            // Fitting: marks fitting done
             'fitting' => [
                 self::STATUS_DISPATCHED_DONE => [self::STATUS_FITTING_PENDING, self::STATUS_FITTING_DONE],
                 self::STATUS_FITTING_PENDING => [self::STATUS_FITTING_DONE],
             ],
 
-            // Account: can only add remarks/payments — no status change
-            'account' => [],
+            'account' => [
+                self::STATUS_FITTING_DONE => [self::STATUS_DEAL_DONE],
+            ],
         ];
     }
 
     /**
      * Returns the statuses the given user is allowed to transition the lead TO.
-     * Returns empty array if the user has no permission to change status.
      */
     public static function allowedTransitionsFor(User $user, Lead $lead): array
     {
         $roleSlug = optional($user->crmRole)->slug;
+
+        // Read-only check
+        if (self::readOnlyForRole($roleSlug, $lead->iCurrentLeadStatus)) {
+            return [];
+        }
 
         // Store manager can go anywhere in the global transition map
         if ($roleSlug === 'storemanager') {
@@ -208,9 +246,9 @@ class LeadWorkflow
                 self::STATUS_QUOTATION_APPROVED,
                 self::STATUS_ADVANCE_RECEIVED,
                 self::STATUS_FITTING_DONE,
+                self::STATUS_DEAL_DONE,
             ],
             default => [
-                // Store manager dashboard shows full funnel overview
                 self::STATUS_IN_MEASUREMENT,
                 self::STATUS_MEASUREMENT_DONE,
                 self::STATUS_IN_DESIGN,
@@ -223,11 +261,11 @@ class LeadWorkflow
                 self::STATUS_DISPATCHED_DONE,
                 self::STATUS_FITTING_PENDING,
                 self::STATUS_FITTING_DONE,
+                self::STATUS_DEAL_DONE,
             ],
         };
     }
 
-    // ── Fitting collection helper ────────────────────────────────────────────
     public static function fittingCollectedThisMonth(): array
     {
         return [self::STATUS_FITTING_DONE];

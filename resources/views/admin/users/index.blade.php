@@ -15,11 +15,9 @@
             @if (session('success'))
                 <div class="alert alert-success">{{ session('success') }}</div>
             @endif
-
             @if (session('error'))
                 <div class="alert alert-danger">{{ session('error') }}</div>
             @endif
-
             @if ($errors->any())
                 <div class="alert alert-danger">
                     <ul class="mb-0 ps-3">
@@ -31,6 +29,7 @@
             @endif
 
             <div class="row g-4">
+                {{-- ── CREATE FORM ── --}}
                 <div class="col-xl-4">
                     <div class="card">
                         <div class="card-header">
@@ -55,7 +54,6 @@
                                     <input type="email" name="email" value="{{ old('email') }}" class="form-control" placeholder="Enter user email" required>
                                 </div>
 
-
                                 <div class="mb-3">
                                     <label class="form-label">Role</label>
                                     <select name="iRoalId" class="form-select" required>
@@ -69,6 +67,15 @@
                                 </div>
 
                                 <div class="mb-3">
+                                    <label class="form-label">Can View Financial Data?</label>
+                                    <select name="can_view_financial" class="form-select" required>
+                                        <option value="0" @selected(old('can_view_financial', '0') == '0')>No — Hide prices in quotation PDF</option>
+                                        <option value="1" @selected(old('can_view_financial') == '1')>Yes — Show full quotation with prices</option>
+                                    </select>
+                                    <small class="text-muted">If "No", quotation PDF shows product/dimension data only, without pricing.</small>
+                                </div>
+
+                                <div class="mb-3">
                                     <label class="form-label">Assign Showrooms</label>
                                     <select name="showrooms[]" id="create-showroom-select2" class="form-select showroom-select2" multiple required>
                                         @foreach ($showrooms as $showroom)
@@ -77,7 +84,7 @@
                                             </option>
                                         @endforeach
                                     </select>
-                                    <small class="text-muted">Search and select multiple showrooms using the checkbox list.</small>
+                                    <small class="text-muted">Search and select multiple showrooms.</small>
                                 </div>
 
                                 <div class="mb-3">
@@ -102,6 +109,7 @@
                     </div>
                 </div>
 
+                {{-- ── USER LIST ── --}}
                 <div class="col-xl-8">
                     <div class="card">
                         <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
@@ -120,8 +128,8 @@
                                             <th>#</th>
                                             <th>User Name</th>
                                             <th>Mobile</th>
-                                            <th>Email</th>
                                             <th>Role</th>
+                                            <th>Financial</th>
                                             <th>Showrooms</th>
                                             <th>Status</th>
                                             <th class="text-center">Actions</th>
@@ -133,13 +141,19 @@
                                                 <td>{{ $users->firstItem() + $loop->index }}</td>
                                                 <td>{{ $user->strUserName ?: $user->first_name }}</td>
                                                 <td>{{ $user->strUserMobile ?: $user->mobile_number }}</td>
-                                                <td>{{ $user->email ?: $user->email }}</td>
                                                 <td>{{ optional($user->crmRole)->strRole ?? '-' }}</td>
+                                                <td>
+                                                    @if($user->can_view_financial)
+                                                        <span class="badge bg-success">Yes</span>
+                                                    @else
+                                                        <span class="badge bg-secondary">No</span>
+                                                    @endif
+                                                </td>
                                                 <td>
                                                     @forelse ($user->showrooms as $showroom)
                                                         <span class="badge bg-primary-subtle text-primary me-1 mb-1">{{ $showroom->strShowRoomName }}</span>
                                                     @empty
-                                                        <span class="text-muted">No showroom assigned</span>
+                                                        <span class="text-muted">None</span>
                                                     @endforelse
                                                 </td>
                                                 <td>
@@ -158,10 +172,11 @@
                                                         data-action="{{ route('admin.users.update', $user) }}"
                                                         data-name="{{ $user->strUserName ?: $user->first_name }}"
                                                         data-mobile="{{ $user->strUserMobile ?: $user->mobile_number }}"
-                                                        data-email="{{ $user->email ?: $user->email }}"
+                                                        data-email="{{ $user->email }}"
                                                         data-role="{{ $user->iRoalId }}"
                                                         data-address="{{ $user->strUserAddress }}"
                                                         data-status="{{ (int) $user->status }}"
+                                                        data-financial="{{ (int) $user->can_view_financial }}"
                                                         data-showrooms='@json($user->showrooms->pluck("iShowroomId")->all())'>
                                                         Edit
                                                     </button>
@@ -172,9 +187,9 @@
                                                         data-bs-target="#passwordModal"
                                                         data-action="{{ route('admin.users.password.update', $user) }}"
                                                         data-username="{{ $user->strUserName ?: $user->first_name }}">
-                                                        Change Password
+                                                        Password
                                                     </button>
-                                                    <form method="POST" action="{{ route('admin.users.destroy', $user) }}" class="d-inline-block" onsubmit="return confirm('Are you sure you want to delete this user?');">
+                                                    <form method="POST" action="{{ route('admin.users.destroy', $user) }}" class="d-inline-block" onsubmit="return confirm('Delete this user?');">
                                                         @csrf
                                                         @method('DELETE')
                                                         <button type="submit" class="btn btn-sm btn-danger mb-1" {{ auth()->id() === $user->id ? 'disabled' : '' }}>
@@ -185,16 +200,13 @@
                                             </tr>
                                         @empty
                                             <tr>
-                                                <td colspan="7" class="text-center text-muted">No admin users found.</td>
+                                                <td colspan="8" class="text-center text-muted">No users found.</td>
                                             </tr>
                                         @endforelse
                                     </tbody>
                                 </table>
                             </div>
-
-                            <div class="mt-3">
-                                {{ $users->links() }}
-                            </div>
+                            <div class="mt-3">{{ $users->links() }}</div>
                         </div>
                     </div>
                 </div>
@@ -203,12 +215,13 @@
     </div>
 </div>
 
+{{-- ── EDIT MODAL ── --}}
 <div class="modal fade" id="editUserModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Edit User</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form method="POST" action="" id="editUserForm">
                 @csrf
@@ -233,6 +246,13 @@
                                 @foreach ($roles as $role)
                                     <option value="{{ $role->iRoleId }}">{{ $role->strRole }}</option>
                                 @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Can View Financial Data?</label>
+                            <select name="can_view_financial" id="edit_can_view_financial" class="form-select">
+                                <option value="0">No — Hide prices in quotation PDF</option>
+                                <option value="1">Yes — Show full quotation with prices</option>
                             </select>
                         </div>
                         <div class="col-md-6 mb-3">
@@ -265,12 +285,13 @@
     </div>
 </div>
 
+{{-- ── PASSWORD MODAL ── --}}
 <div class="modal fade" id="passwordModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Change Password</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form method="POST" action="" id="passwordForm">
                 @csrf
@@ -300,52 +321,28 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <style>
-        .select2-container--default .select2-results__option {
-            padding: 0;
-        }
-
+        .select2-container--default .select2-results__option { padding: 0; }
         .select2-container--default .showroom-option .form-check {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.55rem 0.85rem;
-            margin: 0;
+            display: flex; align-items: center; gap: .5rem;
+            padding: .55rem .85rem; margin: 0;
         }
-
-        .select2-container--default .showroom-option .form-check-input {
-            margin-top: 0;
-            pointer-events: none;
-        }
-
-        .select2-container--default .select2-selection--multiple {
-            min-height: 38px;
-        }
-
+        .select2-container--default .showroom-option .form-check-input { margin-top: 0; pointer-events: none; }
+        .select2-container--default .select2-selection--multiple { min-height: 38px; }
         .select2-container--default .select2-selection--multiple .select2-selection__rendered {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.35rem;
-            padding: 0.35rem;
+            display: flex; flex-wrap: wrap; gap: .35rem; padding: .35rem;
         }
     </style>
 
     <script>
         $(function () {
             function showroomTemplate(option) {
-                if (!option.id) {
-                    return option.text;
-                }
-
+                if (!option.id) return option.text;
                 const isSelected = option.element && option.element.selected;
                 const $option = $(
-                    '<div class="showroom-option">' +
-                        '<div class="form-check">' +
-                            '<input type="checkbox" class="form-check-input" ' + (isSelected ? 'checked' : '') + '>' +
-                            '<label class="form-check-label"></label>' +
-                        '</div>' +
-                    '</div>'
+                    '<div class="showroom-option"><div class="form-check">' +
+                    '<input type="checkbox" class="form-check-input" ' + (isSelected ? 'checked' : '') + '>' +
+                    '<label class="form-check-label"></label></div></div>'
                 );
-
                 $option.find('.form-check-label').text(option.text);
                 return $option;
             }
@@ -353,7 +350,6 @@
             $('.showroom-select2').each(function () {
                 const $select = $(this);
                 const parentSelector = $select.data('dropdown-parent');
-
                 $select.select2({
                     placeholder: 'Select showroom',
                     closeOnSelect: false,
@@ -361,12 +357,8 @@
                     width: '100%',
                     dropdownParent: parentSelector ? $(parentSelector) : null,
                     templateResult: showroomTemplate,
-                    templateSelection: function (option) {
-                        return option.text || option.id;
-                    },
-                    escapeMarkup: function (markup) {
-                        return markup;
-                    }
+                    templateSelection: function (option) { return option.text || option.id; },
+                    escapeMarkup: function (markup) { return markup; }
                 });
             });
 
@@ -381,6 +373,7 @@
                 $('#edit_iRoalId').val(String(button.data('role')));
                 $('#edit_strUserAddress').val(button.data('address'));
                 $('#edit_status').prop('checked', Number(button.data('status')) === 1);
+                $('#edit_can_view_financial').val(String(button.data('financial')));
                 $('#edit_showrooms').val(selectedShowrooms).trigger('change');
             });
 
@@ -392,4 +385,4 @@
             });
         });
     </script>
- @endsection
+@endsection
