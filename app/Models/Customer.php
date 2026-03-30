@@ -16,5 +16,7 @@ class Customer extends Model
         'strCustomer',
         'strMobile',
         'strAddress',
+        'customer_type',
+        'company_name',
     ];
 }
