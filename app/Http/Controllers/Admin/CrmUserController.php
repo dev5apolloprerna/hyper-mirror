@@ -33,10 +33,20 @@ class CrmUserController extends Controller
 
         return view('admin.users.index', [
             'users'     => $query->latest()->paginate(10)->withQueryString(),
-            'roles'     => CrmRole::orderBy('strRole')->get(),
             'showrooms' => Showroom::orderBy('strShowRoomName')->get(),
         ]);
     }
+
+    public function create()
+    {
+        return view('admin.users.form', [
+            'user' => new User(),
+            'roles' => CrmRole::orderBy('strRole')->get(),
+            'showrooms' => Showroom::orderBy('strShowRoomName')->get(),
+            'isEdit' => false,
+        ]);
+    }
+
 
     public function store(Request $request)
     {
@@ -62,6 +72,18 @@ class CrmUserController extends Controller
 
         return redirect()->route('admin.users.index')->with('success', 'CRM user created successfully.');
     }
+    public function edit(User $user)
+    {
+        $user->load('showrooms');
+
+        return view('admin.users.form', [
+            'user' => $user,
+            'roles' => CrmRole::orderBy('strRole')->get(),
+            'showrooms' => Showroom::orderBy('strShowRoomName')->get(),
+            'isEdit' => true,
+        ]);
+    }
+
 
     public function update(Request $request, User $user)
     {
