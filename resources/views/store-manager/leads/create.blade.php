@@ -51,7 +51,26 @@
                             </div>
 
                             <div class="col-md-6 mb-4">
-                                <label class="form-label">Address</label>
+                            <label class="form-label">Customer Type <span style="color:red;">*</span></label>
+                                <select name="customer_type" id="customer_type" class="form-control">
+                                    <option value="Retail" {{ old('customer_type', 'Retail') == 'Retail' ? 'selected' : '' }}>Retail</option>
+                                    <option value="B2B" {{ old('customer_type') == 'B2B' ? 'selected' : '' }}>B2B</option>
+                                </select>
+                                @if($errors->has('customer_type'))
+                                    <span class="text-danger">{{ $errors->first('customer_type') }}</span>
+                                @endif
+                            </div>
+
+                            <div class="col-md-6 mb-4">
+                                <label class="form-label">Company Name (Optional)</label>
+                                <input type="text" name="company_name" id="company_name" class="form-control" value="{{ old('company_name') }}" placeholder="Enter company name for B2B customers">
+                                @if($errors->has('company_name'))
+                                    <span class="text-danger">{{ $errors->first('company_name') }}</span>
+                                @endif
+                            </div>
+
+                            <div class="col-md-12 mb-4">
+                               <label class="form-label">Address</label>
                                 <textarea name="strAddress" id="strAddress" class="form-control" rows="2" placeholder="Enter address">{{ old('strAddress') }}</textarea>
                                 @if($errors->has('strAddress'))
                                     <span class="text-danger">{{ $errors->first('strAddress') }}</span>

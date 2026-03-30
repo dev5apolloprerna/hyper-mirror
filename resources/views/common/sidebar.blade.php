@@ -32,12 +32,19 @@
                             <i class="nav-icon fas fa-user-cog"></i>
                             Users
                         </a>
-                    </li>                
+                    </li>    
+                    <li class="nav-item">
+                        <a href="{{ route('admin.reports.business') }}" class="nav-link {{ request()->is('admin/reports/business*') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-chart-line"></i>
+                            Business Report
+                        </a>
+                    </li>            
                 @else
                     <li class="nav-item">
                         <a href="{{ route('store.leads.index') }}" class="nav-link {{ request()->is('store-manager/leads*') ? 'active' : '' }}">
                             <i class="nav-icon fas fa-user-tag"></i>
-                            <p class="mb-0">{{ $roleSlug === 'storemanager' ? 'Lead Management' : ucfirst($roleSlug) . ' Queue' }}</p>
+                            <p class="mb-0">{{ $roleSlug === 'storemanager' ? 'Sales Management' : ucfirst($roleSlug) . ' Queue' }}</p>
+                            <!-- <p class="mb-0">{{ $roleSlug === 'storemanager' ? 'Lead Management' : ucfirst($roleSlug) . ' Queue' }}</p> -->
                         </a>
                     </li>
                  @endif

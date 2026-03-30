@@ -42,15 +42,15 @@
                                         <form method="POST" action="{{ route('login') }}">
                                             @csrf
                                             <div class="mb-3">
-                                                <label for="username" class="form-label">Email</label>
+                                                <label for="mobile_number" class="form-label">Mobile Number</label>
 
-                                                <input id="email" type="email"
-                                                    class="form-control  @error('email') is-invalid @enderror"
-                                                    name="email" value="{{ old('email') }}" required autocomplete="email"
-                                                    autofocus placeholder="Enter Email Address.">
+                                                <input id="mobile_number" type="text"
+                                                    class="form-control  @error('mobile_number') is-invalid @enderror"
+                                                    name="mobile_number" value="{{ old('mobile_number') }}" required autocomplete="tel"
+                                                    autofocus maxlength="10" placeholder="Enter mobile number.">
 
-                                                @error('email')
-                                                    <span class="invalid-feedback" role="alert">
+
+                                                @error('mobile_number')                                                    <span class="invalid-feedback" role="alert">
                                                         <strong>{{ $message }}</strong>
                                                     </span>
                                                 @enderror
