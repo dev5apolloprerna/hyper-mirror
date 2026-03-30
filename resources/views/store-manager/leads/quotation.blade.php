@@ -55,8 +55,8 @@
             @include('common.alert')
 
             @php
-                $existingItems = old('items', $lead->quotations->map(function ($q) {
-                    return array(
+                $existingItems = old('items', $activeQuotations->map(function ($q) {
+                         return array(
                         'iProductId' => $q->iProductId,
                         'unit_of_measurement' => $q->unit_of_measurement ?? '',
                         'shape_id' => $q->shape_id ?? '',
@@ -113,6 +113,22 @@
                     </div>
                 </div>
             </div>
+
+             @if($quotationVersions->isNotEmpty())
+                <div class="alert alert-info d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>Quotation Versions:</strong>
+                        @foreach($quotationVersions as $version)
+                            <span class="badge bg-light text-dark border ms-1">
+                                #{{ $version->quotation_batch_id }} · {{ $version->line_items }} items · ₹{{ number_format((float) $version->amount, 2) }}
+                            </span>
+                        @endforeach
+                    </div>
+                    <div class="small text-muted">
+                        Latest version is considered active.
+                    </div>
+                </div>
+            @endif
 
             <div class="card mb-3">
                 <div class="card-body">

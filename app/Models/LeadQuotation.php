@@ -14,6 +14,7 @@ class LeadQuotation extends Model
 
     protected $fillable = [
         'iLeadId',
+        'quotation_batch_id',
         'iProductCategoryId',
         'iProductId',
         'unit_of_measurement',
