@@ -155,7 +155,9 @@ Route::middleware('auth')->prefix('store-manager')->name('store.')->group(functi
 // Admin: CRM Users
 Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::get('users', [CrmUserController::class, 'index'])->name('users.index');
+    Route::get('users/create', [CrmUserController::class, 'create'])->name('users.create');
     Route::post('users/store', [CrmUserController::class, 'store'])->name('users.store');
+    Route::get('users/{user}/edit', [CrmUserController::class, 'edit'])->name('users.edit');
     Route::post('users/update/{user}', [CrmUserController::class, 'update'])->name('users.update');
     Route::post('users/password-update/{user}', [CrmUserController::class, 'updatePassword'])->name('users.password.update');
     Route::delete('users/delete/{user}', [CrmUserController::class, 'destroy'])->name('users.destroy');

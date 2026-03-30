@@ -15,7 +15,7 @@ class BusinessReportController extends Controller
         $fromDate = $request->input('from_date');
         $toDate = $request->input('to_date');
 
-        $leadQuery = Lead::query()->with(['customer', 'createdBy', 'showroom', 'quotations.category', 'quotations.product', 'histories.user']);
+        $leadQuery = Lead::query()->with(['customer', 'createdBy', 'showroom', 'quotations.category', 'quotations.product', 'histories.user', 'payments']);
 
         if ($fromDate) {
             $leadQuery->whereDate('CreatedDate', '>=', $fromDate);
@@ -27,11 +27,32 @@ class BusinessReportController extends Controller
         $leads = $leadQuery->get();
 
         $totalQuotationValue = (float) $leads->sum('iLeadAmount');
+
+
+        $approvedStatuses = [
+            LeadWorkflow::STATUS_QUOTATION_APPROVED,
+            LeadWorkflow::STATUS_ADVANCE_RECEIVED,
+            LeadWorkflow::STATUS_PRODUCTION_ACCEPTED,
+            LeadWorkflow::STATUS_READY_TO_DISPATCHED,
+            LeadWorkflow::STATUS_DISPATCHED,
+            LeadWorkflow::STATUS_DISPATCHED_DONE,
+            LeadWorkflow::STATUS_FITTING_PENDING,
+            LeadWorkflow::STATUS_FITTING_DONE,
+            LeadWorkflow::STATUS_DEAL_DONE,
+        ];
+
         $approvedBusinessValue = (float) $leads
-            ->where('iCurrentLeadStatus', LeadWorkflow::STATUS_QUOTATION_APPROVED)
+            ->whereIn('iCurrentLeadStatus', $approvedStatuses)
             ->sum('iLeadAmount');
+
+        $businessDoneStatuses = [
+            LeadWorkflow::STATUS_DISPATCHED_DONE,
+            LeadWorkflow::STATUS_FITTING_DONE,
+            LeadWorkflow::STATUS_DEAL_DONE,
+        ];
+
         $doneBusinessValue = (float) $leads
-            ->where('iCurrentLeadStatus', LeadWorkflow::STATUS_QUOTATION_APPROVED)
+            ->whereIn('iCurrentLeadStatus', $businessDoneStatuses)
             ->sum('iLeadAmount');
 
         $paymentQuery = LeadPayment::query()->whereIn('iLeadId', $leads->pluck('iLeadId')->all());
@@ -50,20 +71,48 @@ class BusinessReportController extends Controller
             ->get();
 
         $salesExecutiveSummary = $leads
-            ->groupBy('iCreatedBy')
+            ->groupBy(function ($lead) {
+                return $lead->iCustomerId . '|' . $lead->iCreatedBy;
+            })
             ->map(function ($group) {
                 $first = $group->first();
-                $total = $group->count();
-                $done = $group->where('iCurrentLeadStatus', LeadWorkflow::STATUS_DEAL_DONE)->count();
-                $pending = $total - $done;
+
+                $approvedStatuses = [
+                    LeadWorkflow::STATUS_QUOTATION_APPROVED,
+                    LeadWorkflow::STATUS_ADVANCE_RECEIVED,
+                    LeadWorkflow::STATUS_PRODUCTION_ACCEPTED,
+                    LeadWorkflow::STATUS_READY_TO_DISPATCHED,
+                    LeadWorkflow::STATUS_DISPATCHED,
+                    LeadWorkflow::STATUS_DISPATCHED_DONE,
+                    LeadWorkflow::STATUS_FITTING_PENDING,
+                    LeadWorkflow::STATUS_FITTING_DONE,
+                    LeadWorkflow::STATUS_DEAL_DONE,
+                ];
+                $businessDoneStatuses = [
+                    LeadWorkflow::STATUS_DISPATCHED_DONE,
+                    LeadWorkflow::STATUS_FITTING_DONE,
+                    LeadWorkflow::STATUS_DEAL_DONE,
+                ];
+
+                $quotationGivenAmount = (float) $group->sum('iLeadAmount');
+                $quotationDoneAmount = (float) $group->whereIn('iCurrentLeadStatus', $businessDoneStatuses)->sum('iLeadAmount');
+
+                $receivedAmount = (float) $group->sum(function ($lead) {
+                    return $lead->payments->sum('iPaidAmount');
+                });
+                $approvedAmount = (float) $group->whereIn('iCurrentLeadStatus', $approvedStatuses)->sum('iLeadAmount');
+                $pendingAmount = max(0, $approvedAmount - $receivedAmount);
 
                 return [
-                    'customer_names' => $group->pluck('customer.strCustomer')->filter()->unique()->values(),
+                    'customer_name' => optional($first->customer)->strCustomer ?? 'N/A',
                     'sales_executive_name' => optional($first->createdBy)->name ?? 'N/A',
-                    'total_quotations' => $total,
-                    'done_count' => $done,
-                    'pending_count' => $pending,
                     'history' => $group,
+                    'total_quotation_given' => $quotationGivenAmount,
+                    'total_quotation_done' => $quotationDoneAmount,
+                    'total_payment_pending' => $pendingAmount,
+                    'total_payment_received' => $receivedAmount,
+                    'approved_total' => $approvedAmount,
+                    'lead_count' => $group->count(),
                 ];
             })
             ->values();

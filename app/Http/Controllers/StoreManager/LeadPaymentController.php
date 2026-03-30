@@ -10,6 +10,17 @@ use Illuminate\Support\Facades\DB;
 
 class LeadPaymentController extends Controller
 {
+    private function roleSlug(): ?string
+    {
+        return optional(auth()->user()->crmRole)->slug;
+    }
+
+    private function assertAccountantOnly(): void
+    {
+        abort_unless($this->roleSlug() === 'account', 403, 'Only accountant can manage payment entries.');
+    }
+
+
     public function index(Request $request, Lead $lead)
     {
         $query = LeadPayment::with('user')
@@ -30,12 +41,17 @@ class LeadPaymentController extends Controller
         }
 
         $payments = $query->paginate(15)->withQueryString();
+        $canManagePayments = $this->roleSlug() === 'account';
 
-        return view('store-manager.lead-payments.index', compact('lead', 'payments'));
+        return view('store-manager.lead-payments.index', compact('lead', 'payments', 'canManagePayments'));
+
+       // return view('store-manager.lead-payments.index', compact('lead', 'payments'));
     }
 
     public function store(Request $request, Lead $lead)
     {
+        $this->assertAccountantOnly();
+
         $request->validate([
             'iPaidAmount' => 'required|numeric|min:0.01',
             'PaymentDate' => 'required|date',
@@ -65,6 +81,8 @@ class LeadPaymentController extends Controller
 
     public function update(Request $request, Lead $lead, LeadPayment $payment)
     {
+        $this->assertAccountantOnly();
+
         if ($payment->iLeadId != $lead->iLeadId) {
             abort(404);
         }
@@ -96,6 +114,8 @@ class LeadPaymentController extends Controller
 
     public function destroy(Lead $lead, LeadPayment $payment)
     {
+        $this->assertAccountantOnly();
+
         if ($payment->iLeadId != $lead->iLeadId) {
             abort(404);
         }
@@ -108,6 +128,8 @@ class LeadPaymentController extends Controller
 
     public function bulkDelete(Request $request, Lead $lead)
     {
+        $this->assertAccountantOnly();
+
         $request->validate([
             'ids' => 'required|array',
             'ids.*' => 'required|integer|exists:lead_payments,iLeadPaymentId',

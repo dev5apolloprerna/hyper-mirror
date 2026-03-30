@@ -33,7 +33,11 @@ class LeadController extends Controller
             if (!empty($queue)) {
                 $query->whereIn('iCurrentLeadStatus', $queue);
             }
+            if ($roleSlug === 'fitting') {
+                $query->where('isFittingRequired', 1);
+            }
         }
+
 
         if ($request->filled('status')) {
             $query->where('iCurrentLeadStatus', $request->status);
@@ -192,9 +196,32 @@ class LeadController extends Controller
         $shapes     = ProductShape::where('iStatus', 1)->where('isDelete', 0)->orderBy('shape_title', 'asc')->get();
         $features   = ProductFeature::where('iStatus', 1)->where('isDelete', 0)->orderBy('feature_name', 'asc')->get();
 
-        $lead->load('quotations');
+        /*$lead->load('quotations');
 
-        return view('store-manager.leads.quotation', compact('lead', 'categories', 'products', 'shapes', 'features'));
+        return view('store-manager.leads.quotation', compact('lead', 'categories', 'products', 'shapes', 'features'));*/
+
+                $activeQuotation = $lead->quotation;
+        $activeBatchId = $activeQuotation?->quotation_batch_id;
+
+        $activeQuotations = $activeBatchId
+            ? $lead->quotations()->where('quotation_batch_id', $activeBatchId)->get()
+            : collect();
+
+        $quotationVersions = $lead->quotations()
+            ->selectRaw('quotation_batch_id, COUNT(*) as line_items, SUM(iAmount) as amount, MAX(created_at) as created_at')
+            ->groupBy('quotation_batch_id')
+            ->orderByDesc('quotation_batch_id')
+            ->get();
+
+        return view('store-manager.leads.quotation', compact(
+            'lead',
+            'categories',
+            'products',
+            'shapes',
+            'features',
+            'activeQuotations',
+            'quotationVersions'
+        ));
     }
 
     // ── Save quotation ───────────────────────────────────────────────────────
@@ -230,7 +257,8 @@ class LeadController extends Controller
             $subtotal       = 0;
             $firstQuotation = null;
 
-            LeadQuotation::where('iLeadId', $lead->iLeadId)->delete();
+            //LeadQuotation::where('iLeadId', $lead->iLeadId)->delete();
+            $nextBatchId = ((int) LeadQuotation::where('iLeadId', $lead->iLeadId)->max('quotation_batch_id')) + 1;
 
             foreach ($data['items'] as $item) {
                 $qty    = (int) $item['quantity'];
@@ -239,6 +267,7 @@ class LeadController extends Controller
 
                 $quotation = LeadQuotation::create([
                     'iLeadId'             => $lead->iLeadId,
+                    'quotation_batch_id'  => $nextBatchId,
                     'iProductCategoryId'  => $data['iProductCategoryId'],
                     'iProductId'          => $item['iProductId'],
                     'unit_of_measurement' => $item['unit_of_measurement'],
@@ -276,7 +305,7 @@ class LeadController extends Controller
 
             LeadHistory::create([
                 'iLeadId'         => $lead->iLeadId,
-                'strComments'     => 'Quotation generated.',
+                'strComments'     => 'Quotation generated. Version #' . $nextBatchId,
                 'NetFolloupwdate' => $data['followup_date'],
                 'iStatus'         => LeadWorkflow::STATUS_QUOTATION_SENT,
                 'iEnterBy'        => auth()->id(),
@@ -302,11 +331,19 @@ class LeadController extends Controller
             403
         );
 
-        $lead->load(['customer', 'quotations.category', 'quotations.product', 'quotations.shape', 'quotations.feature']);
+        $lead->load(['customer', 'quotation']);
 
         if (!$lead->quotation) {
             return redirect()->route('store.leads.index')->with('error', 'Quotation not found for this lead.');
         }
+
+
+        $activeBatchId = $lead->quotation->quotation_batch_id;
+        $activeItems = $lead->quotations()
+            ->where('quotation_batch_id', $activeBatchId)
+            ->with(['category', 'product', 'shape', 'feature'])
+            ->get();
+        $lead->setRelation('quotations', $activeItems);
 
         $canViewFinancial = (bool) auth()->user()->can_view_financial;
 
@@ -322,11 +359,19 @@ class LeadController extends Controller
             403
         );
 
-        $lead->load(['customer', 'quotations.category', 'quotations.product', 'quotations.shape', 'quotations.feature']);
+        $lead->load(['customer', 'quotation']);
 
+        
         if (!$lead->quotation) {
             return redirect()->back()->with('error', 'Quotation not found for this lead.');
         }
+
+        $activeBatchId = $lead->quotation->quotation_batch_id;
+        $activeItems = $lead->quotations()
+            ->where('quotation_batch_id', $activeBatchId)
+            ->with(['category', 'product', 'shape', 'feature'])
+            ->get();
+        $lead->setRelation('quotations', $activeItems);
 
         $canViewFinancial = (bool) auth()->user()->can_view_financial;
 
