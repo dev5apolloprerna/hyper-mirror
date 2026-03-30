@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ShowroomController;
 use App\Http\Controllers\Admin\UserShowroomController;
 use App\Http\Controllers\Admin\CrmUserController;
+use App\Http\Controllers\Admin\BusinessReportController;
 
 use App\Http\Controllers\StoreManager\LeadController;
 use App\Http\Controllers\StoreManager\LeadDesignController;
@@ -158,4 +159,5 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::post('users/update/{user}', [CrmUserController::class, 'update'])->name('users.update');
     Route::post('users/password-update/{user}', [CrmUserController::class, 'updatePassword'])->name('users.password.update');
     Route::delete('users/delete/{user}', [CrmUserController::class, 'destroy'])->name('users.destroy');
+   Route::get('reports/business', [BusinessReportController::class, 'index'])->name('reports.business');
 });

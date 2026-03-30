@@ -38,7 +38,7 @@
                             <i class="nav-icon fas fa-chart-line"></i>
                             Business Report
                         </a>
-                    </li>            
+                    </li>          
                 @else
                     <li class="nav-item">
                         <a href="{{ route('store.leads.index') }}" class="nav-link {{ request()->is('store-manager/leads*') ? 'active' : '' }}">

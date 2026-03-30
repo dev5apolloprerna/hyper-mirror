@@ -55,10 +55,20 @@ class LeadController extends Controller
                   ->orWhere('iCurrentLeadStatus', 'like', "%{$search}%")
                   ->orWhereHas('customer', function ($sub) use ($search) {
                       $sub->where('strCustomer', 'like', "%{$search}%")
-                          ->orWhere('strMobile', 'like', "%{$search}%");
-                  });
+                          ->orWhere('strMobile', 'like', "%{$search}%")
+                          ->orWhere('company_name', 'like', "%{$search}%")
+                          ->orWhere('customer_type', 'like', "%{$search}%");
+                });
             });
         }
+
+         if ($request->filled('from_date')) {
+            $query->whereDate('CreatedDate', '>=', $request->from_date);
+        }
+        if ($request->filled('to_date')) {
+            $query->whereDate('CreatedDate', '<=', $request->to_date);
+        }
+
 
         $leads         = $query->paginate(15)->withQueryString();
         $statusOptions = LeadWorkflow::dashboardStatuses($roleSlug);
@@ -92,6 +102,8 @@ class LeadController extends Controller
             'strCustomer'           => 'required|string|max:100',
             'strAddress'            => 'nullable|string',
             'SiteAddress'           => 'nullable|string',
+            'customer_type'         => 'required|in:B2B,Retail',
+            'company_name'          => 'nullable|string|max:150',
             'IsMeasureMentRequired' => 'required|in:0,1',
             'MeasurementVisitDate'  => 'nullable|date|required_if:IsMeasureMentRequired,1',
             'design_followup_date'  => 'nullable|date|required_if:IsMeasureMentRequired,0',
@@ -102,13 +114,26 @@ class LeadController extends Controller
         try {
             $customer = Customer::firstOrCreate(
                 ['strMobile' => $data['strMobile']],
-                ['strCustomer' => $data['strCustomer'], 'strAddress' => $data['strAddress'] ?? null]
-            );
+                [
+                    'strCustomer' => $data['strCustomer'],
+                    'strAddress' => $data['strAddress'] ?? null,
+                    'customer_type' => $data['customer_type'],
+                    'company_name' => $data['company_name'] ?? null,
+                ]            );
 
             if (!$customer->wasRecentlyCreated) {
                 $customer->update([
                     'strCustomer' => $data['strCustomer'],
                     'strAddress'  => $data['strAddress'] ?? null,
+                                        'customer_type' => $data['customer_type'],
+                    'company_name' => $data['company_name'] ?? null,
+                ]);
+            }
+
+            if ($customer->wasRecentlyCreated) {
+                $customer->update([
+                    'customer_type' => $data['customer_type'],
+                    'company_name' => $data['company_name'] ?? null,
                 ]);
             }
 

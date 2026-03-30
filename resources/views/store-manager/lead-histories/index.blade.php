@@ -259,7 +259,19 @@
                                         @enderror
                                         <small class="text-muted" id="followupHint"></small>
                                     </div>
-
+ <div class="mb-3" id="expectedDeliveryWrapper" style="display:none;">
+                                        <label class="form-label fw-semibold">
+                                            Expected Delivery Date <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="date"
+                                               name="expected_delivery_date"
+                                               id="expected_delivery_date"
+                                               class="form-control @error('expected_delivery_date') is-invalid @enderror"
+                                               value="{{ old('expected_delivery_date', $lead->expected_delivery_date) }}">
+                                        @error('expected_delivery_date')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
                                     <div class="mb-3">
                                         <label class="form-label fw-semibold">
                                             Comments / Remarks <span class="text-danger">*</span>
@@ -405,6 +417,8 @@ const followupReqStar     = document.getElementById('followupRequired');
 const followupHint        = document.getElementById('followupHint');
 const rejectionWrapper    = document.getElementById('rejectionReasonWrapper');
 const rejectionInput      = document.getElementById('rejection_reason');
+const expectedDeliveryWrapper = document.getElementById('expectedDeliveryWrapper');
+const expectedDeliveryInput = document.getElementById('expected_delivery_date');
 
 function updateFormFields() {
     if (!statusSelect) return;
@@ -412,6 +426,7 @@ function updateFormFields() {
     const selected   = statusSelect.value;
     const isReject   = selected === 'Lead Rejected';
     const isDealDone = selected === 'Deal Done';
+    const isQuotationApproved = selected === 'Quotation Approved';
     const noFollowup = NO_FOLLOWUP_STATUSES.includes(selected) || !selected;
     const isRequired = followupRequiredStatuses.includes(selected);
 
@@ -434,6 +449,13 @@ function updateFormFields() {
     }
     if (followupHint) {
         followupHint.textContent = noFollowup ? '' : (statusHints[selected] || '');
+    }
+     if (expectedDeliveryWrapper) {
+        expectedDeliveryWrapper.style.display = isQuotationApproved ? 'block' : 'none';
+    }
+    if (expectedDeliveryInput) {
+        expectedDeliveryInput.required = isQuotationApproved;
+        if (!isQuotationApproved) expectedDeliveryInput.value = '';
     }
 }
 
