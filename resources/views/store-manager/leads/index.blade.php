@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
-@section('title', $roleSlug === 'storemanager' ? 'Lead Management' : ucfirst($roleSlug ?? '') . ' Queue')
+<!-- @section('title', $roleSlug === 'storemanager' ? 'Lead Management' : ucfirst($roleSlug ?? '') . ' Queue') -->
+@section('title', $roleSlug === 'storemanager' ? 'Sales Management' : ucfirst($roleSlug ?? '') . ' Queue')
 
 @section('content')
 <div class="main-content">
@@ -14,15 +15,14 @@
                         <div>
                             @php
                                 $queueLabels = [
-                                    'storemanager' => 'Lead Management',
-                                    'measurement'  => 'Measurement Queue',
+                                    'storemanager' => 'Sales Management',                                    'measurement'  => 'Measurement Queue',
                                     'production'   => 'Production Queue',
                                     'dispatch'     => 'Dispatch Queue',
                                     'fitting'      => 'Fitting Queue',
                                     'account'      => 'Accounts Queue',
                                 ];
                                 $queueDescriptions = [
-                                    'storemanager' => 'Create and manage all leads through the full workflow.',
+                                    'storemanager' => 'Create and manage all sales leads through the full workflow.',
                                     'measurement'  => 'Leads awaiting measurement visit. Update status once done.',
                                     'production'   => 'Leads pending production acceptance and dispatch readiness.',
                                     'dispatch'     => 'Leads ready to be dispatched to customers.',
@@ -77,6 +77,15 @@
                                 </option>
                             </select>
                         </div>
+                         <div class="col-md-2">
+                            <label class="form-label mb-1 small fw-semibold">From Date</label>
+                            <input type="date" name="from_date" class="form-control form-control-sm" value="{{ request('from_date') }}">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label mb-1 small fw-semibold">To Date</label>
+                            <input type="date" name="to_date" class="form-control form-control-sm" value="{{ request('to_date') }}">
+                        </div>
+
                         <div class="col-md-2 d-flex gap-1">
                             <button type="submit" class="btn btn-success btn-sm flex-fill">
                                 <i class="fas fa-search"></i> Search
@@ -185,6 +194,12 @@
                                                        class="btn btn-sm btn-outline-secondary"
                                                        title="View Quotation">
                                                         <i class="fas fa-file-invoice"></i>
+                                                    </a>
+                                                    <a href="{{ route('store.leads.quotation-pdf', $lead->iLeadId) }}"
+                                                       class="btn btn-sm btn-outline-danger"
+                                                       title="Quotation PDF"
+                                                       target="_blank">
+                                                        <i class="fas fa-file-pdf"></i>
                                                     </a>
                                                 @endif
 

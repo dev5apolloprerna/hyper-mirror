@@ -80,6 +80,7 @@ class LeadHistoryController extends Controller
 
         $isRejection = $request->iStatus === LeadWorkflow::STATUS_LEAD_REJECTED;
         $isDealDone  = $request->iStatus === LeadWorkflow::STATUS_DEAL_DONE;
+        $isQuotationApproved = $request->iStatus === LeadWorkflow::STATUS_QUOTATION_APPROVED;
 
         $rules = [
             'iStatus'        => 'required|string|in:' . implode(',', LeadWorkflow::allStatuses()),
@@ -101,6 +102,10 @@ class LeadHistoryController extends Controller
         // Rejection reason required
         if ($isRejection) {
             $rules['rejection_reason'] = 'required|string|max:500';
+        }
+
+         if ($isQuotationApproved) {
+            $rules['expected_delivery_date'] = 'required|date';
         }
 
         $request->validate($rules);
@@ -140,7 +145,10 @@ class LeadHistoryController extends Controller
 
             LeadHistory::create([
                 'iLeadId'         => $lead->iLeadId,
-                'strComments'     => $comments,
+             //   'strComments'     => $comments,
+                'strComments'     => $isQuotationApproved
+                    ? $comments . "\nExpected Delivery Date: " . $request->expected_delivery_date
+                    : $comments,
                 'NetFolloupwdate' => $isRejection ? null : $request->NetFolloupwdate,
                 'iStatus'         => $request->iStatus,
                 'iEnterBy'        => auth()->id(),
@@ -150,6 +158,7 @@ class LeadHistoryController extends Controller
             $lead->update([
                 'iCurrentLeadStatus' => $request->iStatus,
                 'NetFollowupdate'    => $isRejection ? null : $request->NetFolloupwdate,
+                'expected_delivery_date' => $isQuotationApproved ? $request->expected_delivery_date : $lead->expected_delivery_date,
             ]);
 
             DB::commit();

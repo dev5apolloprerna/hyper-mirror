@@ -22,6 +22,7 @@ class Lead extends Model
         'CreatedDate',
         'iCurrentLeadStatus',
         'NetFollowupdate',
+        'expected_delivery_date',
         'isFittingLeadOnly',
         'isFittingRequired',
         'isFittingChargeIncluded',

@@ -199,11 +199,30 @@
             }
         }
 
-        toggleLeadFields();
+      //  toggleLeadFields();
 
-        $('#IsOnlyFittingQuotation, #isFittingRequired, #IsMeasureMentRequired').on('change', function () {
+  toggleLeadFields();
+  toggleCompanyField();
+
+
+        /*$('#IsOnlyFittingQuotation, #isFittingRequired, #IsMeasureMentRequired').on('change', function () {
             toggleLeadFields();
-        });
+        });*/
+
+                        $('#IsOnlyFittingQuotation, #isFittingRequired, #IsMeasureMentRequired').on('change', function () {
+                            toggleLeadFields();
+                        });
+
+                        function toggleCompanyField() {
+                            const isB2B = $('#customer_type').val() === 'B2B';
+                            $('#company_name').prop('required', false);
+                            if (!isB2B) {
+                                $('#company_name').val('');
+                            }
+                        }
+
+                        $('#customer_type').on('change', toggleCompanyField);
+
 
         $('#checkCustomerBtn').on('click', function () {
             let mobile = $('#strMobile').val();
@@ -224,6 +243,10 @@
                     if (response) {
                         $('#strCustomer').val(response.strCustomer);
                         $('#strAddress').val(response.strAddress);
+                        $('#customer_type').val(response.customer_type || 'Retail');
+                        $('#company_name').val(response.company_name || '');
+                        toggleCompanyField();
+
                     } else {
                         alert('Customer not found.');
                         $('#strCustomer').val('');
