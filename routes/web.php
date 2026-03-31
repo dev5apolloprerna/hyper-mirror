@@ -19,6 +19,7 @@ use App\Http\Controllers\StoreManager\LeadController;
 use App\Http\Controllers\StoreManager\LeadDesignController;
 use App\Http\Controllers\StoreManager\LeadHistoryController;
 use App\Http\Controllers\StoreManager\LeadPaymentController;
+use App\Http\Controllers\StoreManager\InvoiceController;
 
 
 Route::fallback(function () {
@@ -141,6 +142,14 @@ Route::middleware('auth')->prefix('store-manager')->name('store.')->group(functi
     Route::delete('leads/{lead}/histories/{history}/delete', [LeadHistoryController::class, 'destroy'])->name('leads.histories.delete');
     Route::post('leads/{lead}/histories/bulk-delete', [LeadHistoryController::class, 'bulkDelete'])->name('leads.histories.bulk-delete');
 
+
+    Route::get('invoice',                    [InvoiceController::class, 'index'])->name('invoice.index');
+    Route::get('invoice/create',             [InvoiceController::class, 'create'])->name('invoice.create');
+    Route::post('invoice/store',             [InvoiceController::class, 'store'])->name('invoice.store');
+    Route::get('invoice/{invoice}',          [InvoiceController::class, 'show'])->name('invoice.show');
+    Route::delete('invoice/{invoice}/delete',[InvoiceController::class, 'destroy'])->name('invoice.destroy');
+    Route::get('invoice/products-by-category',[InvoiceController::class,'productsByCategory'])->name('invoice.products-by-category');
+
 });
 
 // Store Manager: Payments (separate group for clarity)
@@ -163,3 +172,6 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::delete('users/delete/{user}', [CrmUserController::class, 'destroy'])->name('users.destroy');
    Route::get('reports/business', [BusinessReportController::class, 'index'])->name('reports.business');
 });
+
+
+
