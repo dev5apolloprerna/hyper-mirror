@@ -47,6 +47,15 @@
                             <!-- <p class="mb-0">{{ $roleSlug === 'storemanager' ? 'Lead Management' : ucfirst($roleSlug) . ' Queue' }}</p> -->
                         </a>
                     </li>
+
+                    <li class="nav-item">
+                        <a href="{{ route('store.invoice.index') }}"
+                           class="nav-link {{ request()->is('store-manager/invoice*') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-file-invoice-dollar"></i>
+                            <p class="mb-0">Invoices</p>
+                        </a>
+                    </li>
+
                  @endif
              </ul>
          </div>
