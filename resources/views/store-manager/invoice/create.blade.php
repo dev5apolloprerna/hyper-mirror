@@ -85,8 +85,8 @@
                         <select name="iShowroomId" class="form-select @error('iShowroomId') is-invalid @enderror" required>
                             <option value="">— Select Showroom —</option>
                             @foreach($showrooms as $s)
-                                <option value="{{ $s->iShowroomId }}" {{ old('iShowroomId') == $s->iShowroomId ? 'selected' : '' }}>
-                                    {{ $s->strShowRoomName }}
+                                <option value="{{ $s->iShowroomId }}" {{ (string) $defaultShowroomId === (string) $s->iShowroomId ? 'selected' : '' }}>
+                                  {{ $s->strShowRoomName }}
                                 </option>
                             @endforeach
                         </select>
@@ -250,9 +250,18 @@
 @endsection
 
 @section('scripts')
-{{-- Pass categories & products as JSON for JS use --}}
+@php
+    $productsForJs = $products->map(function ($p) {
+        return [
+            'id' => $p->iProductId,
+            'name' => $p->strProductName,
+            'mrp' => $p->MRP,
+            'cat' => $p->iCategoryId,
+        ];
+    })->values();
+@endphp
 <script>
-const ALL_PRODUCTS = @json($products->map(fn($p) => ['id' => $p->iProductId, 'name' => $p->strProductName, 'mrp' => $p->MRP, 'cat' => $p->iCategoryId]));
+const ALL_PRODUCTS = @json($productsForJs);
 let rowIndex = {{ count($oldItems) }};   // start from existing count
 
 // ── Helpers ──────────────────────────────────────────────────────────────────

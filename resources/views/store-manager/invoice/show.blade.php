@@ -33,9 +33,9 @@
         <a href="{{ route('store.invoice.index') }}" class="btn btn-light border">
             <i class="fas fa-arrow-left me-1"></i> Back
         </a>
-        <button onclick="window.print()" class="btn btn-primary">
-            <i class="fas fa-print me-1"></i> Print
-        </button>
+        <a href="{{ route('store.invoice.pdf', $invoice->iInvoiceId) }}" class="btn btn-primary" target="_blank">
+            <i class="fas fa-file-pdf me-1"></i> View PDF
+        </a>
         <form action="{{ route('store.invoice.destroy', $invoice->iInvoiceId) }}"
               method="POST" onsubmit="return confirm('Delete this invoice?')">
             @csrf @method('DELETE')
