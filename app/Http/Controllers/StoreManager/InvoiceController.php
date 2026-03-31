@@ -10,6 +10,8 @@ use App\Models\ProductCategory;
 use App\Models\Showroom;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Validation\Rule;
 
 class InvoiceController extends Controller
 {
@@ -76,11 +78,25 @@ class InvoiceController extends Controller
     {
         $this->authorise();
 
-        $showrooms  = Showroom::orderBy('strShowRoomName')->get();
+        $assignedShowroomIds = auth()->user()
+            ->showrooms()
+            ->pluck('showrooms.iShowroomId');
+
+        $showrooms = Showroom::query()
+            ->when($assignedShowroomIds->isNotEmpty(), function ($query) use ($assignedShowroomIds) {
+                $query->whereIn('iShowroomId', $assignedShowroomIds);
+            })
+            ->orderBy('strShowRoomName')
+            ->get();
+
+        $defaultShowroomId = old('iShowroomId')
+            ?: ($showrooms->count() === 1 ? $showrooms->first()->iShowroomId : null);
+
+
         $categories = ProductCategory::orderBy('strCategoryName')->get();
         $products   = Product::orderBy('strProductName')->get();
 
-        return view('store-manager.invoice.create', compact('showrooms', 'categories', 'products'));
+        return view('store-manager.invoice.create', compact('showrooms', 'categories', 'products', 'defaultShowroomId'));
     }
 
     // ── Store ────────────────────────────────────────────────────────────────
@@ -88,15 +104,22 @@ class InvoiceController extends Controller
     {
         $this->authorise();
 
+        $assignedShowroomIds = auth()->user()
+            ->showrooms()
+            ->pluck('showrooms.iShowroomId')
+            ->all();
+
         $request->validate([
-            'iShowroomId'              => 'required|exists:showrooms,iShowroomId',
-            'InvoiceDate'              => 'required|date',
-            'strNotes'                 => 'nullable|string|max:500',
-            'items'                    => 'required|array|min:1',
-            'items.*.iCategoryId'      => 'required|exists:product_categories,iCategoryId',
-            'items.*.iProductId'       => 'required|exists:products,iProductId',
-            'items.*.quantity'         => 'required|integer|min:1',
-            'items.*.unit_price'       => 'required|numeric|min:0',
+        'iShowroomId'              => ['required', 'exists:showrooms,iShowroomId', Rule::in($assignedShowroomIds)],
+        'InvoiceDate'              => 'required|date',
+        'strNotes'                 => 'nullable|string|max:500',
+        'items'                    => 'required|array|min:1',
+        'items.*.iCategoryId'      => 'required|exists:product_categories,iCategoryId',
+        'items.*.iProductId'       => 'required|exists:products,iProductId',
+        'items.*.quantity'         => 'required|integer|min:1',
+        'items.*.unit_price'       => 'required|numeric|min:0',
+        ], [
+            'iShowroomId.in' => 'Please select your assigned showroom.',
         ]);
 
         DB::beginTransaction();
@@ -140,6 +163,17 @@ class InvoiceController extends Controller
             return back()->withInput()->with('error', $th->getMessage());
         }
     }
+     public function pdf(Invoice $invoice)
+    {
+        $this->authorise();
+        $invoice->load(['showroom', 'createdBy', 'items.category', 'items.product']);
+
+        $pdf = Pdf::loadView('store-manager.invoice.pdf', compact('invoice'));
+        $pdf->setPaper('a4', 'portrait');
+
+        return $pdf->stream($invoice->strInvoiceNo . '.pdf');
+    }
+
 
     // ── View single invoice ──────────────────────────────────────────────────
     public function show(Invoice $invoice)

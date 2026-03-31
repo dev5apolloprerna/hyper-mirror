@@ -146,6 +146,7 @@ Route::middleware('auth')->prefix('store-manager')->name('store.')->group(functi
     Route::get('invoice',                    [InvoiceController::class, 'index'])->name('invoice.index');
     Route::get('invoice/create',             [InvoiceController::class, 'create'])->name('invoice.create');
     Route::post('invoice/store',             [InvoiceController::class, 'store'])->name('invoice.store');
+    Route::get('invoice/{invoice}/pdf',      [InvoiceController::class, 'pdf'])->name('invoice.pdf');
     Route::get('invoice/{invoice}',          [InvoiceController::class, 'show'])->name('invoice.show');
     Route::delete('invoice/{invoice}/delete',[InvoiceController::class, 'destroy'])->name('invoice.destroy');
     Route::get('invoice/products-by-category',[InvoiceController::class,'productsByCategory'])->name('invoice.products-by-category');

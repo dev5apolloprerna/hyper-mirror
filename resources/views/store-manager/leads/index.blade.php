@@ -158,7 +158,7 @@
                                         <td>
                                             @if($lead->NetFollowupdate)
                                                 <span class="{{ $isOverdue ? 'text-danger fw-bold' : ($isToday ? 'text-warning fw-bold' : '') }}">
-                                                    {{ $lead->NetFollowupdate }}
+                                                    {{ date('d-m-Y',strtotime($lead->NetFollowupdate)) }}
                                                 </span>
                                                 @if($isOverdue)
                                                     <span class="badge bg-danger ms-1 small">Overdue</span>
