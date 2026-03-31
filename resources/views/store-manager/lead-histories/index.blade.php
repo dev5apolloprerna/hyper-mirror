@@ -30,6 +30,8 @@
                         </div>
 
                         <div class="page-title-right d-flex gap-2 flex-wrap">
+                            
+
                             <a href="{{ route('store.leads.index') }}" class="btn btn-secondary btn-sm">
                                 <i class="fas fa-arrow-left"></i> Back
                             </a>
@@ -43,7 +45,6 @@
                                     <a href="{{ route('store.leads.quotation-view', $lead->iLeadId) }}" class="btn btn-info btn-sm">
                                         <i class="fas fa-file-invoice"></i> View Quotation
                                     </a>
-                                    
                                 @endif
 
                                 <a href="{{ route('store.leads.designs.index', $lead->iLeadId) }}" class="btn btn-warning btn-sm">
@@ -61,6 +62,13 @@
                                     <i class="fas fa-money-bill-wave"></i> Payments
                                 </a>
                             @endif
+
+                            {{-- Delivery Challan for dispatch role --}}
+                            @if($roleSlug === 'dispatch' && $lead->quotation)
+                                <a href="{{ route('store.leads.delivery-challan', $lead->iLeadId) }}" class="btn btn-outline-primary btn-sm" target="_blank">
+                                    <i class="fas fa-truck"></i> Delivery Challan
+                                </a>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -69,13 +77,22 @@
             {{-- TOP SECTION --}}
             <div class="row g-3">
 
-                {{-- LEFT: Lead Summary --}}
-                <div class="col-xl-7 col-lg-7">
+                {{-- LEFT: Lead Summary (printable) --}}
+                <div class="col-xl-7 col-lg-7" id="leadSummarySection">
                     <div class="card border-0 shadow-sm h-100">
-                        <div class="card-header bg-white py-3 border-bottom">
+                       <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between">
                             <h6 class="mb-0 fw-bold">
                                 <i class="fas fa-info-circle me-2 text-primary"></i>Lead Summary
                             </h6>
+                        
+                            @if($roleSlug === 'measurement')
+                            <button type="button"
+                                    class="btn btn-outline-secondary btn-sm"
+                                    onclick="printLeadSummary()"
+                                    title="Print Lead Summary">
+                                <i class="fas fa-print me-1"></i> Print Summary
+                            </button>
+                            @endif
                         </div>
                         <div class="card-body">
                             <div class="row">
@@ -88,6 +105,14 @@
                                         <tr>
                                             <td class="text-muted">Mobile</td>
                                             <td>{{ $lead->customer->strMobile ?? '—' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted">Address</td>
+                                            <td>{{ $lead->customer->strAddress ?? '—' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted">Site Address</td>
+                                            <td>{{ $lead->SiteAddress ?? '—' }}</td>
                                         </tr>
                                         <tr>
                                             <td class="text-muted">Status</td>
@@ -148,15 +173,78 @@
                                             </td>
                                         </tr>
                                         @endif
-                                        @if($lead->SiteAddress)
                                         <tr>
-                                            <td class="text-muted">Site Address</td>
-                                            <td>{{ $lead->SiteAddress }}</td>
+                                            <td class="text-muted">Lead No</td>
+                                            <td><strong>{{ $lead->strLeadNo }}</strong></td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted">Created Date</td>
+                                            <td>{{ \Carbon\Carbon::parse($lead->CreatedDate)->format('d-m-Y') }}</td>
+                                        </tr>
+                                        @if($lead->expected_delivery_date)
+                                        <tr>
+                                            <td class="text-muted">Expected Delivery</td>
+                                            <td>{{ \Carbon\Carbon::parse($lead->expected_delivery_date)->format('d-m-Y') }}</td>
                                         </tr>
                                         @endif
                                     </table>
                                 </div>
                             </div>
+
+                            {{-- Quotation items in summary --}}
+                            @if($lead->quotations && $lead->quotations->count())
+                            <div class="mt-3 pt-3 border-top">
+                                <h6 class="fw-semibold mb-2">Quotation Items</h6>
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-bordered mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>#</th>
+                                                <th>Product</th>
+                                                <th>Shape</th>
+                                                <th>Unit</th>
+                                                <th>Qty</th>
+                                                <th>H × W</th>
+                                                @if(in_array($roleSlug, ['storemanager', 'account']))
+                                                <th>Rate</th>
+                                                <th>Amount</th>
+                                                @endif
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @php
+                                                $activeBatchId = optional($lead->quotation)->quotation_batch_id;
+                                                $activeQuotations = $activeBatchId
+                                                    ? $lead->quotations->where('quotation_batch_id', $activeBatchId)->values()
+                                                    : $lead->quotations;
+                                            @endphp
+                                            @foreach($activeQuotations as $i => $q)
+                                            <tr>
+                                                <td>{{ $i + 1 }}</td>
+                                                <td>{{ optional($q->product)->strProductName ?? '—' }}</td>
+                                                <td>{{ optional($q->shape)->shape_title ?? '—' }}</td>
+                                                <td>{{ $q->unit_of_measurement ?? '—' }}</td>
+                                                <td>{{ $q->quantity ?? 1 }}</td>
+                                                <td>{{ $q->decHeight }} × {{ $q->decWidth }}</td>
+                                                @if(in_array($roleSlug, ['storemanager', 'account']))
+                                                <td>₹{{ number_format((float)$q->decRatePerSqft, 2) }}</td>
+                                                <td>₹{{ number_format((float)$q->iAmount, 2) }}</td>
+                                                @endif
+                                            </tr>
+                                            @endforeach
+                                        </tbody>
+                                        @if(in_array($roleSlug, ['storemanager', 'account']))
+                                        <tfoot>
+                                            <tr>
+                                                <th colspan="7" class="text-end">Total</th>
+                                                <th>₹{{ number_format((float)$lead->iLeadAmount, 2) }}</th>
+                                            </tr>
+                                        </tfoot>
+                                        @endif
+                                    </table>
+                                </div>
+                            </div>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -229,7 +317,7 @@
                                         @enderror
                                     </div>
 
-                                    {{-- Rejection Reason (shown only for Lead Rejected) --}}
+                                    {{-- Rejection Reason --}}
                                     <div class="mb-3" id="rejectionReasonWrapper" style="display:none;">
                                         <label class="form-label fw-semibold text-danger">
                                             Rejection Reason <span class="text-danger">*</span>
@@ -243,7 +331,7 @@
                                         @enderror
                                     </div>
 
-                                    {{-- Follow-up Date (hidden for Rejected, Measurement Done, Deal Done) --}}
+                                    {{-- Follow-up Date --}}
                                     <div class="mb-3" id="followupDateWrapper" style="display:none;">
                                         <label class="form-label fw-semibold" id="followupDateLabel">
                                             Next Follow Up Date
@@ -259,7 +347,8 @@
                                         @enderror
                                         <small class="text-muted" id="followupHint"></small>
                                     </div>
- <div class="mb-3" id="expectedDeliveryWrapper" style="display:none;">
+
+                                    <div class="mb-3" id="expectedDeliveryWrapper" style="display:none;">
                                         <label class="form-label fw-semibold">
                                             Expected Delivery Date <span class="text-danger">*</span>
                                         </label>
@@ -272,6 +361,7 @@
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
                                     </div>
+
                                     <div class="mb-3">
                                         <label class="form-label fw-semibold">
                                             Comments / Remarks <span class="text-danger">*</span>
@@ -301,7 +391,7 @@
                 </div>
             </div>
 
-            {{-- BOTTOM: LEAD HISTORY (read-only — no delete) --}}
+            {{-- BOTTOM: LEAD HISTORY --}}
             <div class="row mt-3">
                 <div class="col-12">
                     <div class="card border-0 shadow-sm">
@@ -385,6 +475,131 @@
         </div>
     </div>
 </div>
+
+{{-- ═══════════════════════════════════════════════════════════
+     PRINT STYLES — only shown when printing lead summary
+══════════════════════════════════════════════════════════════ --}}
+<style id="printStyles">
+@media print {
+    body * { visibility: hidden; }
+    #printArea, #printArea * { visibility: visible; }
+    #printArea {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 100%;
+        padding: 20px;
+    }
+    .no-print { display: none !important; }
+    .badge { border: 1px solid #ccc !important; }
+}
+</style>
+
+{{-- Hidden printable area --}}
+<div id="printArea" style="display:none;">
+    <div style="font-family: Arial, sans-serif; font-size: 13px; color: #1e293b; padding: 20px;">
+        <div style="text-align:center; border-bottom: 2px solid #1e293b; padding-bottom: 12px; margin-bottom: 20px;">
+            <h2 style="margin:0; font-size:20px;">{{ config('app.name', 'Mirror CRM') }}</h2>
+            <p style="margin:4px 0 0; color:#64748b; font-size:12px;">Lead Summary — {{ $lead->strLeadNo }}</p>
+            <p style="margin:2px 0 0; color:#64748b; font-size:11px;">Printed on: {{ now()->format('d-m-Y H:i A') }}</p>
+        </div>
+
+        <table style="width:100%; border-collapse:collapse; margin-bottom:16px;">
+            <tr>
+                <td style="width:50%; vertical-align:top; padding-right:20px;">
+                    <table style="width:100%; border-collapse:collapse;">
+                        <tr><td style="color:#64748b; padding:4px 0; width:45%;">Lead No</td><td style="font-weight:600;">{{ $lead->strLeadNo }}</td></tr>
+                        <tr><td style="color:#64748b; padding:4px 0;">Customer</td><td style="font-weight:600;">{{ $lead->customer->strCustomer ?? '—' }}</td></tr>
+                        <tr><td style="color:#64748b; padding:4px 0;">Mobile</td><td>{{ $lead->customer->strMobile ?? '—' }}</td></tr>
+                        <tr><td style="color:#64748b; padding:4px 0;">Address</td><td>{{ $lead->customer->strAddress ?? '—' }}</td></tr>
+                        <tr><td style="color:#64748b; padding:4px 0;">Site Address</td><td>{{ $lead->SiteAddress ?? '—' }}</td></tr>
+                        <tr><td style="color:#64748b; padding:4px 0;">Current Status</td><td><strong>{{ $lead->iCurrentLeadStatus }}</strong></td></tr>
+                    </table>
+                </td>
+                <td style="width:50%; vertical-align:top; padding-left:20px; border-left:1px dashed #cbd5e1;">
+                    <table style="width:100%; border-collapse:collapse;">
+                        <tr><td style="color:#64748b; padding:4px 0; width:50%;">Measurement Required</td><td>{{ $lead->IsMeasureMentRequired ? 'Yes' : 'No' }}</td></tr>
+                        @if($lead->MeasurementVisitDate)
+                        <tr><td style="color:#64748b; padding:4px 0;">Measurement Date</td><td>{{ \Carbon\Carbon::parse($lead->MeasurementVisitDate)->format('d-m-Y') }}</td></tr>
+                        @endif
+                        @if($lead->NetFollowupdate)
+                        <tr><td style="color:#64748b; padding:4px 0;">Next Follow Up</td><td>{{ \Carbon\Carbon::parse($lead->NetFollowupdate)->format('d-m-Y') }}</td></tr>
+                        @endif
+                        @if($lead->expected_delivery_date)
+                        <tr><td style="color:#64748b; padding:4px 0;">Expected Delivery</td><td>{{ \Carbon\Carbon::parse($lead->expected_delivery_date)->format('d-m-Y') }}</td></tr>
+                        @endif
+                        <tr><td style="color:#64748b; padding:4px 0;">Lead Amount</td><td><strong>₹{{ number_format((float)$lead->iLeadAmount, 2) }}</strong></td></tr>
+                        @if($lead->iFittingCharges)
+                        <tr><td style="color:#64748b; padding:4px 0;">Fitting Charges</td><td>₹{{ number_format((float)$lead->iFittingCharges, 2) }}</td></tr>
+                        @endif
+                        <tr><td style="color:#64748b; padding:4px 0;">Created Date</td><td>{{ \Carbon\Carbon::parse($lead->CreatedDate)->format('d-m-Y') }}</td></tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+
+        {{-- Quotation items --}}
+        @if($lead->quotations && $lead->quotations->count())
+        @php
+            $activeBatchId2 = optional($lead->quotation)->quotation_batch_id;
+            $printQuotations = $activeBatchId2
+                ? $lead->quotations->where('quotation_batch_id', $activeBatchId2)->values()
+                : $lead->quotations;
+        @endphp
+        <div style="margin-top:16px;">
+            <h4 style="font-size:14px; border-bottom:1px solid #cbd5e1; padding-bottom:6px; margin-bottom:10px;">Quotation Items</h4>
+            <table style="width:100%; border-collapse:collapse; font-size:12px;">
+                <thead>
+                    <tr style="background:#f1f5f9;">
+                        <th style="border:1px solid #cbd5e1; padding:6px;">#</th>
+                        <th style="border:1px solid #cbd5e1; padding:6px;">Product</th>
+                        <th style="border:1px solid #cbd5e1; padding:6px;">Category</th>
+                        <th style="border:1px solid #cbd5e1; padding:6px;">Shape</th>
+                        <th style="border:1px solid #cbd5e1; padding:6px;">Unit</th>
+                        <th style="border:1px solid #cbd5e1; padding:6px;">Qty</th>
+                        <th style="border:1px solid #cbd5e1; padding:6px;">H × W</th>
+                        <th style="border:1px solid #cbd5e1; padding:6px;">Rate/Sqft</th>
+                        <th style="border:1px solid #cbd5e1; padding:6px;">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($printQuotations as $i => $q)
+                    <tr>
+                        <td style="border:1px solid #cbd5e1; padding:6px; text-align:center;">{{ $i + 1 }}</td>
+                        <td style="border:1px solid #cbd5e1; padding:6px;">{{ optional($q->product)->strProductName ?? '—' }}</td>
+                        <td style="border:1px solid #cbd5e1; padding:6px;">{{ optional($q->category)->strCategoryName ?? '—' }}</td>
+                        <td style="border:1px solid #cbd5e1; padding:6px;">{{ optional($q->shape)->shape_title ?? '—' }}</td>
+                        <td style="border:1px solid #cbd5e1; padding:6px; text-align:center;">{{ $q->unit_of_measurement ?? '—' }}</td>
+                        <td style="border:1px solid #cbd5e1; padding:6px; text-align:center;">{{ $q->quantity ?? 1 }}</td>
+                        <td style="border:1px solid #cbd5e1; padding:6px; text-align:center;">{{ $q->decHeight }} × {{ $q->decWidth }}</td>
+                        <td style="border:1px solid #cbd5e1; padding:6px; text-align:right;">₹{{ number_format((float)$q->decRatePerSqft, 2) }}</td>
+                        <td style="border:1px solid #cbd5e1; padding:6px; text-align:right;">₹{{ number_format((float)$q->iAmount, 2) }}</td>
+                    </tr>
+                    @endforeach
+                </tbody>
+                <tfoot>
+                    <tr style="background:#f8fafc; font-weight:700;">
+                        <td colspan="8" style="border:1px solid #cbd5e1; padding:6px; text-align:right;">Grand Total</td>
+                        <td style="border:1px solid #cbd5e1; padding:6px; text-align:right;">₹{{ number_format((float)$lead->iLeadAmount, 2) }}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        @endif
+
+        <div style="margin-top:50px; display:flex; justify-content:space-between;">
+            <div style="text-align:center;">
+                <div style="border-top:1px solid #334155; width:180px; margin-bottom:4px;"></div>
+                <p style="font-size:11px; color:#64748b;">Customer Signature</p>
+            </div>
+            <div style="text-align:center;">
+                <div style="border-top:1px solid #334155; width:180px; margin-bottom:4px;"></div>
+                <p style="font-size:11px; color:#64748b;">Authorised Signature</p>
+            </div>
+        </div>
+    </div>
+</div>
+
 @endsection
 
 @section('scripts')
@@ -410,33 +625,31 @@ const statusHints = {
     'Fitting Pending'     : 'Enter the fitting date.',
 };
 
-const statusSelect        = document.getElementById('iStatus');
-const followupWrapper     = document.getElementById('followupDateWrapper');
-const followupInput       = document.getElementById('NetFolloupwdate');
-const followupReqStar     = document.getElementById('followupRequired');
-const followupHint        = document.getElementById('followupHint');
-const rejectionWrapper    = document.getElementById('rejectionReasonWrapper');
-const rejectionInput      = document.getElementById('rejection_reason');
+const statusSelect            = document.getElementById('iStatus');
+const followupWrapper         = document.getElementById('followupDateWrapper');
+const followupInput           = document.getElementById('NetFolloupwdate');
+const followupReqStar         = document.getElementById('followupRequired');
+const followupHint            = document.getElementById('followupHint');
+const rejectionWrapper        = document.getElementById('rejectionReasonWrapper');
+const rejectionInput          = document.getElementById('rejection_reason');
 const expectedDeliveryWrapper = document.getElementById('expectedDeliveryWrapper');
-const expectedDeliveryInput = document.getElementById('expected_delivery_date');
+const expectedDeliveryInput   = document.getElementById('expected_delivery_date');
 
 function updateFormFields() {
     if (!statusSelect) return;
 
-    const selected   = statusSelect.value;
-    const isReject   = selected === 'Lead Rejected';
-    const isDealDone = selected === 'Deal Done';
+    const selected           = statusSelect.value;
+    const isReject           = selected === 'Lead Rejected';
+    const isDealDone         = selected === 'Deal Done';
     const isQuotationApproved = selected === 'Quotation Approved';
-    const noFollowup = NO_FOLLOWUP_STATUSES.includes(selected) || !selected;
-    const isRequired = followupRequiredStatuses.includes(selected);
+    const noFollowup         = NO_FOLLOWUP_STATUSES.includes(selected) || !selected;
+    const isRequired         = followupRequiredStatuses.includes(selected);
 
-    // Rejection reason
     if (rejectionWrapper) {
         rejectionWrapper.style.display = isReject ? 'block' : 'none';
         if (rejectionInput) rejectionInput.required = isReject;
     }
 
-    // Follow-up date
     if (followupWrapper) {
         followupWrapper.style.display = noFollowup ? 'none' : 'block';
     }
@@ -450,7 +663,7 @@ function updateFormFields() {
     if (followupHint) {
         followupHint.textContent = noFollowup ? '' : (statusHints[selected] || '');
     }
-     if (expectedDeliveryWrapper) {
+    if (expectedDeliveryWrapper) {
         expectedDeliveryWrapper.style.display = isQuotationApproved ? 'block' : 'none';
     }
     if (expectedDeliveryInput) {
@@ -462,6 +675,29 @@ function updateFormFields() {
 if (statusSelect) {
     statusSelect.addEventListener('change', updateFormFields);
     updateFormFields();
+}
+
+// ── Print Lead Summary ────────────────────────────────────────────────────────
+function printLeadSummary() {
+    const printContent = document.getElementById('printArea').innerHTML;
+    const originalBody = document.body.innerHTML;
+
+    document.body.innerHTML = `
+        <html>
+            <head>
+                <title>Lead Summary — {{ $lead->strLeadNo }}</title>
+                <style>
+                    body { font-family: Arial, sans-serif; font-size: 13px; color: #1e293b; margin: 0; padding: 0; }
+                    table { border-collapse: collapse; }
+                    @page { margin: 15mm; }
+                </style>
+            </head>
+            <body>${printContent}</body>
+        </html>`;
+
+    window.print();
+    document.body.innerHTML = originalBody;
+    window.location.reload();
 }
 </script>
 @endsection

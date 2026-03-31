@@ -141,6 +141,8 @@ Route::middleware('auth')->prefix('store-manager')->name('store.')->group(functi
     Route::post('leads/{lead}/histories/{history}/update', [LeadHistoryController::class, 'update'])->name('leads.histories.update');
     Route::delete('leads/{lead}/histories/{history}/delete', [LeadHistoryController::class, 'destroy'])->name('leads.histories.delete');
     Route::post('leads/{lead}/histories/bulk-delete', [LeadHistoryController::class, 'bulkDelete'])->name('leads.histories.bulk-delete');
+    Route::get('leads/{lead}/delivery-challan', [LeadController::class, 'deliveryChallan'])->name('leads.delivery-challan');
+
 
 
     Route::get('invoice',                    [InvoiceController::class, 'index'])->name('invoice.index');
