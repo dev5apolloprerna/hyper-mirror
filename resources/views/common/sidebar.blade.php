@@ -16,15 +16,15 @@
  
                 @if(!$roleSlug)
                     <li class="nav-item">
-                        <a href="{{ route('admin.product-category.index') }}" class="nav-link {{ request()->is('admin/product-category*') ? 'active' : '' }}"><i class="nav-icon fas fa-list"></i><p>Product Category</p>
+                        <a href="{{ route('admin.product-category.index') }}" class="nav-link {{ request()->is('admin/product-category*') ? 'active' : '' }}"><i class="nav-icon fas fa-list"></i>Product Category
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="{{ route('admin.product.index') }}" class="nav-link {{ request()->is('admin/product*') ? 'active' : '' }}"><i class="nav-icon fas fa-box"></i><p>Product</p>
+                        <a href="{{ route('admin.product.index') }}" class="nav-link {{ request()->is('admin/product*') ? 'active' : '' }}"><i class="nav-icon fas fa-box"></i>Product
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="{{ route('admin.showroom.index') }}" class="nav-link {{ request()->is('admin/showroom*') ? 'active' : '' }}"><i class="nav-icon fas fa-store"></i><p>Showroom</p>
+                        <a href="{{ route('admin.showroom.index') }}" class="nav-link {{ request()->is('admin/showroom*') ? 'active' : '' }}"><i class="nav-icon fas fa-store"></i>Showroom
                         </a>
                     </li>
                     <li class="nav-item">
@@ -47,16 +47,16 @@
                             <!-- <p class="mb-0">{{ $roleSlug === 'storemanager' ? 'Lead Management' : ucfirst($roleSlug) . ' Queue' }}</p> -->
                         </a>
                     </li>
-
-                    <li class="nav-item">
+                 @endif
+                 @if($roleSlug === 'storemanager')
+                     <li class="nav-item">
                         <a href="{{ route('store.invoice.index') }}"
                            class="nav-link {{ request()->is('store-manager/invoice*') ? 'active' : '' }}">
                             <i class="nav-icon fas fa-file-invoice-dollar"></i>
                             <p class="mb-0">Invoices</p>
                         </a>
                     </li>
-
-                 @endif
+                @endif
              </ul>
          </div>
      </div>

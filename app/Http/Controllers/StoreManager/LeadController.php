@@ -428,4 +428,29 @@ class LeadController extends Controller
             return back()->with('error', $th->getMessage());
         }
     }
+        public function deliveryChallan(Lead $lead)
+    {
+        // Accessible by dispatch role and storemanager
+        $roleSlug = optional(auth()->user()->crmRole)->slug;
+        abort_unless(
+            in_array($roleSlug, ['dispatch', 'storemanager']),
+            403,
+            'Delivery Challan is only accessible to dispatch users.'
+        );
+ 
+        if (!$lead->quotation) {
+            return redirect()->back()->with('error', 'No quotation found for this lead.');
+        }
+ 
+        $lead->load(['customer', 'quotation']);
+ 
+        $activeBatchId   = $lead->quotation->quotation_batch_id;
+        $quotationItems  = $lead->quotations()
+            ->where('quotation_batch_id', $activeBatchId)
+            ->with(['product', 'shape'])
+            ->get();
+ 
+        return view('store-manager.leads.delivery-challan', compact('lead', 'quotationItems'));
+    }
+
 }
