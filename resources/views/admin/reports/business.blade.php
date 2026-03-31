@@ -22,7 +22,7 @@
         margin-top: 6px;
         margin-bottom: 0;
         font-weight: 700;
-        font-size: 22px;
+        font-size: 16px;
     }
     .table thead th {
         white-space: nowrap;
@@ -54,7 +54,7 @@
 
             <div class="page-title-box d-sm-flex align-items-center justify-content-between">
                 <div>
-                    <h4 class="mb-sm-0">Business Report</h4>
+                    <h4 class="mb-sm-0">Admin Business Report</h4>
                     <p class="text-muted mb-0 mt-1">Track quotation, approved business, collections and pending amounts.</p>
                 </div>
             </div>
@@ -95,7 +95,6 @@
                                     {{ $monthDate->format('M') }}
                                 </a>
                             @endforeach
-                            {{-- Current month shortcut --}}
                             @php
                                 $thisMonthFrom = now()->startOfMonth()->format('Y-m-d');
                                 $thisMonthTo   = now()->endOfMonth()->format('Y-m-d');
@@ -115,7 +114,7 @@
                 <div class="col-md-4 col-xl-2">
                     <div class="card metric-card h-100">
                         <div class="card-body">
-                            <small>Total Quotation Value</small>
+                            <small>Total Quotation</small>
                             <h5>₹{{ number_format($totalQuotationValue, 2) }}</h5>
                         </div>
                     </div>
@@ -133,14 +132,13 @@
                         <div class="card-body">
                             <small>Business Done</small>
                             <h5 class="text-success">₹{{ number_format($doneBusinessValue, 2) }}</h5>
-                            <small class="text-muted" style="font-size:10px; text-transform:none;">Dispatched Done + Fitting Done</small>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-4 col-xl-2">
                     <div class="card metric-card h-100">
                         <div class="card-body">
-                            <small>Total Received</small>
+                            <small>Received</small>
                             <h5 class="text-success">₹{{ number_format($receivedAmount, 2) }}</h5>
                         </div>
                     </div>
@@ -148,7 +146,7 @@
                 <div class="col-md-4 col-xl-2">
                     <div class="card metric-card h-100">
                         <div class="card-body">
-                            <small>Payment Pending</small>
+                            <small>Pending</small>
                             <h5 class="text-warning">₹{{ number_format($pendingAmount, 2) }}</h5>
                         </div>
                     </div>
@@ -156,7 +154,7 @@
                 <div class="col-md-4 col-xl-2">
                     <div class="card metric-card h-100">
                         <div class="card-body">
-                            <small>Today Business Done</small>
+                            <small>Today Deal Done</small>
                             <h5>₹{{ number_format($todayBusiness, 2) }}</h5>
                         </div>
                     </div>
@@ -166,46 +164,50 @@
             {{-- ── Two Column Section ── --}}
             <div class="row g-3 mb-3">
 
-                {{-- Showroom Wise Business (Leads + Invoices) --}}
+                {{-- Showroom Wise Business --}}
                 <div class="col-lg-5">
                     <div class="card border-0 shadow-sm h-100">
-                        <div class="card-header bg-white d-flex align-items-center justify-content-between">
-                            <h6 class="mb-0 fw-bold">Showroom Wise Business</h6>
-                            <small class="text-muted">Leads + Invoices combined</small>
-                        </div>
+                        <div class="card-header bg-white">
+                            <h6 class="mb-0">Showroom Wise Business</h6>
+                            <small class="text-muted">Invoice item-wise details by branch</small>                   </div>
                         <div class="card-body p-0">
                             <div class="table-responsive">
                                 <table class="table table-bordered mb-0">
                                     <thead class="table-light">
                                         <tr>
                                             <th>Showroom</th>
-                                            <th class="text-end">Lead Business (Done)</th>
-                                            <th class="text-end">Invoice Amount</th>
-                                            <th class="text-end">Total</th>
+                                            <th>Sales Manager</th>
+                                            <th>Category</th>
+                                            <th>Product</th>
+                                            <th class="text-center">Qty</th>
+                                            <th class="text-end">Amount</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         @forelse($showroomWiseBusiness as $row)
                                             <tr>
-                                                <td>{{ optional($row->showroom)->strShowRoomName ?? 'N/A' }}</td>
-                                                <td class="text-end">₹{{ number_format((float)($row->lead_amount ?? 0), 2) }}</td>
-                                                <td class="text-end">₹{{ number_format((float)($row->invoice_amount ?? 0), 2) }}</td>
-                                                <td class="text-end fw-bold">₹{{ number_format((float)($row->lead_amount ?? 0) + (float)($row->invoice_amount ?? 0), 2) }}</td>
+                                                <td>{{ $row['branch_name'] }}</td>
+                                                <td>{{ $row['sales_manager_name'] }}</td>
+                                                <td>{{ $row['category'] }}</td>
+                                                <td>{{ $row['product'] }}</td>
+                                                <td class="text-center">{{ rtrim(rtrim(number_format((float)$row['quantity'], 2, '.', ''), '0'), '.') }}</td>
+                                                <td class="text-end">₹{{ number_format((float)($row['amount'] ?? 0), 2) }}</td>
                                             </tr>
                                         @empty
-                                            <tr><td colspan="4" class="text-center text-muted py-3">No data found</td></tr>
-                                        @endforelse
-                                    </tbody>
+                                            <tr><td colspan="6" class="text-center text-muted py-3">No data found</td></tr>                                       
+                                     @endforelse
+                                     </tbody>
                                     @if($showroomWiseBusiness->isNotEmpty())
                                     <tfoot class="table-success">
                                         <tr>
                                             <td><strong>Total</strong></td>
-                                            <td class="text-end"><strong>₹{{ number_format($showroomWiseBusiness->sum('lead_amount'), 2) }}</strong></td>
-                                            <td class="text-end"><strong>₹{{ number_format($showroomWiseBusiness->sum('invoice_amount'), 2) }}</strong></td>
-                                            <td class="text-end"><strong>₹{{ number_format($showroomWiseBusiness->sum(fn($r) => (float)($r->lead_amount ?? 0) + (float)($r->invoice_amount ?? 0)), 2) }}</strong></td>
+                                            <td colspan="3"></td>
+                                            <td class="text-center"><strong>{{ rtrim(rtrim(number_format((float)$showroomWiseBusiness->sum('quantity'), 2, '.', ''), '0'), '.') }}</strong></td>
+                                            <td class="text-end"><strong>₹{{ number_format((float)$showroomWiseBusiness->sum('amount'), 2) }}</strong></td>
                                         </tr>
                                     </tfoot>
                                     @endif
+                                    </tbody>
                                 </table>
                             </div>
                         </div>
@@ -216,7 +218,7 @@
                 <div class="col-lg-7">
                     <div class="card border-0 shadow-sm h-100">
                         <div class="card-header bg-white">
-                            <h6 class="mb-0 fw-bold">Sales Executive Summary</h6>
+                            <h6 class="mb-0">Sales Executive Summary</h6>
                         </div>
                         <div class="card-body p-0">
                             <div class="table-responsive">
@@ -225,12 +227,12 @@
                                         <tr>
                                             <th>Customer</th>
                                             <th>Executive</th>
-                                            <th class="text-end">Quotation</th>
-                                            <th class="text-end">Done</th>
-                                            <th class="text-end">Pending</th>
-                                            <th class="text-end">Received</th>
-                                            <th class="text-center">Leads</th>
-                                            <th class="text-center">Details</th>
+                                            <th>Quotation Given</th>
+                                            <th>Done</th>
+                                            <th>Pending</th>
+                                            <th>Received</th>
+                                            <th>Leads</th>
+                                            <th>History</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -238,18 +240,16 @@
                                             <tr>
                                                 <td>{{ $row['customer_name'] }}</td>
                                                 <td>{{ $row['sales_executive_name'] }}</td>
-                                                <td class="text-end">₹{{ number_format((float) $row['total_quotation_given'], 2) }}</td>
-                                                <td class="text-end text-success fw-semibold">₹{{ number_format((float) $row['total_quotation_done'], 2) }}</td>
-                                                <td class="text-end text-warning">₹{{ number_format((float) $row['total_payment_pending'], 2) }}</td>
-                                                <td class="text-end text-success">₹{{ number_format((float) $row['total_payment_received'], 2) }}</td>
-                                                <td class="text-center">
-                                                    <span class="badge bg-primary">{{ $row['lead_count'] }}</span>
-                                                </td>
-                                                <td class="text-center">
+                                                <td>₹{{ number_format((float) $row['total_quotation_given'], 2) }}</td>
+                                                <td class="text-success fw-semibold">₹{{ number_format((float) $row['total_quotation_done'], 2) }}</td>
+                                                <td class="text-warning">₹{{ number_format((float) $row['total_payment_pending'], 2) }}</td>
+                                                <td class="text-success">₹{{ number_format((float) $row['total_payment_received'], 2) }}</td>
+                                                <td>{{ $row['lead_count'] }}</td>
+                                                <td>
                                                     <button class="btn btn-sm btn-outline-info"
                                                             data-bs-toggle="modal"
                                                             data-bs-target="#historyModal{{ $index }}"
-                                                            title="View Leads">
+                                                            title="View History">
                                                         <i class="fas fa-eye"></i>
                                                     </button>
                                                 </td>
@@ -265,181 +265,48 @@
                 </div>
             </div>
 
-            {{-- Invoice Report --}}
-            <div class="card border-0 shadow-sm mb-3">
-                <div class="card-header bg-white">
-                    <h6 class="mb-0 fw-bold">Invoice Report (Category / Product / Quantity / Amount)</h6>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-hover mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Lead No</th>
-                                    <th>Product Category</th>
-                                    <th>Product</th>
-                                    <th class="text-center">Quantity</th>
-                                    <th class="text-end">Amount</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($invoiceItems as $item)
-                                    <tr>
-                                        <td>{{ $item['lead_no'] }}</td>
-                                        <td>{{ $item['product_category'] }}</td>
-                                        <td>{{ $item['product'] }}</td>
-                                        <td class="text-center">{{ $item['quantity'] }}</td>
-                                        <td class="text-end">₹{{ number_format((float)$item['amount'], 2) }}</td>
-                                    </tr>
-                                @empty
-                                    <tr><td colspan="5" class="text-center text-muted py-3">No invoice data</td></tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
         </div>
     </div>
 </div>
 
-{{-- ── Lead Detail Modals ────────────────────────────────────────────────────── --}}
+{{-- ── Lead History Modals ── --}}
 @foreach($salesExecutiveSummary as $index => $row)
 <div class="modal fade" id="historyModal{{ $index }}" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content">
-            <div class="modal-header bg-light">
-                <div>
-                    <h5 class="modal-title mb-0">
-                        <i class="fas fa-list-alt me-2 text-primary"></i>Lead Details — {{ $row['customer_name'] }}
-                    </h5>
-                    <small class="text-muted">Sales Executive: <strong>{{ $row['sales_executive_name'] }}</strong></small>
-                </div>
+            <div class="modal-header">
+                <h5 class="modal-title">Lead History - {{ $row['customer_name'] }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body p-0">
-                {{-- Summary strip --}}
-                <div class="row g-0 border-bottom bg-light py-2 px-3">
-                    <div class="col-3 text-center">
-                        <small class="text-muted d-block">Total Leads</small>
-                        <strong class="text-primary">{{ $row['lead_count'] }}</strong>
-                    </div>
-                    <div class="col-3 text-center">
-                        <small class="text-muted d-block">Quotation Given</small>
-                        <strong>₹{{ number_format((float)$row['total_quotation_given'], 2) }}</strong>
-                    </div>
-                    <div class="col-3 text-center">
-                        <small class="text-muted d-block">Business Done</small>
-                        <strong class="text-success">₹{{ number_format((float)$row['total_quotation_done'], 2) }}</strong>
-                    </div>
-                    <div class="col-3 text-center">
-                        <small class="text-muted d-block">Received</small>
-                        <strong class="text-success">₹{{ number_format((float)$row['total_payment_received'], 2) }}</strong>
-                    </div>
-                </div>
-
+            <div class="modal-body">
                 <div class="table-responsive">
-                    <table class="table table-bordered table-hover table-sm mb-0">
-                        <thead class="table-dark">
+                    <table class="table table-bordered table-sm mb-0">
+                        <thead class="table-light">
                             <tr>
-                                <th>#</th>
-                                <th>Lead No</th>
+                                <th>Lead</th>
                                 <th>Status</th>
-                                <th>Created</th>
-                                <th>Next Follow Up</th>
-                                <th class="text-end">Lead Amount</th>
-                                <th class="text-end">Received</th>
-                                <th class="text-end">Pending</th>
-                                <th>Products</th>
+                                <th>Amount</th>
+                                <th>Received</th>
+                                <th>Pending</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($row['history'] as $hIdx => $historyLead)
+                            @foreach($row['history'] as $historyLead)
                                 @php
                                     $received = (float) $historyLead->payments->sum('iPaidAmount');
-                                    $pending  = max(0, (float) $historyLead->iLeadAmount - $received);
-                                    $businessDoneStatuses = [
-                                        \App\Support\LeadWorkflow::STATUS_DISPATCHED_DONE,
-                                        \App\Support\LeadWorkflow::STATUS_FITTING_DONE,
-                                        \App\Support\LeadWorkflow::STATUS_DEAL_DONE,
-                                    ];
-                                    $isDone = in_array($historyLead->iCurrentLeadStatus, $businessDoneStatuses);
+                                    $pending = max(0, (float) $historyLead->iLeadAmount - $received);
                                 @endphp
-                                <tr class="{{ $isDone ? 'table-success' : '' }}">
-                                    <td>{{ $hIdx + 1 }}</td>
-                                    <td>
-                                        <a href="{{ route('store.leads.histories.index', $historyLead->iLeadId) }}"
-                                           target="_blank"
-                                           class="fw-semibold text-primary text-decoration-none">
-                                            {{ $historyLead->strLeadNo }}
-                                            <i class="fas fa-external-link-alt ms-1" style="font-size:10px;"></i>
-                                        </a>
-                                    </td>
-                                    <td>
-                                        @php
-                                            $statusColors = [
-                                                'Lead Rejected'       => 'bg-danger',
-                                                'Deal Done'           => 'bg-success',
-                                                'Fitting Done'        => 'bg-success',
-                                                'Dispatched Done'     => 'bg-success',
-                                                'Quotation Approved'  => 'bg-primary',
-                                                'Advance Received'    => 'bg-info text-dark',
-                                            ];
-                                            $badgeCls = $statusColors[$historyLead->iCurrentLeadStatus] ?? 'bg-secondary';
-                                        @endphp
-                                        <span class="badge {{ $badgeCls }}" style="font-size:10px;">
-                                            {{ $historyLead->iCurrentLeadStatus }}
-                                        </span>
-                                    </td>
-                                    <td class="text-nowrap small">
-                                        {{ \Carbon\Carbon::parse($historyLead->CreatedDate)->format('d-m-Y') }}
-                                    </td>
-                                    <td class="text-nowrap small">
-                                        {{ $historyLead->NetFollowupdate
-                                            ? \Carbon\Carbon::parse($historyLead->NetFollowupdate)->format('d-m-Y')
-                                            : '—' }}
-                                    </td>
-                                    <td class="text-end">₹{{ number_format((float)$historyLead->iLeadAmount, 2) }}</td>
-                                    <td class="text-end text-success">₹{{ number_format($received, 2) }}</td>
-                                    <td class="text-end {{ $pending > 0 ? 'text-warning' : 'text-success' }}">₹{{ number_format($pending, 2) }}</td>
-                                    <td>
-                                        @php
-                                            $activeBatch = optional($historyLead->quotation)->quotation_batch_id;
-                                            $activeItems = $activeBatch
-                                                ? $historyLead->quotations->where('quotation_batch_id', $activeBatch)->values()
-                                                : $historyLead->quotations;
-                                        @endphp
-                                        @if($activeItems->count())
-                                            <ul class="mb-0 ps-3" style="font-size:11px;">
-                                                @foreach($activeItems as $qi)
-                                                    <li>
-                                                        {{ optional($qi->product)->strProductName ?? '—' }}
-                                                        (Qty: {{ $qi->quantity ?? 1 }})
-                                                    </li>
-                                                @endforeach
-                                            </ul>
-                                        @else
-                                            <span class="text-muted small">—</span>
-                                        @endif
-                                    </td>
+                                <tr>
+                                    <td>{{ $historyLead->strLeadNo }}</td>
+                                    <td>{{ $historyLead->iCurrentLeadStatus }}</td>
+                                    <td>₹{{ number_format((float)$historyLead->iLeadAmount, 2) }}</td>
+                                    <td>₹{{ number_format($received, 2) }}</td>
+                                    <td>₹{{ number_format($pending, 2) }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
-                        <tfoot class="table-light">
-                            <tr>
-                                <th colspan="5" class="text-end">Totals</th>
-                                <th class="text-end">₹{{ number_format($row['history']->sum('iLeadAmount'), 2) }}</th>
-                                <th class="text-end text-success">₹{{ number_format((float)$row['total_payment_received'], 2) }}</th>
-                                <th class="text-end text-warning">₹{{ number_format((float)$row['total_payment_pending'], 2) }}</th>
-                                <th></th>
-                            </tr>
-                        </tfoot>
                     </table>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
