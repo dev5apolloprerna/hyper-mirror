@@ -7,6 +7,9 @@ use App\Models\Lead;
 use App\Models\LeadPayment;
 use App\Support\LeadWorkflow;
 use Illuminate\Http\Request;
+use App\Models\Invoice;
+use App\Models\InvoiceItem;
+use App\Models\Showroom;
 
 class BusinessReportController extends Controller
 {
@@ -63,12 +66,49 @@ class BusinessReportController extends Controller
             ->where('iCurrentLeadStatus', LeadWorkflow::STATUS_DEAL_DONE)
             ->sum('iLeadAmount');
 
-        $showroomWiseBusiness = Lead::query()
-            ->selectRaw('iShowroomId, SUM(iLeadAmount) as total_amount')
-            ->where('iCurrentLeadStatus', LeadWorkflow::STATUS_DEAL_DONE)
+        $showroomWiseLeads = Lead::query()
+            ->selectRaw('iShowroomId, SUM(iLeadAmount) as quotation_total')
+            ->whereIn('iCurrentLeadStatus', $businessDoneStatuses)
             ->groupBy('iShowroomId')
-            ->with('showroom')
-            ->get();
+            ->get()
+            ->keyBy('iShowroomId');
+
+             $showroomWiseLeadReceived = LeadPayment::query()
+            ->join('leads', 'leads.iLeadId', '=', 'lead_payments.iLeadId')
+            ->selectRaw('leads.iShowroomId, SUM(lead_payments.iPaidAmount) as quotation_received')
+            ->when($fromDate, fn ($query) => $query->whereDate('leads.CreatedDate', '>=', $fromDate))
+            ->when($toDate, fn ($query) => $query->whereDate('leads.CreatedDate', '<=', $toDate))
+            ->whereIn('leads.iCurrentLeadStatus', $businessDoneStatuses)
+            ->groupBy('leads.iShowroomId')
+            ->get()
+            ->keyBy('iShowroomId');
+
+         $invoiceQuery = Invoice::query()
+            ->with(['showroom', 'createdBy', 'items.category', 'items.product'])
+            ->where('status', '!=', 'cancelled');
+
+        if ($fromDate) {
+            $invoiceQuery->whereDate('InvoiceDate', '>=', $fromDate);
+        }
+        if ($toDate) {
+            $invoiceQuery->whereDate('InvoiceDate', '<=', $toDate);
+        }
+
+        $invoices = $invoiceQuery->get();
+
+        $showroomWiseBusiness = $invoices->flatMap(function ($invoice) {
+            return $invoice->items->map(function ($item) use ($invoice) {
+                return [
+                    'branch_name' => optional($invoice->showroom)->strShowRoomName ?? 'N/A',
+                    'sales_manager_name' => optional($invoice->createdBy)->first_name ?? 'N/A',
+                    'category' => optional($item->category)->strCategoryName ?? '-',
+                    'product' => optional($item->product)->strProductName ?? '-',
+                    'quantity' => (float) ($item->quantity ?? 0),
+                    'amount' => (float) ($item->iAmount ?? 0),
+                ];
+            });
+        })->values();
+
 
         $salesExecutiveSummary = $leads
             ->groupBy(function ($lead) {
