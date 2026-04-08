@@ -30,25 +30,31 @@
                             <img class="rounded-circle header-profile-user"
                                 src="{{ asset('assets/images/users/undraw_profile.webp') }}" alt="Header Avatar">
                             <span class="text-start ms-xl-2">
+                                @php
+                                    $adminUser = auth()->user();
+                                    $employeeUser = Auth::guard('web_employees')->user();
+                                    $displayName = $adminUser->full_name ?? $employeeUser->name ?? 'User';
+
+                                    $roleName = null;
+                                    if ($adminUser) {
+                                        $role = App\Models\User::select('users.id', 'roles.name')
+                                            ->where('users.id', $adminUser->id)
+                                            ->join('roles', 'users.role_id', '=', 'roles.id')
+                                            ->first();
+
+                                        $roleName = $role->name ?? null;
+                                    }
+                                @endphp
                                 <span class="d-none d-xl-inline-block ms-1 fw-medium user-name-text">
-                                   @if(auth()->user())
-                                        {{ auth()->user()->full_name }}
-                                    @else
-                                        {{ Auth::guard('web_employees')->user()->name }}
-                                    @endif
+                                    {{ $displayName }}
+                                </span>
 
                                 </span>
-                                <?php
-                                
-                                $session = auth()->user()->id;
-                                $role = App\Models\User::select('users.id', 'roles.name')
-                                    ->where('users.id', $session)
-                                    ->join('roles', 'users.role_id', '=', 'roles.id')
-                                    ->first();
-                                ?>
-                                <span class="d-none d-xl-block ms-1 fs-12 text-muted user-name-sub-text">
-                                     {{ $role->name }}
-                                 </span>
+                                 @if($roleName)
+                                    <span class="d-none d-xl-block ms-1 fs-12 text-muted user-name-sub-text">
+                                        {{ $roleName }}
+                                    </span>
+                                @endif
                                
                             </span>
                         </span>
@@ -56,7 +62,7 @@
                    
                     <div class="dropdown-menu dropdown-menu-end">
                         <!-- item-->
-                        <h6 class="dropdown-header">Welcome {{ auth()->user()->full_name }}</h6>
+                        <h6 class="dropdown-header">Welcome {{ $displayName }}</h6>
                         <a class="dropdown-item" href="{{ route('profile.detail') }}"><i
                                 class="mdi mdi-account-circle text-muted fs-16 align-middle me-1"></i> <span
                                 class="align-middle">Profile</span></a>
