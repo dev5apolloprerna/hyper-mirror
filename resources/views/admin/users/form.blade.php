@@ -115,9 +115,9 @@
                 </div>
             </div>
 
-            @if($isEdit)
-                <div class="card border-0 shadow-sm mt-3">
-                    <div class="card-header bg-white">
+            <!-- @if($isEdit)
+            <div class="card border-0 shadow-sm mt-3" id="change-password-card">
+                <div class="card-header bg-white">
                         <h6 class="mb-0">Change Password</h6>
                     </div>
                     <div class="card-body">
@@ -139,7 +139,7 @@
                         </form>
                     </div>
                 </div>
-            @endif
+            @endif -->
 
         </div>
     </div>
