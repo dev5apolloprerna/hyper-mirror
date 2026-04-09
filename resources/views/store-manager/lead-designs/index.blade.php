@@ -20,77 +20,148 @@
                             <a href="{{ route('store.leads.index') }}" class="btn btn-secondary btn-sm">
                                 <i class="fas fa-arrow-left"></i> Back
                             </a>
-                            <a href="{{ route('store.leads.designs.create', $lead->iLeadId) }}" class="btn btn-primary btn-sm">
+                            <!-- <a href="{{ route('store.leads.designs.create', $lead->iLeadId) }}" class="btn btn-primary btn-sm">
                                 <i class="fas fa-plus"></i> Add Design
-                            </a>
+                            </a> -->
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="card">
-                <div class="card-body">
+                       <div class="row g-3">
+                <div class="col-xl-4 col-lg-5">
+                    <div class="card h-100">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">
+                                <i class="fas {{ $editDesign ? 'fa-pen' : 'fa-plus-circle' }} me-2"></i>
+                                {{ $editDesign ? 'Edit Design' : 'Upload Design' }}
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <form action="{{ $editDesign ? route('store.leads.designs.update', [$lead->iLeadId, $editDesign->iLeadDesignId]) : route('store.leads.designs.store', $lead->iLeadId) }}"
+                                  method="POST"
+                                  enctype="multipart/form-data">
+                                @csrf
 
-                    <div class="mb-3">
-                        <button type="button" class="btn btn-danger btn-sm" id="bulkDeleteBtn">
-                            <i class="fas fa-trash"></i> Bulk Delete
-                        </button>
+                                <div class="mb-3">
+                                    <label class="form-label">Title</label>
+                                    <input type="text"
+                                           name="strTitle"
+                                           class="form-control"
+                                           value="{{ old('strTitle', optional($editDesign)->strTitle) }}"
+                                           placeholder="Enter design title">
+                                    @if($errors->has('strTitle'))
+                                        <span class="text-danger small">{{ $errors->first('strTitle') }}</span>
+                                    @endif
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        Design File {!! $editDesign ? '' : '<span class="text-danger">*</span>' !!}
+                                    </label>
+                                    <input type="file" name="strFilename" class="form-control">
+                                    @if($errors->has('strFilename'))
+                                        <span class="text-danger small">{{ $errors->first('strFilename') }}</span>
+                                    @endif
+                                    @if($editDesign && $editDesign->strFilename)
+                                        <div class="mt-2 small">
+                                            Current:
+                                            <a href="{{ asset('uploads/lead-designs/' . $editDesign->strFilename) }}" target="_blank">
+                                                {{ $editDesign->strFilename }}
+                                            </a>
+
+                                            </a>
+
+                                              </div>
+                                    @endif
+                                </div>
+
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas {{ $editDesign ? 'fa-save' : 'fa-upload' }} me-1"></i>
+                                        {{ $editDesign ? 'Update Design' : 'Upload Design' }}
+                                    </button>
+                                    @if($editDesign)
+                                        <a href="{{ route('store.leads.designs.index', $lead->iLeadId) }}" class="btn btn-light border">
+                                            Cancel
+                                        </a>
+                                    @endif
+                                </div>
+                            </form>
+                        </div>
                     </div>
+                </div>
+                
 
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-striped align-middle">
-                            <thead>
-                                <tr>
-                                    <th width="5%">
-                                        <input type="checkbox" id="selectAll">
-                                    </th>
-                                    <th>Title</th>
-                                    <th>File</th>
-                                    <th width="12%">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($designs as $design)
-                                    <tr>
-                                        <td>
-                                            <input type="checkbox" class="record-checkbox" value="{{ $design->iLeadDesignId }}">
-                                        </td>
-                                        <td>{{ $design->strTitle }}</td>
-                                        <td>
-                                            <a href="{{ asset('uploads/lead-designs/' . $design->strFilename) }}" target="_blank">
-                                                {{ $design->strFilename }}
-                                            </a>
-                                        </td>
-                                        <td>
-                                            <a href="{{ asset('uploads/lead-designs/' . $design->strFilename) }}" target="_blank" class="text-info me-2" title="View">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
+                                    <div class="col-xl-8 col-lg-7">
+                    <div class="card h-100">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="fas fa-images me-2"></i> Uploaded Designs
+                            </h5>
+                            <button type="button" class="btn btn-danger btn-sm" id="bulkDeleteBtn">
+                                <i class="fas fa-trash"></i> Bulk Delete
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-striped align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th width="5%">
+                                                <input type="checkbox" id="selectAll">
+                                            </th>
+                                            <th>Title</th>
+                                            <th>File</th>
+                                            <th width="14%">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @forelse($designs as $design)
+                                            <tr>
+                                                <td>
+                                                    <input type="checkbox" class="record-checkbox" value="{{ $design->iLeadDesignId }}">
+                                                </td>
+                                                <td>{{ $design->strTitle ?: '—' }}</td>
+                                                <td>
+                                                    <a href="{{ asset('uploads/lead-designs/' . $design->strFilename) }}" target="_blank">
+                                                        {{ $design->strFilename }}
+                                                    </a>
+                                                </td>
+                                                <td>
+                                                    <a href="{{ asset('uploads/lead-designs/' . $design->strFilename) }}" target="_blank" class="text-info me-2" title="View">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
 
-                                            <a href="{{ route('store.leads.designs.edit', [$lead->iLeadId, $design->iLeadDesignId]) }}" class="text-primary me-2" title="Edit">
-                                                <i class="fas fa-edit"></i>
-                                            </a>
+                                                    <a href="{{ route('store.leads.designs.edit', [$lead->iLeadId, $design->iLeadDesignId]) }}"
+                                                       class="text-primary me-2"
+                                                       title="Edit">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
 
-                                            <a href="javascript:void(0);" class="text-danger delete-record" data-id="{{ $design->iLeadDesignId }}" title="Delete">
-                                                <i class="fas fa-trash"></i>
-                                            </a>
+                                                    <a href="javascript:void(0);" class="text-danger delete-record" data-id="{{ $design->iLeadDesignId }}" title="Delete">
+                                                        <i class="fas fa-trash"></i>
+                                                    </a>
 
-                                            <form id="delete-form-{{ $design->iLeadDesignId }}" action="{{ route('store.leads.designs.delete', [$lead->iLeadId, $design->iLeadDesignId]) }}" method="POST" style="display:none;">
-                                                @csrf
-                                                @method('DELETE')
-                                            </form>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="4" class="text-center">No designs found.</td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
+                                                    <form id="delete-form-{{ $design->iLeadDesignId }}" action="{{ route('store.leads.designs.delete', [$lead->iLeadId, $design->iLeadDesignId]) }}" method="POST" style="display:none;">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="4" class="text-center">No designs found.</td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
 
-                    <div class="mt-3 d-flex justify-content-center">
-                        {{ $designs->links() }}
+                            <div class="mt-3 d-flex justify-content-center">
+                                {{ $designs->links() }}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

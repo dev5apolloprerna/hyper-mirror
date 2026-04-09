@@ -112,14 +112,20 @@ class InvoiceController extends Controller
         $request->validate([
         'iShowroomId'              => ['required', 'exists:showrooms,iShowroomId', Rule::in($assignedShowroomIds)],
         'InvoiceDate'              => 'required|date',
-        'strNotes'                 => 'nullable|string|max:500',
+        //'strNotes'                 => 'nullable|string|max:500',
+        'strNotes'                 => 'nullable|string|max:500|required_if:payment_received,0',
+        'payment_mode'             => ['required', Rule::in(['cash', 'bank'])],
+        'payment_received'         => ['required', Rule::in(['0', '1'])],
+
         'items'                    => 'required|array|min:1',
         'items.*.iCategoryId'      => 'required|exists:product_categories,iCategoryId',
         'items.*.iProductId'       => 'required|exists:products,iProductId',
         'items.*.quantity'         => 'required|integer|min:1',
         'items.*.unit_price'       => 'required|numeric|min:0',
+        'items.*.item_remark'      => 'nullable|string|max:255',
         ], [
             'iShowroomId.in' => 'Please select your assigned showroom.',
+            'strNotes.required_if' => 'Notes / Comments are mandatory when payment is pending.',
         ]);
 
         DB::beginTransaction();
@@ -137,6 +143,10 @@ class InvoiceController extends Controller
                 'InvoiceDate'  => $request->InvoiceDate,
                 'strNotes'     => $request->strNotes,
                 'status'       => 'confirmed',
+                'payment_mode' => $request->payment_mode,
+                'payment_received' => (bool) $request->payment_received,
+                'payment_mode' => $request->payment_mode,
+                'payment_received' => (bool) $request->payment_received,
             ]);
 
             foreach ($request->items as $row) {
@@ -151,6 +161,7 @@ class InvoiceController extends Controller
                     'quantity'    => $qty,
                     'unit_price'  => $price,
                     'iAmount'     => $amount,
+                    'item_remark' => $row['item_remark'] ?? null,
                 ]);
             }
 
@@ -182,6 +193,41 @@ class InvoiceController extends Controller
         $invoice->load(['showroom', 'createdBy', 'items.category', 'items.product']);
         return view('store-manager.invoice.show', compact('invoice'));
     }
+            public function updatePayment(Request $request, Invoice $invoice)
+    {
+        $this->authorise();
+
+        if ($invoice->payment_received) {
+            return redirect()
+                ->route('store.invoice.index', $request->query())
+                ->with('error', 'Payment is already marked received. Payment details cannot be updated.');
+        }
+
+        $validated = $request->validate([
+            'payment_mode' => ['required', Rule::in(['cash', 'bank'])],
+            'payment_received' => ['required', Rule::in(['0', '1'])],
+            'strNotes' => 'nullable|string|max:500',
+        ]);
+
+        $notes = trim((string) ($validated['strNotes'] ?? ''));
+
+        if ($validated['payment_received'] === '0' && $notes === '' && blank($invoice->strNotes)) {
+            return redirect()
+                ->route('store.invoice.index', $request->query())
+                ->with('error', 'Comments are mandatory while payment is pending.');
+        }
+
+        $invoice->update([
+            'payment_mode' => $validated['payment_mode'],
+            'payment_received' => (bool) $validated['payment_received'],
+            'strNotes' => $notes !== '' ? $notes : $invoice->strNotes,
+        ]);
+
+        return redirect()
+            ->route('store.invoice.index', $request->query())
+            ->with('success', 'Invoice payment details updated successfully.');
+    }
+
 
     // ── Delete ───────────────────────────────────────────────────────────────
     public function destroy(Invoice $invoice)

@@ -66,6 +66,24 @@ class BusinessReportController extends Controller
             ->where('iCurrentLeadStatus', LeadWorkflow::STATUS_DEAL_DONE)
             ->sum('iLeadAmount');
 
+        $todayInvoiceCollections = Invoice::query()
+            ->with('items')
+            ->whereDate('InvoiceDate', now()->toDateString())
+            ->where('status', '!=', 'cancelled')
+            ->where('payment_received', true)
+            ->get()
+            ->groupBy('payment_mode');
+
+        $todayCashAmount = (float) optional($todayInvoiceCollections->get('cash'))->sum(function ($invoice) {
+            return (float) $invoice->total_amount;
+        });
+        $todayBankAmount = (float) optional($todayInvoiceCollections->get('bank'))->sum(function ($invoice) {
+            return (float) $invoice->total_amount;
+        });
+        $todayTotalAmount = $todayCashAmount + $todayBankAmount;
+
+
+
         $showroomWiseLeads = Lead::query()
             ->selectRaw('iShowroomId, SUM(iLeadAmount) as quotation_total')
             ->whereIn('iCurrentLeadStatus', $businessDoneStatuses)
@@ -178,6 +196,9 @@ class BusinessReportController extends Controller
             'receivedAmount',
             'pendingAmount',
             'todayBusiness',
+            'todayCashAmount',
+            'todayBankAmount',
+            'todayTotalAmount',
             'showroomWiseBusiness',
             'salesExecutiveSummary',
             'invoiceItems'

@@ -23,6 +23,10 @@
                         <a href="{{ route('admin.product.index') }}" class="nav-link {{ request()->is('admin/product*') ? 'active' : '' }}"><i class="nav-icon fas fa-box"></i>Product
                         </a>
                     </li>
+                     <li class="nav-item">
+                        <a href="{{ route('admin.product-shape.index') }}" class="nav-link {{ request()->is('admin/product-shape*') ? 'active' : '' }}"><i class="nav-icon fas fa-draw-polygon"></i>Product Shape
+                        </a>
+                    </li>
                     <li class="nav-item">
                         <a href="{{ route('admin.showroom.index') }}" class="nav-link {{ request()->is('admin/showroom*') ? 'active' : '' }}"><i class="nav-icon fas fa-store"></i>Showroom
                         </a>

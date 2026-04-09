@@ -1,4 +1,4 @@
-@extends('layouts.app')
+    @extends('layouts.app')
 @section('title', 'Invoices')
 
 @section('styles')
@@ -105,6 +105,10 @@
                             <th>Showroom</th>
                             <th>Items</th>
                             <th>Total Amount</th>
+                            <th>Unpaid Amount</th>
+                            <th>Payment Mode</th>
+                            <th>Payment Received</th>
+                            <th>Comments</th>
                             <th>Status</th>
                             <th>Created By</th>
                             <th class="text-center">Actions</th>
@@ -129,6 +133,60 @@
                                 </td>
                                 <td class="fw-bold">
                                     ₹{{ number_format($inv->total_amount, 2) }}
+                                </td>
+                                                                 <td class="fw-bold text-warning">
+                                    ₹{{ number_format($inv->unpaid_amount, 2) }}
+                                </td>
+                                <td>
+                                    @if($inv->payment_received)
+                                        <span class="badge bg-secondary"> {{ ucfirst($inv->payment_mode ?? 'cash') }} </span>
+                                    @else
+                                        <form method="POST" action="{{ route('store.invoice.update-payment', $inv->iInvoiceId) }}" class="d-flex align-items-center gap-1">
+                                            @csrf
+                                            <input type="hidden" name="payment_received" value="{{ $inv->payment_received ? 1 : 0 }}">
+                                            <input type="hidden" name="strNotes" value="{{ $inv->strNotes }}">
+                                            <select name="payment_mode" class="form-select form-select-sm">
+                                                <option value="cash" {{ $inv->payment_mode === 'cash' ? 'selected' : '' }}>Cash</option>
+                                                <option value="bank" {{ $inv->payment_mode === 'bank' ? 'selected' : '' }}>Bank</option>
+                                            </select>
+                                            <button type="submit" class="btn btn-sm btn-outline-success" title="Update payment mode">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                        </form>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($inv->payment_received)
+                                        <span class="badge bg-success">Yes</span>
+                                    @else
+                                        <form method="POST" action="{{ route('store.invoice.update-payment', $inv->iInvoiceId) }}" class="d-flex align-items-center gap-1">
+                                            @csrf
+                                            <input type="hidden" name="payment_mode" value="{{ $inv->payment_mode ?? 'cash' }}">
+                                            <input type="hidden" name="strNotes" value="{{ $inv->strNotes }}">
+                                            <select name="payment_received" class="form-select form-select-sm">
+                                                <option value="1">Yes</option>
+                                                <option value="0" selected>No</option>
+                                            </select>
+                                            <button type="submit" class="btn btn-sm btn-outline-success" title="Update payment received">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                        </form>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($inv->payment_received)
+                                        {{ $inv->strNotes ?: '—' }}
+                                    @else
+                                        <form method="POST" action="{{ route('store.invoice.update-payment', $inv->iInvoiceId) }}" class="d-flex align-items-center gap-1">
+                                            @csrf
+                                            <input type="hidden" name="payment_mode" value="{{ $inv->payment_mode ?? 'cash' }}">
+                                            <input type="hidden" name="payment_received" value="0">
+                                            <input type="text" name="strNotes" class="form-control form-control-sm" value="{{ $inv->strNotes }}" placeholder="Comment required">
+                                            <button type="submit" class="btn btn-sm btn-outline-primary" title="Save comment">
+                                                <i class="fas fa-save"></i>
+                                            </button>
+                                        </form>
+                                    @endif
                                 </td>
                                 <td>
                                     @if($inv->status === 'confirmed')
@@ -159,7 +217,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="9" class="text-center py-5 text-muted">
+                                <td colspan="13" class="text-center py-5 text-muted">
                                     <i class="fas fa-inbox fa-2x d-block mb-2 opacity-25"></i>
                                     No invoices found.
                                 </td>
@@ -171,7 +229,7 @@
                             <tr class="table-success fw-bold">
                                 <td colspan="5" class="text-end">Grand Total (filtered)</td>
                                 <td>₹{{ number_format($grandTotal, 2) }}</td>
-                                <td colspan="3"></td>
+                                <td colspan="7"></td>
                             </tr>
                         </tfoot>
                     @endif

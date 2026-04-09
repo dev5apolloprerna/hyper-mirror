@@ -32,6 +32,10 @@
                 <td><strong>Status:</strong> {{ strtoupper($invoice->status ?? 'draft') }}</td>
                 <td><strong>Total:</strong> ₹{{ number_format((float) $invoice->total_amount, 2) }}</td>
             </tr>
+            <tr>
+                <td><strong>Payment Mode:</strong> {{ ucfirst($invoice->payment_mode ?? 'cash') }}</td>
+                <td><strong>Payment Received:</strong> {{ $invoice->payment_received ? 'Yes' : 'No' }}</td>
+            </tr>
         </table>
     </div>
 
@@ -42,6 +46,7 @@
                 <th>Category</th>
                 <th>Product</th>
                 <th class="text-center" style="width: 10%;">Qty</th>
+                <th style="width: 18%;">Remark</th>
                 <th class="text-end" style="width: 18%;">Unit Price</th>
                 <th class="text-end" style="width: 18%;">Amount</th>
             </tr>
@@ -53,6 +58,7 @@
                     <td>{{ optional($item->category)->strCategoryName ?? '—' }}</td>
                     <td>{{ optional($item->product)->strProductName ?? '—' }}</td>
                     <td class="text-center">{{ $item->quantity }}</td>
+                    <td>{{ $item->item_remark ?: '—' }}</td>
                     <td class="text-end">₹{{ number_format((float) $item->unit_price, 2) }}</td>
                     <td class="text-end">₹{{ number_format((float) $item->iAmount, 2) }}</td>
                 </tr>
@@ -60,7 +66,7 @@
         </tbody>
         <tfoot>
             <tr class="total-row">
-                <td colspan="5" class="text-end">TOTAL</td>
+                <td colspan="6" class="text-end">TOTAL</td>
                 <td class="text-end">₹{{ number_format((float) $invoice->total_amount, 2) }}</td>
             </tr>
         </tfoot>

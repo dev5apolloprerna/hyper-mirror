@@ -16,12 +16,25 @@ class LeadDesignController extends Controller
             ->orderBy('iLeadDesignId', 'desc')
             ->paginate(15);
 
-        return view('store-manager.lead-designs.index', compact('lead', 'designs'));
+       // return view('store-manager.lead-designs.index', compact('lead', 'designs'));
+
+        $editDesign = null;
+        $editDesignId = request()->integer('edit_design');
+
+        if ($editDesignId) {
+            $editDesign = LeadDesign::where('iLeadId', $lead->iLeadId)
+                ->where('iLeadDesignId', $editDesignId)
+                ->first();
+        }
+
+        return view('store-manager.lead-designs.index', compact('lead', 'designs', 'editDesign'));
+
     }
 
     public function create(Lead $lead)
     {
-        return view('store-manager.lead-designs.create', compact('lead'));
+        return redirect()->route('store.leads.designs.index', $lead->iLeadId);
+        //return view('store-manager.lead-designs.create', compact('lead'));
     }
 
     public function store(Request $request, Lead $lead)
@@ -57,7 +70,12 @@ class LeadDesignController extends Controller
             abort(404);
         }
 
-        return view('store-manager.lead-designs.edit', compact('lead', 'design'));
+        return redirect()->route('store.leads.designs.index', [
+            'lead' => $lead->iLeadId,
+            'edit_design' => $design->iLeadDesignId,
+        ]);
+        
+        //return view('store-manager.lead-designs.edit', compact('lead', 'design'));
     }
 
     public function update(Request $request, Lead $lead, LeadDesign $design)

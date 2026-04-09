@@ -34,6 +34,16 @@
             <div class="card" id="printableArea">
                 <div class="card-body">
 
+                        @php
+                            $subtotalAmount = (float) $lead->quotations->sum('iAmount');
+                            $fittingCharges = (float) ($lead->iFittingCharges ?? 0);
+                            $discountAmount = (int) ($lead->isDiscountApplicable ?? 0) === 1 ? (float) ($lead->decDiscountAmount ?? 0) : 0;
+                            $amountAfterDiscount = max(($subtotalAmount + $fittingCharges) - $discountAmount, 0);
+                            $gstAmount = (int) ($lead->isGstApplicable ?? 0) === 1 ? (float) ($lead->decGstAmount ?? ($amountAfterDiscount * 0.18)) : 0;
+                        @endphp
+
+
+
                     <div class="row mb-4">
                         <div class="col-md-6">
                             <h5 class="mb-3">Customer Details</h5>
@@ -110,15 +120,27 @@
                                             <th colspan="{{ 9 }}" class="text-end">Subtotal</th>
                                             <th colspan="3">₹{{ number_format((float) $lead->quotations->sum('iAmount'), 2) }}</th>
                                         </tr>
-                                        @if((float)($lead->iFittingCharges ?? 0) > 0)
+                                        @if($fittingCharges > 0)
                                             <tr>
                                                 <th colspan="9" class="text-end">Fitting Charges</th>
-                                                <th colspan="3">₹{{ number_format((float)($lead->iFittingCharges ?? 0), 2) }}</th>
+                                                 <th colspan="3">₹{{ number_format($fittingCharges, 2) }}</th>
+                                            </tr>
+                                        @endif
+                                        @if((int) ($lead->isDiscountApplicable ?? 0) === 1)
+                                            <tr>
+                                                <th colspan="9" class="text-end">Discount</th>
+                                                <th colspan="3">- ₹{{ number_format($discountAmount, 2) }}</th>
+                                            </tr>
+                                        @endif
+                                        @if((int) ($lead->isGstApplicable ?? 0) === 1)
+                                            <tr>
+                                                <th colspan="9" class="text-end">GST (18%)</th>
+                                                <th colspan="3">₹{{ number_format($gstAmount, 2) }}</th>
                                             </tr>
                                         @endif
                                         <tr class="table-success">
                                             <th colspan="9" class="text-end">Grand Total</th>
-                                            <th colspan="3">₹{{ number_format((float)($lead->iLeadAmount ?? 0), 2) }}</th>
+                                            <th colspan="3">₹{{ number_format((float)($lead->iLeadAmount ?? ($amountAfterDiscount + $gstAmount)), 2) }}</th>
                                         </tr>
                                     </tfoot>
                                     @endif
