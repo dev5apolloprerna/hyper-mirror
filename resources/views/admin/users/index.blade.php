@@ -115,9 +115,16 @@
 
                                         <td class="text-center">
                                             <div class="d-flex justify-content-center gap-2 flex-wrap">
-                                                <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-sm btn-info text-white">
-                                                    <i class="fas fa-edit me-1"></i> Edit
+                                                <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-sm btn-info text-white" title="Edit">
+                                                    <i class="fas fa-edit me-1"></i> 
                                                 </a>
+                                                 <button type="button" title="Change Password" 
+                                                        class="btn btn-sm btn-warning text-white js-open-password-modal"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#changePasswordModal"
+                                                        data-user-id="{{ $user->id }}"
+                                                        data-user-name="{{ $user->strUserName ?: $user->first_name ?: 'User' }}">
+                                                    <i class="fas fa-key me-1"></i></button>
 
                                                 <form method="POST"
                                                       action="{{ route('admin.users.destroy', $user) }}"
@@ -125,10 +132,10 @@
                                                       onsubmit="return confirm('Delete this user?');">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit"
+                                                    <button type="submit" title="Delete" 
                                                             class="btn btn-sm btn-danger"
                                                             {{ auth()->id() === $user->id ? 'disabled' : '' }}>
-                                                        <i class="fas fa-trash me-1"></i> Delete
+                                                        <i class="fas fa-trash me-1"></i>
                                                     </button>
                                                 </form>
                                             </div>
@@ -156,4 +163,55 @@
         </div>
     </div>
 </div>
+<div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" id="changePasswordForm">
+                @csrf
+                <div class="modal-header">
+                    <h5 class="modal-title" id="changePasswordModalLabel">Change Password</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted mb-3">
+                        Update password for <strong id="passwordModalUserName">User</strong>.
+                    </p>
+                    <div class="mb-3">
+                        <label class="form-label">New Password <span class="text-danger">*</span></label>
+                        <input type="password" name="password" class="form-control" required minlength="6">
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label">Confirm Password <span class="text-danger">*</span></label>
+                        <input type="password" name="password_confirmation" class="form-control" required minlength="6">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning text-white">Update Password</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endsection
+
+@section('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const buttons = document.querySelectorAll('.js-open-password-modal');
+        const form = document.getElementById('changePasswordForm');
+        const userName = document.getElementById('passwordModalUserName');
+        const routeTemplate = @json(route('admin.users.password.update', ['user' => '__USER_ID__']));
+
+        buttons.forEach(function (button) {
+            button.addEventListener('click', function () {
+                const id = button.getAttribute('data-user-id');
+                const name = button.getAttribute('data-user-name') || 'User';
+
+                form.setAttribute('action', routeTemplate.replace('__USER_ID__', id));
+                userName.textContent = name;
+            });
+        });
+    });
+</script>
 @endsection
