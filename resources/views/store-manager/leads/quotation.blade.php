@@ -57,6 +57,7 @@
             @php
                 $existingItems = old('items', $activeQuotations->map(function ($q) {
                          return array(
+                        'iProductCategoryId' => $q->iProductCategoryId,
                         'iProductId' => $q->iProductId,
                         'unit_of_measurement' => $q->unit_of_measurement ?? '',
                         'shape_id' => $q->shape_id ?? '',
@@ -73,6 +74,7 @@
                 if (empty($existingItems)) {
                     $existingItems = array(
                         array(
+                            'iProductCategoryId' => '',
                             'iProductId' => '',
                             'unit_of_measurement' => '',
                             'shape_id' => '',
@@ -177,22 +179,7 @@
                         @csrf
 
                         <div class="row mb-4">
-                            <div class="col-md-6">
-                                <label class="form-label">Product Category <span style="color:red;">*</span></label>
-                                <select name="iProductCategoryId" id="iProductCategoryId" class="form-control" required>
-                                    <option value="">Select Category</option>
-                                    @foreach($categories as $category)
-                                        <option value="{{ $category->iCategoryId }}" {{ old('iProductCategoryId') == $category->iCategoryId ? 'selected' : '' }}>
-                                            {{ $category->strCategoryName }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                @error('iProductCategoryId')
-                                    <span class="text-danger d-block">{{ $message }}</span>
-                                @enderror
-                            </div>
-
-                            <div class="col-md-6 d-flex align-items-end">
+                            <div class="col-md-12 d-flex justify-content-end">
                                 <button type="button" class="btn btn-outline-primary btn-sm" id="addItemRow">
                                     <i class="fas fa-plus"></i> Add Product
                                 </button>
@@ -210,6 +197,17 @@
                                     </div>
 
                                     <div class="row g-2 align-items-end">
+                                         <div class="col-md-2">
+                                            <label class="form-label">Category <span style="color:red;">*</span></label>
+                                            <select name="items[{{ $index }}][iProductCategoryId]" class="form-control row-category-select" required>
+                                                <option value="">Select Category</option>
+                                                @foreach($categories as $category)
+                                                    <option value="{{ $category->iCategoryId }}" {{ (string)($item['iProductCategoryId'] ?? '') === (string)$category->iCategoryId ? 'selected' : '' }}>
+                                                        {{ $category->strCategoryName }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
                                         <div class="col-md-2">
                                             <label class="form-label">Product <span style="color:red;">*</span></label>
                                             <select name="items[{{ $index }}][iProductId]" class="form-control row-product-select" required>
@@ -292,7 +290,6 @@
 
                                     <div class="product-separator mt-3"></div>
                                 </div>
-                                </div>
                             @endforeach
                         </div>
 
@@ -327,6 +324,32 @@
                                     <span class="text-danger d-block">{{ $message }}</span>
                                 @enderror
                             </div>
+                             <div class="col-md-4 mb-4">
+                                <label class="form-label">Discount?</label>
+                                <select name="isDiscountApplicable" id="isDiscountApplicable" class="form-control" required>
+                                    <option value="0" {{ old('isDiscountApplicable', (int)($lead->isDiscountApplicable ?? 0)) == 0 ? 'selected' : '' }}>No</option>
+                                    <option value="1" {{ old('isDiscountApplicable', (int)($lead->isDiscountApplicable ?? 0)) == 1 ? 'selected' : '' }}>Yes</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-4 mb-4" id="discountAmountBox">
+                                <label class="form-label">Discount Amount</label>
+                                <input type="number" step="0.01" min="0" name="discount_amount" id="discountAmount" class="form-control" value="{{ old('discount_amount', (float)($lead->decDiscountAmount ?? 0)) }}">
+                            </div>
+
+                            <div class="col-md-4 mb-4">
+                                <label class="form-label">GST (18%)?</label>
+                                <select name="isGstApplicable" id="isGstApplicable" class="form-control" required>
+                                    <option value="0" {{ old('isGstApplicable', (int)($lead->isGstApplicable ?? 0)) == 0 ? 'selected' : '' }}>No</option>
+                                    <option value="1" {{ old('isGstApplicable', (int)($lead->isGstApplicable ?? 0)) == 1 ? 'selected' : '' }}>Yes</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-4 mb-4">
+                                <label class="form-label">GST Amount</label>
+                                <input type="text" id="gstAmount" class="form-control" readonly>
+                            </div>
+
 
                             <div class="col-md-4 mb-4">
                                 <label class="form-label">Grand Total</label>
@@ -370,7 +393,7 @@
         function refreshRowNumbersAndInputNames() {
             $('#quotationRows .quotation-row').each(function (index) {
                 $(this).attr('data-index', index);
-                $(this).find('.row-number').text(index + 1);
+                $(this).find('select.row-category-select').attr('name', 'items[' + index + '][iProductCategoryId]');
                 $(this).find('select.row-product-select').attr('name', 'items[' + index + '][iProductId]');
                 $(this).find('select.unit-of-measurement').attr('name', 'items[' + index + '][unit_of_measurement]');
                 $(this).find('select[name*="[shape_id]"]').attr('name', 'items[' + index + '][shape_id]');
@@ -386,16 +409,22 @@
             $('.remove-row').prop('disabled', $('#quotationRows .quotation-row').length === 1);
         }
 
+        function updateProductDropdownForRow($row) {
+            const categoryId = $row.find('.row-category-select').val();
+            const $productSelect = $row.find('.row-product-select');
+            const currentVal = $productSelect.val();
+
+
+                        $productSelect.html(buildProductSelectOptions(categoryId, currentVal));
+
+                if (currentVal && $productSelect.find('option[value="' + currentVal + '"]').length === 0) {
+                $productSelect.val('');
+            }
+        }
+
         function updateAllProductDropdowns() {
-            const categoryId = $('#iProductCategoryId').val();
-
-            $('#quotationRows .row-product-select').each(function () {
-                const currentVal = $(this).val();
-                $(this).html(buildProductSelectOptions(categoryId, currentVal));
-
-                if (currentVal && $(this).find('option[value="' + currentVal + '"]').length === 0) {
-                    $(this).val('');
-                }
+            $('#quotationRows .quotation-row').each(function () {
+                updateProductDropdownForRow($(this));
             });
         }
 
@@ -413,6 +442,17 @@
                 $('#iFittingCharges').val(0);
             }
         }
+
+         function toggleDiscountBox() {
+            const isDiscountApplicable = $('#isDiscountApplicable').val() === '1';
+            if (isDiscountApplicable) {
+                $('#discountAmountBox').show();
+            } else {
+                $('#discountAmountBox').hide();
+                $('#discountAmount').val(0);
+            }
+        }
+
 
         function recalculateTotals() {
             let subtotal = 0;
@@ -432,15 +472,25 @@
             const fitting = (leadFittingRequired === '1' && leadFittingChargeIncluded === '0')
                 ? (parseFloat($('#iFittingCharges').val()) || 0)
                 : 0;
+ 
+            const baseAmount = subtotal + fitting;
+            const isDiscountApplicable = $('#isDiscountApplicable').val() === '1';
+            const discount = isDiscountApplicable ? (parseFloat($('#discountAmount').val()) || 0) : 0;
+            const discountAmount = Math.min(discount, baseAmount);
+            const afterDiscount = baseAmount - discountAmount;
+
+            const isGstApplicable = $('#isGstApplicable').val() === '1';
+            const gst = isGstApplicable ? (afterDiscount * 0.18) : 0;
+
 
             $('#subtotalAmount').val(subtotal.toFixed(2));
-            $('#grandTotalAmount').val((subtotal + fitting).toFixed(2));
+            $('#gstAmount').val(gst.toFixed(2));
+            $('#grandTotalAmount').val((afterDiscount + gst).toFixed(2));
         }
 
         function addItemRow() {
             const nextIndex = $('#quotationRows .quotation-row').length;
-            const categoryId = $('#iProductCategoryId').val();
-
+            
             const rowHtml = `
     <div class="quotation-row card-like" data-index="${nextIndex}">
         <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
@@ -451,6 +501,18 @@
         </div>
 
         <div class="row g-2 align-items-end">
+
+                 <div class="col-md-2">
+                <label class="form-label">Category <span style="color:red;">*</span></label>
+                <select name="items[${nextIndex}][iProductCategoryId]" class="form-control row-category-select" required>
+                    <option value="">Select Category</option>
+                    @foreach($categories as $category)
+                        <option value="{{ $category->iCategoryId }}">{{ $category->strCategoryName }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+
             <div class="col-md-2">
                 <label class="form-label">Product <span style="color:red;">*</span></label>
                 <select name="items[${nextIndex}][iProductId]" class="form-control row-product-select" required>
@@ -529,15 +591,7 @@
             recalculateTotals();
         }
 
-        $('#iProductCategoryId').on('change', function () {
-            updateAllProductDropdowns();
-        });
-
         $('#addItemRow').on('click', function () {
-            if ($('#iProductCategoryId').val() === '') {
-                alert('Please select Product Category first.');
-                return;
-            }
             addItemRow();
         });
 
@@ -549,13 +603,21 @@
             }
         });
 
-        $(document).on('keyup change', '.quantity, .decHeight, .decWidth, .decRatePerSqft, #iFittingCharges, .row-product-select', function () {
+         $(document).on('change', '.row-category-select', function () {
+            const $row = $(this).closest('.quotation-row');
+            updateProductDropdownForRow($row);
+            recalculateTotals();
+        });
+
+        $(document).on('keyup change', '.quantity, .decHeight, .decWidth, .decRatePerSqft, #iFittingCharges, .row-product-select, #isDiscountApplicable, #discountAmount, #isGstApplicable', function () {
+            toggleDiscountBox();
             recalculateTotals();
         });
 
         updateAllProductDropdowns();
         refreshRowNumbersAndInputNames();
         toggleFittingCharges();
+        toggleDiscountBox();
         recalculateTotals();
     });
 </script>

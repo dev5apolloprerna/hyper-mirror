@@ -107,12 +107,13 @@
                         @enderror
                     </div>
 
-                    <div class="col-md-5">
+                   <!--  <div class="col-md-5">
                         <label class="form-label fw-semibold">Notes / Remarks</label>
                         <input type="text" name="strNotes"
                                value="{{ old('strNotes') }}"
                                class="form-control" placeholder="Optional notes…">
-                    </div>
+                    </div> -->
+                    
 
                 </div>
             </div>
@@ -131,7 +132,7 @@
 
                 {{-- Seed existing items (after validation error) --}}
                 @php
-                    $oldItems = old('items', [['iCategoryId'=>'','iProductId'=>'','quantity'=>1,'unit_price'=>'','iAmount'=>'']]);
+                    $oldItems = old('items', [['iCategoryId'=>'','iProductId'=>'','quantity'=>1,'unit_price'=>'','iAmount'=>'','item_remark'=>'']]);
                 @endphp
 
                 @foreach($oldItems as $idx => $row)
@@ -199,12 +200,21 @@
                             </div>
 
                             {{-- Amount --}}
-                            <div class="col-md-1">
+                            <div class="col-md-2">
                                 <label class="form-label small fw-semibold mb-1">Amount</label>
                                 <input type="text"
                                        name="items[{{ $idx }}][iAmount]"
                                        value="{{ $row['iAmount'] ?? '' }}"
                                        class="form-control form-control-sm amount-field" readonly>
+                            </div>
+                             {{-- Product Remark --}}
+                            <div class="col-md-2">
+                                <label class="form-label small fw-semibold mb-1">Remark</label>
+                                <input type="text"
+                                       name="items[{{ $idx }}][item_remark]"
+                                       value="{{ $row['item_remark'] ?? '' }}"
+                                       class="form-control form-control-sm"
+                                       placeholder="Optional remark">
                             </div>
 
                             {{-- Remove --}}
@@ -223,6 +233,45 @@
 
             {{-- Total strip --}}
             <div class="card-footer bg-white border-top pt-3 pb-4 px-4">
+                                <div class="row g-3 mb-3">
+                    <div class="col-md-5">
+                        <label class="form-label fw-semibold">
+                            Notes / Remarks
+                        </label>
+                        <input type="text" name="strNotes"
+                               value="{{ old('strNotes') }}"
+                               class="form-control @error('strNotes') is-invalid @enderror"
+                               placeholder="Comments are mandatory when payment is pending">
+                        @error('strNotes')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">
+                            Payment Mode <span class="text-danger">*</span>
+                        </label>
+                        <select name="payment_mode" class="form-select @error('payment_mode') is-invalid @enderror" required>
+                            <option value="cash" {{ old('payment_mode', 'cash') === 'cash' ? 'selected' : '' }}>Cash</option>
+                            <option value="bank" {{ old('payment_mode') === 'bank' ? 'selected' : '' }}>Bank</option>
+                        </select>
+                        @error('payment_mode')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label fw-semibold">
+                            Payment Received <span class="text-danger">*</span>
+                        </label>
+                        <select name="payment_received" class="form-select @error('payment_received') is-invalid @enderror" required>
+                            <option value="0" {{ old('payment_received', '0') === '0' ? 'selected' : '' }}>No</option>
+                            <option value="1" {{ old('payment_received') === '1' ? 'selected' : '' }}>Yes</option>
+                        </select>
+                        @error('payment_received')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+
                 <div class="row justify-content-end">
                     <div class="col-md-4">
                         <div class="total-strip">
@@ -341,10 +390,15 @@ function newRow() {
                        class="form-control form-control-sm price-input" placeholder="0.00" required>
             </div>
 
-            <div class="col-md-1">
+            <div class="col-md-2">
                 <label class="form-label small fw-semibold mb-1">Amount</label>
                 <input type="text" name="items[${rowIndex}][iAmount]"
                        class="form-control form-control-sm amount-field" readonly>
+            </div>
+        <div class="col-md-2">
+                <label class="form-label small fw-semibold mb-1">Remark</label>
+                <input type="text" name="items[${rowIndex}][item_remark]"
+                       class="form-control form-control-sm" placeholder="Optional remark">
             </div>
 
             <div class="col-md-1 d-flex align-items-end">

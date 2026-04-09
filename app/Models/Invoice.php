@@ -19,6 +19,12 @@ class Invoice extends Model
         'InvoiceDate',
         'strNotes',
         'status',
+         'payment_mode',
+        'payment_received',
+    ];
+
+    protected $casts = [
+        'payment_received' => 'boolean',
     ];
 
     public function showroom()
@@ -39,5 +45,9 @@ class Invoice extends Model
     public function getTotalAmountAttribute(): float
     {
         return (float) $this->items->sum('iAmount');
+    }
+        public function getUnpaidAmountAttribute(): float
+    {
+        return $this->payment_received ? 0.0 : $this->total_amount;
     }
 }

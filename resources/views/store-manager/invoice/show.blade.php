@@ -85,6 +85,14 @@
                 <div class="lbl">Created By</div>
                 <div class="val">{{ optional($invoice->createdBy)->strUserName ?: optional($invoice->createdBy)->first_name ?? '—' }}</div>
             </div>
+            <div>
+                <div class="lbl">Payment Mode</div>
+                <div class="val">{{ ucfirst($invoice->payment_mode ?? 'cash') }}</div>
+            </div>
+            <div>
+                <div class="lbl">Payment Received</div>
+                <div class="val">{{ $invoice->payment_received ? 'Yes' : 'No' }}</div>
+            </div>
             @if($invoice->strNotes)
             <div style="grid-column:span 2;">
                 <div class="lbl">Notes</div>
@@ -103,6 +111,7 @@
                             <th>Category</th>
                             <th>Product</th>
                             <th class="text-center">Qty</th>
+                            <th>Remark</th>
                             <th class="text-end">Unit Price</th>
                             <th class="text-end">Amount</th>
                         </tr>
@@ -114,6 +123,7 @@
                                 <td>{{ optional($item->category)->strCategoryName ?? '—' }}</td>
                                 <td>{{ optional($item->product)->strProductName ?? '—' }}</td>
                                 <td class="text-center fw-semibold">{{ $item->quantity }}</td>
+                                <td>{{ $item->item_remark ?: '—' }}</td>
                                 <td class="text-end">₹{{ number_format((float)$item->unit_price, 2) }}</td>
                                 <td class="text-end fw-bold">₹{{ number_format((float)$item->iAmount, 2) }}</td>
                             </tr>
@@ -121,7 +131,7 @@
                     </tbody>
                     <tfoot>
                         <tr>
-                            <td colspan="5" class="text-end pe-4">TOTAL</td>
+                            <td colspan="6" class="text-end pe-4">TOTAL</td>
                             <td class="text-end pe-3">₹{{ number_format($invoice->total_amount, 2) }}</td>
                         </tr>
                     </tfoot>

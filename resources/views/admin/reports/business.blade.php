@@ -161,6 +161,33 @@
                 </div>
             </div>
 
+                        <div class="row g-3 mb-3">
+                <div class="col-md-4">
+                    <div class="card metric-card h-100">
+                        <div class="card-body">
+                            <small>Daily Business Cash</small>
+                            <h5 class="text-success">₹{{ number_format($todayCashAmount, 2) }}</h5>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card metric-card h-100">
+                        <div class="card-body">
+                            <small>Daily Business Bank</small>
+                            <h5 class="text-primary">₹{{ number_format($todayBankAmount, 2) }}</h5>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card metric-card h-100">
+                        <div class="card-body">
+                            <small>Daily Business Total</small>
+                            <h5>₹{{ number_format($todayTotalAmount, 2) }}</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {{-- ── Two Column Section ── --}}
             <div class="row g-3 mb-3">
 

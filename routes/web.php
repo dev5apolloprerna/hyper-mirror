@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\ShowroomController;
 use App\Http\Controllers\Admin\UserShowroomController;
 use App\Http\Controllers\Admin\CrmUserController;
 use App\Http\Controllers\Admin\BusinessReportController;
+use App\Http\Controllers\Admin\ProductShapeController;
 
 use App\Http\Controllers\StoreManager\LeadController;
 use App\Http\Controllers\StoreManager\LeadDesignController;
@@ -80,6 +81,16 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::delete('product-category/delete/{id}', [ProductCategoryController::class, 'destroy'])->name('product-category.delete');
     Route::post('product-category/bulk-delete', [ProductCategoryController::class, 'bulkDelete'])->name('product-category.bulkDelete');
 });
+
+// Admin: Product Shapes
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::get('product-shape', [ProductShapeController::class, 'index'])->name('product-shape.index');
+    Route::post('product-shape/store', [ProductShapeController::class, 'store'])->name('product-shape.store');
+    Route::post('product-shape/update/{id}', [ProductShapeController::class, 'update'])->name('product-shape.update');
+    Route::delete('product-shape/delete/{id}', [ProductShapeController::class, 'destroy'])->name('product-shape.delete');
+    Route::post('product-shape/bulk-delete', [ProductShapeController::class, 'bulkDelete'])->name('product-shape.bulkDelete');
+});
+
 
 // Admin: Products
 Route::prefix('admin')->name('admin.')->group(function () {
@@ -149,6 +160,7 @@ Route::middleware('auth')->prefix('store-manager')->name('store.')->group(functi
     Route::get('invoice/create',             [InvoiceController::class, 'create'])->name('invoice.create');
     Route::post('invoice/store',             [InvoiceController::class, 'store'])->name('invoice.store');
     Route::get('invoice/{invoice}/pdf',      [InvoiceController::class, 'pdf'])->name('invoice.pdf');
+    Route::post('invoice/{invoice}/update-payment', [InvoiceController::class, 'updatePayment'])->name('invoice.update-payment');
     Route::get('invoice/{invoice}',          [InvoiceController::class, 'show'])->name('invoice.show');
     Route::delete('invoice/{invoice}/delete',[InvoiceController::class, 'destroy'])->name('invoice.destroy');
     Route::get('invoice/products-by-category',[InvoiceController::class,'productsByCategory'])->name('invoice.products-by-category');

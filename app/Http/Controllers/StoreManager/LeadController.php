@@ -232,8 +232,9 @@ class LeadController extends Controller
         $requiresManualFittingCharge = (int) $lead->isFittingRequired === 1 && (int) $lead->isFittingChargeIncluded === 0;
 
         $rules = [
-            'iProductCategoryId'                      => 'required|exists:product_categories,iCategoryId',
+            //'iProductCategoryId'                      => 'required|exists:product_categories,iCategoryId',
             'items'                                    => 'required|array|min:1',
+            'items.*.iProductCategoryId'               => 'required|exists:product_categories,iCategoryId',
             'items.*.iProductId'                       => 'required|exists:products,iProductId',
             'items.*.unit_of_measurement'              => 'required|in:inch,MM,Feet',
             'items.*.shape_id'                         => 'required|exists:product_shape,shape_id',
@@ -247,9 +248,28 @@ class LeadController extends Controller
             'iFittingCharges'                          => $requiresManualFittingCharge
                                                             ? 'required|numeric|min:0'
                                                             : 'nullable|numeric|min:0',
+            'isDiscountApplicable'                     => 'required|in:0,1',
+            'discount_amount'                          => 'nullable|numeric|min:0',
+            'isGstApplicable'                          => 'required|in:0,1',                                               
         ];
 
         $data = $request->validate($rules);
+
+        $productCategoryMap = Product::query()
+            ->whereIn('iProductId', collect($data['items'])->pluck('iProductId')->all())
+            ->pluck('iCategoryId', 'iProductId');
+
+        foreach ($data['items'] as $index => $item) {
+            $selectedProductCategory = (int) ($productCategoryMap[$item['iProductId']] ?? 0);
+            if ($selectedProductCategory !== (int) $item['iProductCategoryId']) {
+                return back()
+                    ->withInput()
+                    ->withErrors([
+                        "items.$index.iProductId" => 'Selected product does not belong to selected category for this row.',
+                    ]);
+            }
+        }
+
 
         DB::beginTransaction();
 
@@ -268,7 +288,7 @@ class LeadController extends Controller
                 $quotation = LeadQuotation::create([
                     'iLeadId'             => $lead->iLeadId,
                     'quotation_batch_id'  => $nextBatchId,
-                    'iProductCategoryId'  => $data['iProductCategoryId'],
+                    'iProductCategoryId'  => $item['iProductCategoryId'],
                     'iProductId'          => $item['iProductId'],
                     'unit_of_measurement' => $item['unit_of_measurement'],
                     'shape_id'            => $item['shape_id'],
@@ -293,14 +313,36 @@ class LeadController extends Controller
                 ? (float) ($data['iFittingCharges'] ?? 0)
                 : 0;
 
-            $grandTotal = $subtotal + $fittingCharges;
+            //$grandTotal = $subtotal + $fittingCharges;
+
+            $discountApplicable = (int) ($data['isDiscountApplicable'] ?? 0) === 1;
+            $rawDiscountAmount = (float) ($data['discount_amount'] ?? 0);
+            $baseAmount = $subtotal + $fittingCharges;
+            $discountAmount = $discountApplicable ? min($rawDiscountAmount, $baseAmount) : 0;
+            $amountAfterDiscount = $baseAmount - $discountAmount;
+
+            $gstApplicable = (int) ($data['isGstApplicable'] ?? 0) === 1;
+            $gstAmount = $gstApplicable ? ($amountAfterDiscount * 0.18) : 0;
+
+            $grandTotal = $amountAfterDiscount + $gstAmount;
+
 
             $lead->update([
-                'iQuotationId'       => $firstQuotation ? $firstQuotation->iQuotationId : null,
+                /*'iQuotationId'       => $firstQuotation ? $firstQuotation->iQuotationId : null,
                 'iLeadAmount'        => $grandTotal,
                 'iCurrentLeadStatus' => LeadWorkflow::STATUS_QUOTATION_SENT,
                 'NetFollowupdate'    => $data['followup_date'],
                 'iFittingCharges'    => $fittingCharges,
+*/
+                'iQuotationId'          => $firstQuotation ? $firstQuotation->iQuotationId : null,
+                'iLeadAmount'           => $grandTotal,
+                'iCurrentLeadStatus'    => LeadWorkflow::STATUS_QUOTATION_SENT,
+                'NetFollowupdate'       => $data['followup_date'],
+                'iFittingCharges'       => $fittingCharges,
+                'isDiscountApplicable'  => $discountApplicable ? 1 : 0,
+                'decDiscountAmount'     => $discountAmount,
+                'isGstApplicable'       => $gstApplicable ? 1 : 0,
+                'decGstAmount'          => $gstAmount,
             ]);
 
             LeadHistory::create([

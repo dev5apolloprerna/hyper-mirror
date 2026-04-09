@@ -19,6 +19,7 @@ class InvoiceItem extends Model
         'quantity',
         'unit_price',
         'iAmount',
+        'item_remark',
     ];
 
     public function invoice()
