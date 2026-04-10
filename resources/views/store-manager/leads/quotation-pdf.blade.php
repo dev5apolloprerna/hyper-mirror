@@ -44,10 +44,8 @@
 </head>
 <body>
 
-        @php
-        $hasRemarksColumn = $lead->quotations->contains(function ($quotationItem) {
-            return !empty($quotationItem->remarks);
-        });
+    @php
+        $hasRemarksColumn = $lead->quotations->pluck('remarks')->filter()->isNotEmpty();
 
         $subtotalAmount = (float) $lead->quotations->sum('iAmount');
         $fittingCharges = (float) ($lead->iFittingCharges ?? 0);
@@ -56,7 +54,6 @@
         $gstAmount = (int) ($lead->isGstApplicable ?? 0) === 1 ? (float) ($lead->decGstAmount ?? ($amountAfterDiscount * 0.18)) : 0;
         $summaryColspan = $hasRemarksColumn ? 12 : 11;
     @endphp
-
 
     <div class="no-print" style="margin-bottom:16px; text-align:right;">
         <button onclick="window.print()" style="padding:8px 18px; background:#1a1a2e; color:#fff; border:none; border-radius:6px; cursor:pointer; font-size:13px;">
@@ -146,7 +143,7 @@
         @if($canViewFinancial)
         <tfoot>
             <tr>
-            <th colspan="{{ $summaryColspan }}" style="text-align:right;">Subtotal</th>
+                <th colspan="{{ $summaryColspan }}" style="text-align:right;">Subtotal</th>
                 <th>₹{{ number_format($subtotalAmount, 2) }}</th>
             </tr>
             @if($fittingCharges > 0)
@@ -162,8 +159,6 @@
             </tr>
             @endif
             @if((int) ($lead->isGstApplicable ?? 0) === 1)
-            </tr>
-            @if((float)($lead->iFittingCharges ?? 0) > 0)
             <tr>
                 <th colspan="{{ $summaryColspan }}" style="text-align:right;">GST (18%)</th>
                 <th>₹{{ number_format($gstAmount, 2) }}</th>
