@@ -35,7 +35,11 @@ class LeadPaymentController extends Controller
                     ->orWhere('PaymentDate', 'like', "%{$search}%")
                     ->orWhere('PaymentMode', 'like', "%{$search}%")
                     ->orWhereHas('user', function ($sub) use ($search) {
-                        $sub->where('name', 'like', "%{$search}%");
+            $sub->where('name', 'like', "%{$search}%")
+                ->orWhere('first_name', 'like', "%{$search}%")
+                ->orWhere('last_name', 'like', "%{$search}%")
+                ->orWhereRaw("CONCAT(COALESCE(first_name,''), ' ', COALESCE(last_name,'')) like ?", ["%{$search}%"])
+                ->orWhere('strUserName', 'like', "%{$search}%");
                     });
             });
         }

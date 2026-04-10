@@ -136,6 +136,7 @@
                                             'Advance Received'    => 'bg-success',
                                             'Production Accepted' => 'bg-warning text-dark',
                                             'Ready to Dispatched' => 'bg-info text-dark',
+                                            'Received @ Narol'    => 'bg-dark',
                                             'Dispatched'          => 'bg-primary',
                                             'Dispatched Done'     => 'bg-success',
                                             'Fitting Pending'     => 'bg-warning text-dark',
@@ -187,6 +188,14 @@
                                                         <span class="ms-1 d-none d-md-inline">Open</span>
                                                     @endif
                                                 </a>
+                                                @if($roleSlug === 'storemanager')
+                                                    <a href="{{ route('store.leads.histories.index', $lead->iLeadId) }}"
+                                                       class="btn btn-sm btn-outline-primary"
+                                                       title="View Full Lead Detail">
+                                                        <i class="fas fa-eye"></i>
+                                                        <span class="ms-1 d-none d-md-inline"></span>
+                                                    </a>
+                                                @endif
 
                                                 {{-- Quotation view --}}
                                                 @if($lead->quotation)

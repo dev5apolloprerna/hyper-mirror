@@ -20,7 +20,8 @@
                                 {{ $lead->customer->strMobile ?? '' }}
                                 &nbsp;·&nbsp;
                                 <span class="badge bg-primary text-white">{{ $lead->iCurrentLeadStatus }}</span>
-                                @if($lead->NetFollowupdate && !in_array($lead->iCurrentLeadStatus, ['Lead Rejected', 'Deal Done', 'Measurement Done']))
+                                {{-- @if($lead->NetFollowupdate && !in_array($lead->iCurrentLeadStatus, ['Lead Rejected', 'Deal Done', 'Measurement Done'])) --}}
+                                @if($lead->NetFollowupdate && !in_array($lead->iCurrentLeadStatus, ['Lead Rejected', 'Deal Done', 'Measurement Done', 'Ready to Dispatched']))
                                     &nbsp;·&nbsp;
                                     <span class="text-{{ now()->toDateString() > $lead->NetFollowupdate ? 'danger' : 'success' }}">
                                         <i class="fas fa-calendar-alt me-1"></i>Next: {{ \Carbon\Carbon::parse($lead->NetFollowupdate)->format('d-m-Y') }}
@@ -30,8 +31,6 @@
                         </div>
 
                         <div class="page-title-right d-flex gap-2 flex-wrap">
-                            
-
                             <a href="{{ route('store.leads.index') }}" class="btn btn-secondary btn-sm">
                                 <i class="fas fa-arrow-left"></i> Back
                             </a>
@@ -80,18 +79,25 @@
                 {{-- LEFT: Lead Summary (printable) --}}
                 <div class="col-xl-7 col-lg-7" id="leadSummarySection">
                     <div class="card border-0 shadow-sm h-100">
-                       <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between">
-                            <h6 class="mb-0 fw-bold">
-                                <i class="fas fa-info-circle me-2 text-primary"></i>Lead Summary
+                        <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between">
+                            <h6 class="mb-0 fw-bold d-flex align-items-center flex-wrap gap-2">
+                                <span><i class="fas fa-info-circle me-2 text-primary"></i>Lead Summary</span>
+                                <span class="badge bg-light text-dark border">
+                                    Sales Person:
+                                    {{ optional($lead->createdBy)->full_name ?: (optional($lead->createdBy)->name ?? (optional($lead->createdBy)->strUserName ?? '—')) }}
+                                    @if(!empty(optional($lead->createdBy)->mobile_number) || !empty(optional($lead->createdBy)->strUserMobile))
+                                        · {{ optional($lead->createdBy)->mobile_number ?? optional($lead->createdBy)->strUserMobile }}
+                                    @endif
+                                </span>
                             </h6>
-                        
+
                             @if($roleSlug === 'measurement')
-                            <button type="button"
-                                    class="btn btn-outline-secondary btn-sm"
-                                    onclick="printLeadSummary()"
-                                    title="Print Lead Summary">
-                                <i class="fas fa-print me-1"></i> Print Summary
-                            </button>
+                                <button type="button"
+                                        class="btn btn-outline-secondary btn-sm"
+                                        onclick="printLeadSummary()"
+                                        title="Print Lead Summary">
+                                    <i class="fas fa-print me-1"></i> Print Summary
+                                </button>
                             @endif
                         </div>
                         <div class="card-body">
@@ -130,49 +136,56 @@
                                             <td>{{ $lead->IsMeasureMentRequired ? 'Required' : 'Not Required' }}</td>
                                         </tr>
                                         @if($lead->MeasurementVisitDate)
-                                        <tr>
-                                            <td class="text-muted">Measurement Date</td>
-                                            <td>{{ \Carbon\Carbon::parse($lead->MeasurementVisitDate)->format('d-m-Y') }}</td>
-                                        </tr>
+                                            <tr>
+                                                <td class="text-muted">Measurement Date</td>
+                                                <td>{{ \Carbon\Carbon::parse($lead->MeasurementVisitDate)->format('d-m-Y') }}</td>
+                                            </tr>
                                         @endif
                                     </table>
                                 </div>
+
                                 <div class="col-md-6">
                                     <table class="table table-sm table-borderless mb-0">
+                                        {{-- @if($lead->NetFollowupdate && !in_array($lead->iCurrentLeadStatus, [\App\Support\LeadWorkflow::STATUS_LEAD_REJECTED, \App\Support\LeadWorkflow::STATUS_DEAL_DONE, \App\Support\LeadWorkflow::STATUS_MEASUREMENT_DONE])) --}}
                                         @if($lead->NetFollowupdate && !in_array($lead->iCurrentLeadStatus, [\App\Support\LeadWorkflow::STATUS_LEAD_REJECTED, \App\Support\LeadWorkflow::STATUS_DEAL_DONE, \App\Support\LeadWorkflow::STATUS_MEASUREMENT_DONE]))
-                                        <tr>
-                                            <td class="text-muted" style="width:45%">Next Follow Up</td>
-                                            <td class="{{ now()->toDateString() > $lead->NetFollowupdate ? 'text-danger fw-bold' : '' }}">
-                                                {{ \Carbon\Carbon::parse($lead->NetFollowupdate)->format('d-m-Y') }}
-                                                @if(now()->toDateString() > $lead->NetFollowupdate)
-                                                    <span class="badge bg-danger ms-1">Overdue</span>
-                                                @elseif(now()->toDateString() === $lead->NetFollowupdate)
-                                                    <span class="badge bg-warning text-dark ms-1">Today</span>
-                                                @endif
-                                            </td>
-                                        </tr>
+                                            <tr>
+                                                <td class="text-muted" style="width:45%">Next Follow Up</td>
+                                                <td class="{{ now()->toDateString() > $lead->NetFollowupdate ? 'text-danger fw-bold' : '' }}">
+                                                    {{ \Carbon\Carbon::parse($lead->NetFollowupdate)->format('d-m-Y') }}
+                                                    @if(now()->toDateString() > $lead->NetFollowupdate)
+                                                        <span class="badge bg-danger ms-1">Overdue</span>
+                                                    @elseif(now()->toDateString() === $lead->NetFollowupdate)
+                                                        <span class="badge bg-warning text-dark ms-1">Today</span>
+                                                    @endif
+                                                </td>
+                                            </tr>
                                         @endif
-                                        <tr>
-                                            <td class="text-muted">Lead Amount</td>
-                                            <td><strong>₹{{ number_format((float)$lead->iLeadAmount, 2) }}</strong></td>
-                                        </tr>
-                                        @if($lead->iFittingCharges)
-                                        <tr>
-                                            <td class="text-muted">Fitting Charges</td>
-                                            <td>₹{{ number_format((float)$lead->iFittingCharges, 2) }}</td>
-                                        </tr>
+
+                                        @if($canViewFinancial)
+                                            <tr>
+                                                <td class="text-muted">Lead Amount</td>
+                                                <td><strong>₹{{ number_format((float)$lead->iLeadAmount, 2) }}</strong></td>
+                                            </tr>
+                                            @if($lead->iFittingCharges)
+                                                <tr>
+                                                    <td class="text-muted">Fitting Charges</td>
+                                                    <td>₹{{ number_format((float)$lead->iFittingCharges, 2) }}</td>
+                                                </tr>
+                                            @endif
                                         @endif
-                                        @if(in_array($roleSlug, ['storemanager', 'account']))
-                                        <tr>
-                                            <td class="text-muted">Total Paid</td>
-                                            <td>
-                                                @php $totalPaid = $lead->payments()->sum('iPaidAmount'); @endphp
-                                                <strong class="{{ $totalPaid >= $lead->iLeadAmount && $lead->iLeadAmount > 0 ? 'text-success' : 'text-warning' }}">
-                                                    ₹{{ number_format((float)$totalPaid, 2) }}
-                                                </strong>
-                                            </td>
-                                        </tr>
+
+                                        @if(in_array($roleSlug, ['storemanager', 'account']) && $canViewFinancial)
+                                            <tr>
+                                                <td class="text-muted">Total Paid</td>
+                                                <td>
+                                                    @php $totalPaid = $lead->payments()->sum('iPaidAmount'); @endphp
+                                                    <strong class="{{ $totalPaid >= $lead->iLeadAmount && $lead->iLeadAmount > 0 ? 'text-success' : 'text-warning' }}">
+                                                        ₹{{ number_format((float)$totalPaid, 2) }}
+                                                    </strong>
+                                                </td>
+                                            </tr>
                                         @endif
+
                                         <tr>
                                             <td class="text-muted">Lead No</td>
                                             <td><strong>{{ $lead->strLeadNo }}</strong></td>
@@ -182,10 +195,10 @@
                                             <td>{{ \Carbon\Carbon::parse($lead->CreatedDate)->format('d-m-Y') }}</td>
                                         </tr>
                                         @if($lead->expected_delivery_date)
-                                        <tr>
-                                            <td class="text-muted">Expected Delivery</td>
-                                            <td>{{ \Carbon\Carbon::parse($lead->expected_delivery_date)->format('d-m-Y') }}</td>
-                                        </tr>
+                                            <tr>
+                                                <td class="text-muted">Expected Delivery</td>
+                                                <td>{{ \Carbon\Carbon::parse($lead->expected_delivery_date)->format('d-m-Y') }}</td>
+                                            </tr>
                                         @endif
                                     </table>
                                 </div>
@@ -193,57 +206,59 @@
 
                             {{-- Quotation items in summary --}}
                             @if($lead->quotations && $lead->quotations->count())
-                            <div class="mt-3 pt-3 border-top">
-                                <h6 class="fw-semibold mb-2">Quotation Items</h6>
-                                <div class="table-responsive">
-                                    <table class="table table-sm table-bordered mb-0">
-                                        <thead class="table-light">
-                                            <tr>
-                                                <th>#</th>
-                                                <th>Product</th>
-                                                <th>Shape</th>
-                                                <th>Unit</th>
-                                                <th>Qty</th>
-                                                <th>H × W</th>
-                                                @if(in_array($roleSlug, ['storemanager', 'account']))
-                                                <th>Rate</th>
-                                                <th>Amount</th>
-                                                @endif
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @php
-                                                $activeBatchId = optional($lead->quotation)->quotation_batch_id;
-                                                $activeQuotations = $activeBatchId
-                                                    ? $lead->quotations->where('quotation_batch_id', $activeBatchId)->values()
-                                                    : $lead->quotations;
-                                            @endphp
-                                            @foreach($activeQuotations as $i => $q)
-                                            <tr>
-                                                <td>{{ $i + 1 }}</td>
-                                                <td>{{ optional($q->product)->strProductName ?? '—' }}</td>
-                                                <td>{{ optional($q->shape)->shape_title ?? '—' }}</td>
-                                                <td>{{ $q->unit_of_measurement ?? '—' }}</td>
-                                                <td>{{ $q->quantity ?? 1 }}</td>
-                                                <td>{{ $q->decHeight }} × {{ $q->decWidth }}</td>
-                                                @if(in_array($roleSlug, ['storemanager', 'account']))
-                                                <td>₹{{ number_format((float)$q->decRatePerSqft, 2) }}</td>
-                                                <td>₹{{ number_format((float)$q->iAmount, 2) }}</td>
-                                                @endif
-                                            </tr>
-                                            @endforeach
-                                        </tbody>
-                                        @if(in_array($roleSlug, ['storemanager', 'account']))
-                                        <tfoot>
-                                            <tr>
-                                                <th colspan="7" class="text-end">Total</th>
-                                                <th>₹{{ number_format((float)$lead->iLeadAmount, 2) }}</th>
-                                            </tr>
-                                        </tfoot>
-                                        @endif
-                                    </table>
+                                <div class="mt-3 pt-3 border-top">
+                                    <h6 class="fw-semibold mb-2">Quotation Items</h6>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-bordered mb-0">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>#</th>
+                                                    <th>Product</th>
+                                                    <th>Shape</th>
+                                                    <th>Unit</th>
+                                                    <th>Qty</th>
+                                                    <th>H × W</th>
+                                                    @if(in_array($roleSlug, ['storemanager', 'account']) && $canViewFinancial)
+                                                        <th>Rate</th>
+                                                        <th>Amount</th>
+                                                    @endif
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @php
+                                                    $activeBatchId = optional($lead->quotation)->quotation_batch_id;
+                                                    $activeQuotations = $activeBatchId
+                                                        ? $lead->quotations->where('quotation_batch_id', $activeBatchId)->values()
+                                                        : $lead->quotations;
+                                                @endphp
+
+                                                @foreach($activeQuotations as $i => $q)
+                                                    <tr>
+                                                        <td>{{ $i + 1 }}</td>
+                                                        <td>{{ optional($q->product)->strProductName ?? '—' }}</td>
+                                                        <td>{{ optional($q->shape)->shape_title ?? '—' }}</td>
+                                                        <td>{{ $q->unit_of_measurement ?? '—' }}</td>
+                                                        <td>{{ $q->quantity ?? 1 }}</td>
+                                                        <td>{{ $q->decHeight }} × {{ $q->decWidth }}</td>
+                                                        @if(in_array($roleSlug, ['storemanager', 'account']))
+                                                            <td>₹{{ number_format((float)$q->decRatePerSqft, 2) }}</td>
+                                                            <td>₹{{ number_format((float)$q->iAmount, 2) }}</td>
+                                                        @endif
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+
+                                            @if(in_array($roleSlug, ['storemanager', 'account']) && $canViewFinancial)
+                                                <tfoot>
+                                                    <tr>
+                                                        <th colspan="7" class="text-end">Total</th>
+                                                        <th>₹{{ number_format((float)$lead->iLeadAmount, 2) }}</th>
+                                                    </tr>
+                                                </tfoot>
+                                            @endif
+                                        </table>
+                                    </div>
                                 </div>
-                            </div>
                             @endif
                         </div>
                     </div>
@@ -265,7 +280,7 @@
                             @endif
                         </div>
 
-                        @if($lead->iCurrentLeadStatus === \App\Support\LeadWorkflow::STATUS_DEAL_DONE && in_array($roleSlug, ['storemanager', 'account']))
+                        @if($lead->iCurrentLeadStatus === \App\Support\LeadWorkflow::STATUS_DEAL_DONE && in_array($roleSlug, ['storemanager', 'account']) && $canViewFinancial)
                             @php $totalPaid = $lead->payments()->sum('iPaidAmount'); @endphp
                             <div class="card border-0 shadow-sm mt-3">
                                 <div class="card-body">
@@ -286,12 +301,16 @@
                             <div class="card-body">
 
                                 @if(!$canCloseDeal && in_array(\App\Support\LeadWorkflow::STATUS_DEAL_DONE, \App\Support\LeadWorkflow::allowedTransitionsFor(auth()->user(), $lead)))
-                                    @php $totalPaid = $lead->payments()->sum('iPaidAmount'); @endphp
+                                    {{-- @php $totalPaid = $lead->payments()->sum('iPaidAmount'); @endphp --}}
                                     <div class="alert alert-warning py-2 small mb-3">
                                         <i class="fas fa-exclamation-triangle me-1"></i>
-                                        <strong>Deal Done</strong> is not available yet.<br>
-                                        Paid: ₹{{ number_format((float)$totalPaid, 2) }} /
-                                        Required: ₹{{ number_format((float)$lead->iLeadAmount, 2) }}
+                                        <strong>Deal Done</strong> is not available yet.
+                                        @if($canViewFinancial)
+                                            @php $totalPaid = $lead->payments()->sum('iPaidAmount'); @endphp
+                                            <br>
+                                            Paid: ₹{{ number_format((float)$totalPaid, 2) }} /
+                                            Required: ₹{{ number_format((float)$lead->iLeadAmount, 2) }}
+                                        @endif
                                     </div>
                                 @endif
 
@@ -308,7 +327,13 @@
                                             <option value="">— Select status —</option>
                                             @foreach($allowedStatuses as $status)
                                                 <option value="{{ $status }}" {{ old('iStatus') == $status ? 'selected' : '' }}>
-                                                    {{ $status }}
+                                                    @if($status === \App\Support\LeadWorkflow::STATUS_DISPATCHED_DONE)
+                                                        Dispatched To Client (Dispatched Done)
+                                                    @elseif($status === \App\Support\LeadWorkflow::STATUS_RECEIVED_AT_NAROL)
+                                                        Dispatched to Narol
+                                                    @else
+                                                        {{ $status }}
+                                                    @endif
                                                 </option>
                                             @endforeach
                                         </select>
@@ -426,6 +451,7 @@
                                                                 'Quotation Sent'      => 'background:#e2e3e5;color:#41464b;',
                                                                 'Lead Rejected'       => 'background:#f8d7da;color:#842029;',
                                                                 'Quotation Approved'  => 'background:#d1e7dd;color:#0f5132;',
+                                                                'Received @ Narol'    => 'background:#e2d9f3;color:#432874;',
                                                                 'Advance Received'    => 'background:#d1e7dd;color:#0a3622;',
                                                                 'Production Accepted' => 'background:#fff3cd;color:#664d03;',
                                                                 'Ready to Dispatched' => 'background:#cff4fc;color:#055160;',
@@ -520,17 +546,19 @@
                     <table style="width:100%; border-collapse:collapse;">
                         <tr><td style="color:#64748b; padding:4px 0; width:50%;">Measurement Required</td><td>{{ $lead->IsMeasureMentRequired ? 'Yes' : 'No' }}</td></tr>
                         @if($lead->MeasurementVisitDate)
-                        <tr><td style="color:#64748b; padding:4px 0;">Measurement Date</td><td>{{ \Carbon\Carbon::parse($lead->MeasurementVisitDate)->format('d-m-Y') }}</td></tr>
+                            <tr><td style="color:#64748b; padding:4px 0;">Measurement Date</td><td>{{ \Carbon\Carbon::parse($lead->MeasurementVisitDate)->format('d-m-Y') }}</td></tr>
                         @endif
-                        @if($lead->NetFollowupdate)
-                        <tr><td style="color:#64748b; padding:4px 0;">Next Follow Up</td><td>{{ \Carbon\Carbon::parse($lead->NetFollowupdate)->format('d-m-Y') }}</td></tr>
+                        @if($lead->NetFollowupdate && $lead->iCurrentLeadStatus !== \App\Support\LeadWorkflow::STATUS_READY_TO_DISPATCHED)
+                            <tr><td style="color:#64748b; padding:4px 0;">Next Follow Up</td><td>{{ \Carbon\Carbon::parse($lead->NetFollowupdate)->format('d-m-Y') }}</td></tr>
                         @endif
                         @if($lead->expected_delivery_date)
-                        <tr><td style="color:#64748b; padding:4px 0;">Expected Delivery</td><td>{{ \Carbon\Carbon::parse($lead->expected_delivery_date)->format('d-m-Y') }}</td></tr>
+                            <tr><td style="color:#64748b; padding:4px 0;">Expected Delivery</td><td>{{ \Carbon\Carbon::parse($lead->expected_delivery_date)->format('d-m-Y') }}</td></tr>
                         @endif
-                        <tr><td style="color:#64748b; padding:4px 0;">Lead Amount</td><td><strong>₹{{ number_format((float)$lead->iLeadAmount, 2) }}</strong></td></tr>
-                        @if($lead->iFittingCharges)
-                        <tr><td style="color:#64748b; padding:4px 0;">Fitting Charges</td><td>₹{{ number_format((float)$lead->iFittingCharges, 2) }}</td></tr>
+                        @if($canViewFinancial)
+                            <tr><td style="color:#64748b; padding:4px 0;">Lead Amount</td><td><strong>₹{{ number_format((float)$lead->iLeadAmount, 2) }}</strong></td></tr>
+                            @if($lead->iFittingCharges)
+                                <tr><td style="color:#64748b; padding:4px 0;">Fitting Charges</td><td>₹{{ number_format((float)$lead->iFittingCharges, 2) }}</td></tr>
+                            @endif
                         @endif
                         <tr><td style="color:#64748b; padding:4px 0;">Created Date</td><td>{{ \Carbon\Carbon::parse($lead->CreatedDate)->format('d-m-Y') }}</td></tr>
                     </table>
@@ -540,51 +568,57 @@
 
         {{-- Quotation items --}}
         @if($lead->quotations && $lead->quotations->count())
-        @php
-            $activeBatchId2 = optional($lead->quotation)->quotation_batch_id;
-            $printQuotations = $activeBatchId2
-                ? $lead->quotations->where('quotation_batch_id', $activeBatchId2)->values()
-                : $lead->quotations;
-        @endphp
-        <div style="margin-top:16px;">
-            <h4 style="font-size:14px; border-bottom:1px solid #cbd5e1; padding-bottom:6px; margin-bottom:10px;">Quotation Items</h4>
-            <table style="width:100%; border-collapse:collapse; font-size:12px;">
-                <thead>
-                    <tr style="background:#f1f5f9;">
-                        <th style="border:1px solid #cbd5e1; padding:6px;">#</th>
-                        <th style="border:1px solid #cbd5e1; padding:6px;">Product</th>
-                        <th style="border:1px solid #cbd5e1; padding:6px;">Category</th>
-                        <th style="border:1px solid #cbd5e1; padding:6px;">Shape</th>
-                        <th style="border:1px solid #cbd5e1; padding:6px;">Unit</th>
-                        <th style="border:1px solid #cbd5e1; padding:6px;">Qty</th>
-                        <th style="border:1px solid #cbd5e1; padding:6px;">H × W</th>
-                        <th style="border:1px solid #cbd5e1; padding:6px;">Rate/Sqft</th>
-                        <th style="border:1px solid #cbd5e1; padding:6px;">Amount</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($printQuotations as $i => $q)
-                    <tr>
-                        <td style="border:1px solid #cbd5e1; padding:6px; text-align:center;">{{ $i + 1 }}</td>
-                        <td style="border:1px solid #cbd5e1; padding:6px;">{{ optional($q->product)->strProductName ?? '—' }}</td>
-                        <td style="border:1px solid #cbd5e1; padding:6px;">{{ optional($q->category)->strCategoryName ?? '—' }}</td>
-                        <td style="border:1px solid #cbd5e1; padding:6px;">{{ optional($q->shape)->shape_title ?? '—' }}</td>
-                        <td style="border:1px solid #cbd5e1; padding:6px; text-align:center;">{{ $q->unit_of_measurement ?? '—' }}</td>
-                        <td style="border:1px solid #cbd5e1; padding:6px; text-align:center;">{{ $q->quantity ?? 1 }}</td>
-                        <td style="border:1px solid #cbd5e1; padding:6px; text-align:center;">{{ $q->decHeight }} × {{ $q->decWidth }}</td>
-                        <td style="border:1px solid #cbd5e1; padding:6px; text-align:right;">₹{{ number_format((float)$q->decRatePerSqft, 2) }}</td>
-                        <td style="border:1px solid #cbd5e1; padding:6px; text-align:right;">₹{{ number_format((float)$q->iAmount, 2) }}</td>
-                    </tr>
-                    @endforeach
-                </tbody>
-                <tfoot>
-                    <tr style="background:#f8fafc; font-weight:700;">
-                        <td colspan="8" style="border:1px solid #cbd5e1; padding:6px; text-align:right;">Grand Total</td>
-                        <td style="border:1px solid #cbd5e1; padding:6px; text-align:right;">₹{{ number_format((float)$lead->iLeadAmount, 2) }}</td>
-                    </tr>
-                </tfoot>
-            </table>
-        </div>
+            @php
+                $activeBatchId2 = optional($lead->quotation)->quotation_batch_id;
+                $printQuotations = $activeBatchId2
+                    ? $lead->quotations->where('quotation_batch_id', $activeBatchId2)->values()
+                    : $lead->quotations;
+            @endphp
+            <div style="margin-top:16px;">
+                <h4 style="font-size:14px; border-bottom:1px solid #cbd5e1; padding-bottom:6px; margin-bottom:10px;">Quotation Items</h4>
+                <table style="width:100%; border-collapse:collapse; font-size:12px;">
+                    <thead>
+                        <tr style="background:#f1f5f9;">
+                            <th style="border:1px solid #cbd5e1; padding:6px;">#</th>
+                            <th style="border:1px solid #cbd5e1; padding:6px;">Product</th>
+                            <th style="border:1px solid #cbd5e1; padding:6px;">Category</th>
+                            <th style="border:1px solid #cbd5e1; padding:6px;">Shape</th>
+                            <th style="border:1px solid #cbd5e1; padding:6px;">Unit</th>
+                            <th style="border:1px solid #cbd5e1; padding:6px;">Qty</th>
+                            <th style="border:1px solid #cbd5e1; padding:6px;">H × W</th>
+                            @if($canViewFinancial)
+                                <th style="border:1px solid #cbd5e1; padding:6px;">Rate/Sqft</th>
+                                <th style="border:1px solid #cbd5e1; padding:6px;">Amount</th>
+                            @endif
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($printQuotations as $i => $q)
+                            <tr>
+                                <td style="border:1px solid #cbd5e1; padding:6px; text-align:center;">{{ $i + 1 }}</td>
+                                <td style="border:1px solid #cbd5e1; padding:6px;">{{ optional($q->product)->strProductName ?? '—' }}</td>
+                                <td style="border:1px solid #cbd5e1; padding:6px;">{{ optional($q->category)->strCategoryName ?? '—' }}</td>
+                                <td style="border:1px solid #cbd5e1; padding:6px;">{{ optional($q->shape)->shape_title ?? '—' }}</td>
+                                <td style="border:1px solid #cbd5e1; padding:6px; text-align:center;">{{ $q->unit_of_measurement ?? '—' }}</td>
+                                <td style="border:1px solid #cbd5e1; padding:6px; text-align:center;">{{ $q->quantity ?? 1 }}</td>
+                                <td style="border:1px solid #cbd5e1; padding:6px; text-align:center;">{{ $q->decHeight }} × {{ $q->decWidth }}</td>
+                                @if($canViewFinancial)
+                                    <td style="border:1px solid #cbd5e1; padding:6px; text-align:right;">₹{{ number_format((float)$q->decRatePerSqft, 2) }}</td>
+                                    <td style="border:1px solid #cbd5e1; padding:6px; text-align:right;">₹{{ number_format((float)$q->iAmount, 2) }}</td>
+                                @endif
+                            </tr>
+                        @endforeach
+                    </tbody>
+                    @if($canViewFinancial)
+                        <tfoot>
+                            <tr style="background:#f8fafc; font-weight:700;">
+                                <td colspan="8" style="border:1px solid #cbd5e1; padding:6px; text-align:right;">Grand Total</td>
+                                <td style="border:1px solid #cbd5e1; padding:6px; text-align:right;">₹{{ number_format((float)$lead->iLeadAmount, 2) }}</td>
+                            </tr>
+                        </tfoot>
+                    @endif
+                </table>
+            </div>
         @endif
 
         <div style="margin-top:50px; display:flex; justify-content:space-between;">
@@ -611,6 +645,8 @@ const NO_FOLLOWUP_STATUSES = [
     'Deal Done',
     'Dispatched Done',
     'Fitting Done',
+    'Ready to Dispatched',
+    'Received @ Narol',
 ];
 
 const statusHints = {
@@ -620,8 +656,8 @@ const statusHints = {
     'Quotation Approved'  : 'Enter the advance payment follow-up date.',
     'Advance Received'    : 'Enter the expected production / follow-up date.',
     'Production Accepted' : 'Enter the expected dispatch date.',
-    'Ready to Dispatched' : 'Enter the dispatch date.',
-    'Dispatched'          : 'Enter the fitting schedule date.',
+    'Dispatched'          : 'Choose whether dispatch is completed to client or sent to Narol.',
+    'Received @ Narol'    : 'No follow-up is required for this status.',
     'Fitting Pending'     : 'Enter the fitting date.',
 };
 
@@ -638,12 +674,12 @@ const expectedDeliveryInput   = document.getElementById('expected_delivery_date'
 function updateFormFields() {
     if (!statusSelect) return;
 
-    const selected           = statusSelect.value;
-    const isReject           = selected === 'Lead Rejected';
-    const isDealDone         = selected === 'Deal Done';
+    const selected            = statusSelect.value;
+    const isReject            = selected === 'Lead Rejected';
+    const isDealDone          = selected === 'Deal Done';
     const isQuotationApproved = selected === 'Quotation Approved';
-    const noFollowup         = NO_FOLLOWUP_STATUSES.includes(selected) || !selected;
-    const isRequired         = followupRequiredStatuses.includes(selected);
+    const noFollowup          = NO_FOLLOWUP_STATUSES.includes(selected) || !selected;
+    const isRequired          = followupRequiredStatuses.includes(selected);
 
     if (rejectionWrapper) {
         rejectionWrapper.style.display = isReject ? 'block' : 'none';
@@ -653,19 +689,24 @@ function updateFormFields() {
     if (followupWrapper) {
         followupWrapper.style.display = noFollowup ? 'none' : 'block';
     }
+
     if (followupReqStar) {
         followupReqStar.style.display = isRequired && !noFollowup ? 'inline' : 'none';
     }
+
     if (followupInput) {
         followupInput.required = isRequired && !noFollowup;
         if (noFollowup) followupInput.value = '';
     }
+
     if (followupHint) {
         followupHint.textContent = noFollowup ? '' : (statusHints[selected] || '');
     }
+
     if (expectedDeliveryWrapper) {
         expectedDeliveryWrapper.style.display = isQuotationApproved ? 'block' : 'none';
     }
+
     if (expectedDeliveryInput) {
         expectedDeliveryInput.required = isQuotationApproved;
         if (!isQuotationApproved) expectedDeliveryInput.value = '';

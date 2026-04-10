@@ -18,6 +18,7 @@ class LeadWorkflow
     public const STATUS_PRODUCTION_ACCEPTED = 'Production Accepted';
     public const STATUS_READY_TO_DISPATCHED = 'Ready to Dispatched';
     public const STATUS_DISPATCHED          = 'Dispatched';
+    public const STATUS_RECEIVED_AT_NAROL   = 'Received @ Narol';
     public const STATUS_DISPATCHED_DONE     = 'Dispatched Done';
     public const STATUS_FITTING_PENDING     = 'Fitting Pending';
     public const STATUS_FITTING_DONE        = 'Fitting Done';
@@ -37,6 +38,7 @@ class LeadWorkflow
             self::STATUS_PRODUCTION_ACCEPTED,
             self::STATUS_READY_TO_DISPATCHED,
             self::STATUS_DISPATCHED,
+            self::STATUS_RECEIVED_AT_NAROL,
             self::STATUS_DISPATCHED_DONE,
             self::STATUS_FITTING_PENDING,
             self::STATUS_FITTING_DONE,
@@ -57,7 +59,7 @@ class LeadWorkflow
             self::STATUS_QUOTATION_APPROVED,
             self::STATUS_ADVANCE_RECEIVED,
             self::STATUS_PRODUCTION_ACCEPTED,
-            self::STATUS_READY_TO_DISPATCHED,
+           // self::STATUS_READY_TO_DISPATCHED,
             self::STATUS_DISPATCHED,
             self::STATUS_FITTING_PENDING,
         ];
@@ -109,6 +111,7 @@ class LeadWorkflow
             'dispatch' => [
                 self::STATUS_READY_TO_DISPATCHED,
                 self::STATUS_DISPATCHED,
+                self::STATUS_RECEIVED_AT_NAROL,
                 self::STATUS_DISPATCHED_DONE,
             ],
             'fitting' => [
@@ -141,7 +144,9 @@ class LeadWorkflow
             self::STATUS_ADVANCE_RECEIVED    => [self::STATUS_PRODUCTION_ACCEPTED],
             self::STATUS_PRODUCTION_ACCEPTED => [self::STATUS_READY_TO_DISPATCHED],
             self::STATUS_READY_TO_DISPATCHED => [self::STATUS_DISPATCHED],
-            self::STATUS_DISPATCHED          => [self::STATUS_DISPATCHED_DONE],
+            // self::STATUS_DISPATCHED          => [self::STATUS_DISPATCHED_DONE],
+            self::STATUS_DISPATCHED          => [self::STATUS_DISPATCHED_DONE, self::STATUS_RECEIVED_AT_NAROL],
+            self::STATUS_RECEIVED_AT_NAROL   => [self::STATUS_DISPATCHED_DONE],
             self::STATUS_DISPATCHED_DONE     => [self::STATUS_FITTING_PENDING, self::STATUS_FITTING_DONE],
             self::STATUS_FITTING_PENDING     => [self::STATUS_FITTING_DONE],
             self::STATUS_FITTING_DONE        => [self::STATUS_DEAL_DONE],
@@ -168,7 +173,9 @@ class LeadWorkflow
 
             'dispatch' => [
                 self::STATUS_READY_TO_DISPATCHED => [self::STATUS_DISPATCHED],
-                self::STATUS_DISPATCHED          => [self::STATUS_DISPATCHED_DONE],
+                //self::STATUS_DISPATCHED          => [self::STATUS_DISPATCHED_DONE],
+                self::STATUS_DISPATCHED          => [self::STATUS_DISPATCHED_DONE, self::STATUS_RECEIVED_AT_NAROL],
+                self::STATUS_RECEIVED_AT_NAROL   => [self::STATUS_DISPATCHED_DONE],
                 // Dispatched Done: handled by fitting
             ],
 
@@ -235,6 +242,7 @@ class LeadWorkflow
             'dispatch' => [
                 self::STATUS_READY_TO_DISPATCHED,
                 self::STATUS_DISPATCHED,
+                self::STATUS_RECEIVED_AT_NAROL,
                 self::STATUS_DISPATCHED_DONE,
             ],
             'fitting' => [
@@ -258,6 +266,7 @@ class LeadWorkflow
                 self::STATUS_PRODUCTION_ACCEPTED,
                 self::STATUS_READY_TO_DISPATCHED,
                 self::STATUS_DISPATCHED,
+                self::STATUS_RECEIVED_AT_NAROL,
                 self::STATUS_DISPATCHED_DONE,
                 self::STATUS_FITTING_PENDING,
                 self::STATUS_FITTING_DONE,
