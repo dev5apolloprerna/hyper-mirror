@@ -197,7 +197,7 @@
                                     </div>
 
                                     <div class="row g-2 align-items-end">
-                                         <div class="col-md-2">
+                                        <div class="col-md-2">
                                             <label class="form-label">Category <span style="color:red;">*</span></label>
                                             <select name="items[{{ $index }}][iProductCategoryId]" class="form-control row-category-select" required>
                                                 <option value="">Select Category</option>
@@ -415,7 +415,7 @@
             const currentVal = $productSelect.val();
 
 
-                        $productSelect.html(buildProductSelectOptions(categoryId, currentVal));
+           $productSelect.html(buildProductSelectOptions(categoryId, currentVal));
 
                 if (currentVal && $productSelect.find('option[value="' + currentVal + '"]').length === 0) {
                 $productSelect.val('');
@@ -490,7 +490,8 @@
 
         function addItemRow() {
             const nextIndex = $('#quotationRows .quotation-row').length;
-            
+            const categoryId = '';
+
             const rowHtml = `
     <div class="quotation-row card-like" data-index="${nextIndex}">
         <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
