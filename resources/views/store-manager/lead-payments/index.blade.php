@@ -136,7 +136,11 @@
                                                 <td>₹{{ number_format((float)$payment->iPaidAmount, 2) }}</td>
                                                 <td>{{ $payment->PaymentDate }}</td>
                                                 <td>{{ $payment->PaymentMode }}</td>
-                                                <td>{{ $payment->user->name ?? '—' }}</td>
+                                                 <td>
+                                                    {{ $payment->user->full_name
+                                                        ?: ($payment->user->name
+                                                            ?? ($payment->user->strUserName ?? '—')) }}
+                                                </td>
                                                 @if($canManagePayments)
                                                     <td>
                                                         <a href="javascript:void(0);"

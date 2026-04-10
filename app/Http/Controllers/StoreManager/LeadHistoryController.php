@@ -35,7 +35,8 @@ class LeadHistoryController extends Controller
         // Determine allowed statuses for the status-change form
         $allowedStatuses = LeadWorkflow::allowedTransitionsFor(auth()->user(), $lead);
 
-        $lead->load(['customer', 'quotation']);
+        $lead->load(['customer', 'quotation', 'quotations.product', 'quotations.category', 'quotations.shape', 'createdBy']);
+        $canViewFinancial = (bool) auth()->user()->can_view_financial;
 
         // For "Deal Done": check if payments match quotation amount
         $canCloseDeal = false;
@@ -61,7 +62,8 @@ class LeadHistoryController extends Controller
             'allowedStatuses',
             'roleSlug',
             'isReadOnly',
-            'canCloseDeal'
+            'canCloseDeal',
+            'canViewFinancial'
         ));
     }
 
