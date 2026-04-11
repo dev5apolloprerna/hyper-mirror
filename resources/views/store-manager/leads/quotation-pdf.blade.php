@@ -8,9 +8,11 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: Arial, sans-serif; font-size: 13px; color: #222; padding: 30px; }
 
-        .header { text-align: center; margin-bottom: 24px; border-bottom: 2px solid #333; padding-bottom: 14px; }
+         .header { margin-bottom: 24px; border-bottom: 2px solid #333; padding-bottom: 14px; }
+        .header-top { text-align: center; }
         .header h1 { font-size: 22px; font-weight: 700; color: #1a1a2e; }
         .header p  { font-size: 12px; color: #666; }
+        .quotation-meta { text-align: right; margin-top: 8px; font-size: 12px; color: #444; line-height: 1.5; }
 
         .section-title { font-size: 14px; font-weight: 700; color: #1a1a2e;
                          border-bottom: 1px solid #ccc; padding-bottom: 6px; margin: 20px 0 10px; }
@@ -19,6 +21,8 @@
         .info-row  { display: flex; gap: 8px; }
         .info-label { font-weight: 600; min-width: 140px; color: #555; }
         .info-value { color: #222; }
+        .lead-inline { margin: 4px 0 12px; font-size: 12px; color: #333; }
+        .lead-inline strong { color: #111; }
 
         table { width: 100%; border-collapse: collapse; margin-top: 8px; }
         th, td { border: 1px solid #ccc; padding: 7px 10px; text-align: left; }
@@ -52,6 +56,7 @@
         $discountAmount = (int) ($lead->isDiscountApplicable ?? 0) === 1 ? (float) ($lead->decDiscountAmount ?? 0) : 0;
         $amountAfterDiscount = max(($subtotalAmount + $fittingCharges) - $discountAmount, 0);
         $gstAmount = (int) ($lead->isGstApplicable ?? 0) === 1 ? (float) ($lead->decGstAmount ?? ($amountAfterDiscount * 0.18)) : 0;
+        $netAmount = $amountAfterDiscount;
         $summaryColspan = $hasRemarksColumn ? 12 : 11;
     @endphp
 
@@ -65,9 +70,11 @@
     </div>
 
     <div class="header">
-        <h1>{{ config('app.name', 'Mirror CRM') }}</h1>
-        <p>Quotation — Lead No: <strong>{{ $lead->strLeadNo }}</strong></p>
-        <p>Date: {{ now()->format('d-m-Y') }}</p>
+        <div class="header-top">
+            <h1>{{ config('app.name', 'Mirror CRM') }}</h1>
+            <p>Date: {{ now()->format('d-m-Y') }}</p>
+            <div><strong>Quotation No:</strong> {{ $lead->strLeadNo }}</div>
+        </div>
     </div>
 
     @if(!$canViewFinancial)
@@ -85,13 +92,12 @@
     </div>
 
     <div class="section-title">Lead Details</div>
-    <div class="info-grid">
-        <div class="info-row"><span class="info-label">Lead No</span><span class="info-value">{{ $lead->strLeadNo }}</span></div>
-        <div class="info-row"><span class="info-label">Status</span><span class="info-value">{{ $lead->iCurrentLeadStatus }}</span></div>
-        <div class="info-row"><span class="info-label">Measurement Required</span><span class="info-value">{{ $lead->IsMeasureMentRequired ? 'Yes' : 'No' }}</span></div>
-        @if($lead->MeasurementVisitDate)
-        <div class="info-row"><span class="info-label">Measurement Date</span><span class="info-value">{{ \Carbon\Carbon::parse($lead->MeasurementVisitDate)->format('d-m-Y') }}</span></div>
-        @endif
+        <div class="lead-inline">
+        <strong>Lead No:</strong> {{ $lead->strLeadNo }}
+        &nbsp;&nbsp;|&nbsp;&nbsp;
+        <strong>Measurement Date:</strong> {{ $lead->MeasurementVisitDate ? \Carbon\Carbon::parse($lead->MeasurementVisitDate)->format('d-m-Y') : '—' }}
+        &nbsp;&nbsp;|&nbsp;&nbsp;
+        <strong>Status:</strong> {{ $lead->iCurrentLeadStatus ?? '—' }}
     </div>
 
     <div class="section-title">Quotation Items</div>
@@ -152,12 +158,16 @@
                 <th>₹{{ number_format($fittingCharges, 2) }}</th>
             </tr>
             @endif
-            @if((int) ($lead->isDiscountApplicable ?? 0) === 1)
+            @if((int) ($lead->isDiscountApplicable ?? 0) === 1 && $discountAmount > 0)
             <tr>
-                <th colspan="{{ $summaryColspan }}" style="text-align:right;">Discount</th>
+                <th colspan="{{ $summaryColspan }}" style="text-align:right;">Discount Amount</th>
                 <th>- ₹{{ number_format($discountAmount, 2) }}</th>
             </tr>
             @endif
+            <tr>
+                <th colspan="{{ $summaryColspan }}" style="text-align:right;">Net Amount</th>
+                <th>₹{{ number_format($netAmount, 2) }}</th>
+            </tr>
             @if((int) ($lead->isGstApplicable ?? 0) === 1)
             <tr>
                 <th colspan="{{ $summaryColspan }}" style="text-align:right;">GST (18%)</th>
@@ -166,7 +176,8 @@
             @endif
             <tr>
                 <th colspan="{{ $summaryColspan }}" style="text-align:right;">Grand Total</th>
-                <th>₹{{ number_format((float)($lead->iLeadAmount ?? ($amountAfterDiscount + $gstAmount)), 2) }}</th>
+                <th>₹{{ number_format((float)($lead->iLeadAmount ?? ($netAmount + $gstAmount)), 2) }}</th>
+                <!-- <th>₹{{ number_format((float)($lead->iLeadAmount ?? ($amountAfterDiscount + $gstAmount)), 2) }}</th> -->
             </tr>
         </tfoot>
         @endif

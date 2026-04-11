@@ -22,6 +22,7 @@ use App\Http\Controllers\StoreManager\LeadHistoryController;
 use App\Http\Controllers\StoreManager\LeadPaymentController;
 use App\Http\Controllers\StoreManager\InvoiceController;
 
+use App\Http\Controllers\ComplainMasterController;
 
 Route::fallback(function () {
     return view('errors.404');
@@ -186,6 +187,14 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::post('users/password-update/{user}', [CrmUserController::class, 'updatePassword'])->name('users.password.update');
     Route::delete('users/delete/{user}', [CrmUserController::class, 'destroy'])->name('users.destroy');
    Route::get('reports/business', [BusinessReportController::class, 'index'])->name('reports.business');
+});
+
+Route::middleware('auth')->prefix('complaints')->name('complaints.')->group(function () {
+    Route::get('/', [ComplainMasterController::class, 'index'])->name('index');
+    Route::post('/store', [ComplainMasterController::class, 'store'])->name('store');
+    Route::post('/{complaint}/resolve', [ComplainMasterController::class, 'resolve'])
+        ->middleware('crm.role:account')
+        ->name('resolve');
 });
 
 
