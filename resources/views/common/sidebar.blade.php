@@ -52,6 +52,15 @@
                         </a>
                     </li>
                  @endif
+                 @if($roleSlug != 'admin')
+                   <li class="nav-item">
+                        <a href="{{ route('complaints.index') }}" class="nav-link {{ request()->is('complaints*') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-comment-dots"></i>
+                            <p class="mb-0">Complaint Master</p>
+                        </a>
+                    </li>
+                    @endif
+
                  @if($roleSlug === 'storemanager')
                      <li class="nav-item">
                         <a href="{{ route('store.invoice.index') }}"
