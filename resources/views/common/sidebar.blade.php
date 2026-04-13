@@ -69,6 +69,13 @@
                             <p class="mb-0">Invoices</p>
                         </a>
                     </li>
+                     <li class="nav-item">
+                        <a href="{{ route('store.ledger.index') }}"
+                           class="nav-link {{ request()->is('store-manager/ledger*') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-book"></i>
+                            <p class="mb-0">Ledger History</p>
+                        </a>
+                    </li>
                 @endif
              </ul>
          </div>
