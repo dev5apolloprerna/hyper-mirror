@@ -24,6 +24,7 @@ use App\Http\Controllers\StoreManager\InvoiceController;
 
 use App\Http\Controllers\ComplainMasterController;
 
+use App\Http\Controllers\StoreManager\LedgerController;
 Route::fallback(function () {
     return view('errors.404');
 });
@@ -165,7 +166,7 @@ Route::middleware('auth')->prefix('store-manager')->name('store.')->group(functi
     Route::get('invoice/{invoice}',          [InvoiceController::class, 'show'])->name('invoice.show');
     Route::delete('invoice/{invoice}/delete',[InvoiceController::class, 'destroy'])->name('invoice.destroy');
     Route::get('invoice/products-by-category',[InvoiceController::class,'productsByCategory'])->name('invoice.products-by-category');
-
+    Route::get('ledger', [LedgerController::class, 'index'])->name('ledger.index');
 });
 
 // Store Manager: Payments (separate group for clarity)
