@@ -214,10 +214,17 @@
 
                                                 {{-- Store manager extras --}}
                                                 @if($roleSlug === 'storemanager')
-                                                    <a href="{{ route('store.leads.quotation', $lead->iLeadId) }}"
+                                                @if($lead->iCurrentLeadStatus !== 'Quotation Approved')
+                                                 <a href="{{ route('store.leads.edit', $lead->iLeadId) }}"
+                                                       class="btn btn-sm btn-outline-info"
+                                                       title="Edit Lead">
+                                                        <i class="fas fa-user-edit"></i>
+                                                    </a>
+                                                    @endif
+                                                      <a href="{{ route('store.leads.quotation', $lead->iLeadId) }}"
                                                        class="btn btn-sm btn-outline-success"
-                                                       title="Manage Quotation">
-                                                        <i class="fas fa-file-signature"></i>
+                                                       title="Create Quotation">
+                                                        <i class="fas fa-plus-circle"></i>
                                                     </a>
                                                     <a href="{{ route('store.leads.designs.index', $lead->iLeadId) }}"
                                                        class="btn btn-sm btn-outline-warning"

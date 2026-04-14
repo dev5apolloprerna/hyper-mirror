@@ -61,6 +61,20 @@
                             <p class="mb-0">Payment</p>
                         </a>
                     </li>
+                     <li class="nav-item">
+                        <a href="{{ route('admin.invoice-settings.edit') }}"
+                            class="nav-link {{ request()->is('admin/invoice-settings*') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-file-contract"></i>
+                            Invoice PDF Settings
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ route('store.invoice.index') }}"
+                            class="nav-link {{ request()->is('store-manager/invoice*') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-file-invoice-dollar"></i>
+                            <p class="mb-0">Invoices</p>
+                        </a>
+                    </li>
                 @else
                     <li class="nav-item">
                         <a href="{{ route('store.leads.index') }}"

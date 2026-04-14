@@ -15,6 +15,7 @@ use App\Support\LeadWorkflow;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class LeadController extends Controller
 {
@@ -89,6 +90,14 @@ class LeadController extends Controller
         return view('store-manager.leads.create');
     }
 
+    public function edit(Lead $lead)
+    {
+        abort_unless(optional(auth()->user()->crmRole)->slug === 'storemanager', 403);
+        $lead->load('customer');
+
+        return view('store-manager.leads.edit', compact('lead'));
+    }
+
     // ── Check customer by mobile ─────────────────────────────────────────────
     public function checkCustomer(Request $request)
     {
@@ -126,6 +135,7 @@ class LeadController extends Controller
             'IsMeasureMentRequired' => 'required|in:0,1',
             'MeasurementVisitDate'  => 'nullable|date|required_if:IsMeasureMentRequired,1',
             'design_followup_date'  => 'nullable|date|required_if:IsMeasureMentRequired,0',
+            'strComments'           => 'nullable|string|max:2000',
         ]);
 
         DB::beginTransaction();
@@ -190,7 +200,7 @@ class LeadController extends Controller
 
             LeadHistory::create([
                 'iLeadId'         => $lead->iLeadId,
-                'strComments'     => 'Lead created.',
+                'strComments'     => $data['strComments'] ?? 'Lead created.',
                 'NetFolloupwdate' => $nextFollowDate,
                 'iStatus'         => $status,
                 'iEnterBy'        => auth()->id(),
@@ -198,14 +208,90 @@ class LeadController extends Controller
             ]);
 
             DB::commit();
-
-            return redirect()->route('store.leads.histories.index', $lead->iLeadId)
+            return redirect()->route('store.leads.index')
+          //  return redirect()->route('store.leads.histories.index', $lead->iLeadId)
                 ->with('success', 'Lead created successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
             return back()->withInput()->with('error', $th->getMessage());
         }
     }
+        public function update(Request $request, Lead $lead)
+    {
+        abort_unless(optional(auth()->user()->crmRole)->slug === 'storemanager', 403);
+
+        $data = $request->validate([
+            'strCustomer'         => 'required|string|max:100',
+            'strAddress'          => 'nullable|string',
+            'SiteAddress'         => 'nullable|string',
+            'customer_type'       => 'required|in:B2B,Retail',
+            'company_name'        => 'nullable|string|max:150',
+            'IsOnlyFittingQuotation' => 'required|in:0,1',
+            'isFittingRequired'   => [
+                'nullable',
+                'in:0,1',
+                Rule::requiredIf(fn () => (int) $request->input('IsOnlyFittingQuotation') !== 1),
+            ],
+            'isFittingChargeIncluded' => [
+                'nullable',
+                'in:0,1',
+                Rule::requiredIf(fn () => (int) $request->input('IsOnlyFittingQuotation') === 1 || (int) $request->input('isFittingRequired') === 1),
+            ],
+            'IsMeasureMentRequired' => 'required|in:0,1',
+            'MeasurementVisitDate'  => 'nullable|date|required_if:IsMeasureMentRequired,1',
+            'design_followup_date'  => 'nullable|date|required_if:IsMeasureMentRequired,0',
+            'strComments'           => 'nullable|string|max:2000',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $customer = $lead->customer;
+            if ($customer) {
+                $customer->update([
+                    'strCustomer'   => $data['strCustomer'],
+                    'strAddress'    => $data['strAddress'] ?? null,
+                    'customer_type' => $data['customer_type'],
+                    'company_name'  => $data['company_name'] ?? null,
+                ]);
+            }
+
+            $isMeasurementRequired = (int) $data['IsMeasureMentRequired'] === 1;
+            $isOnlyFittingQuotation = (int) $data['IsOnlyFittingQuotation'] === 1;
+            $isFittingRequired = $isOnlyFittingQuotation ? 1 : (int) ($data['isFittingRequired'] ?? 0);
+            $isFittingChargeIncluded = $isFittingRequired ? (int) ($data['isFittingChargeIncluded'] ?? 0) : 0;
+            $nextFollowDate = $isMeasurementRequired
+                ? ($data['MeasurementVisitDate'] ?? null)
+                : ($data['design_followup_date'] ?? null);
+
+            $lead->update([
+                'IsMeasureMentRequired'   => $data['IsMeasureMentRequired'],
+                'MeasurementVisitDate'    => $data['MeasurementVisitDate'] ?? null,
+                'SiteAddress'             => $data['SiteAddress'] ?? null,
+                'NetFollowupdate'         => $nextFollowDate,
+                'isFittingLeadOnly'       => $isOnlyFittingQuotation ? 1 : 0,
+                'isFittingRequired'       => $isFittingRequired,
+                'isFittingChargeIncluded' => $isFittingChargeIncluded,
+            ]);
+
+            LeadHistory::create([
+                'iLeadId'         => $lead->iLeadId,
+                'strComments'     => $data['strComments'] ?? 'Lead details updated.',
+                'NetFolloupwdate' => $nextFollowDate,
+                'iStatus'         => $lead->iCurrentLeadStatus,
+                'iEnterBy'        => auth()->id(),
+                'EntryDate'       => now(),
+            ]);
+
+            DB::commit();
+
+            return redirect()->route('store.leads.index')
+                ->with('success', 'Lead updated successfully.');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return back()->withInput()->with('error', $th->getMessage());
+        }
+    }
+
 
     // ── Quotation form ───────────────────────────────────────────────────────
     public function quotationForm(Lead $lead)
@@ -271,7 +357,8 @@ class LeadController extends Controller
                                                             : 'nullable|numeric|min:0',
             'isDiscountApplicable'                     => 'required|in:0,1',
             'discount_amount'                          => 'nullable|numeric|min:0',
-            'isGstApplicable'                          => 'required|in:0,1',                                               
+            'isGstApplicable'                          => 'required|in:0,1',
+            'strComments'                              => 'nullable|string|max:2000',                                               
         ];
 
         $data = $request->validate($rules);
@@ -357,7 +444,7 @@ class LeadController extends Controller
 */
                 'iQuotationId'          => $firstQuotation ? $firstQuotation->iQuotationId : null,
                 'iLeadAmount'           => $grandTotal,
-                'iCurrentLeadStatus'    => LeadWorkflow::STATUS_QUOTATION_SENT,
+                //'iCurrentLeadStatus'    => LeadWorkflow::STATUS_QUOTATION_SENT,
                 'NetFollowupdate'       => $data['followup_date'],
                 'iFittingCharges'       => $fittingCharges,
                 'isDiscountApplicable'  => $discountApplicable ? 1 : 0,
@@ -368,17 +455,19 @@ class LeadController extends Controller
 
             LeadHistory::create([
                 'iLeadId'         => $lead->iLeadId,
-                'strComments'     => 'Quotation generated. Version #' . $nextBatchId,
+                'strComments'     => $data['strComments'] ?? ('Quotation generated. Version #' . $nextBatchId),
                 'NetFolloupwdate' => $data['followup_date'],
-                'iStatus'         => LeadWorkflow::STATUS_QUOTATION_SENT,
+                //'iStatus'         => LeadWorkflow::STATUS_QUOTATION_SENT,
+                'iStatus'         => $lead->iCurrentLeadStatus,
                 'iEnterBy'        => auth()->id(),
                 'EntryDate'       => now(),
             ]);
 
             DB::commit();
 
-            return redirect()->route('store.leads.histories.index', $lead->iLeadId)
-                ->with('success', 'Quotation generated successfully.');
+            //return redirect()->route('store.leads.histories.index', $lead->iLeadId)
+              
+            return redirect()->route('store.leads.index')->with('success', 'Quotation generated successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
             return back()->withInput()->with('error', $th->getMessage());
@@ -438,7 +527,12 @@ class LeadController extends Controller
 
         $canViewFinancial = (bool) auth()->user()->can_view_financial;
 
-        return view('store-manager.leads.quotation-pdf', compact('lead', 'canViewFinancial'));
+        $pdf = Pdf::loadView('store-manager.leads.quotation-pdf-document', compact('lead', 'canViewFinancial'));
+        $pdf->setPaper('a4', 'portrait');
+
+        return $pdf->stream('quotation-' . $lead->strLeadNo . '.pdf');
+        
+     //   return view('store-manager.leads.quotation-pdf', compact('lead', 'canViewFinancial'));
     }
 
     // ── Update status (legacy — kept for compatibility) ─────────────────────
@@ -484,8 +578,8 @@ class LeadController extends Controller
 
             DB::commit();
 
-            return redirect()->route('store.leads.histories.index', $lead->iLeadId)
-                ->with('success', 'Lead status updated to "' . $data['iStatus'] . '".');
+            return redirect()->route('store.leads.index')->with('success', 'Quotation generated successfully.');
+            //return redirect()->route('store.leads.histories.index', $lead->iLeadId)->with('success', 'Lead status updated to "' . $data['iStatus'] . '".');
         } catch (\Throwable $th) {
             DB::rollBack();
             return back()->with('error', $th->getMessage());

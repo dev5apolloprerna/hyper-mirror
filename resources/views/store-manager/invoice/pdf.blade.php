@@ -1,81 +1,294 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Invoice {{ $invoice->strInvoiceNo }}</title>
-    <style>
-        body { font-family: DejaVu Sans, sans-serif; color: #1e293b; font-size: 12px; }
-        .header { margin-bottom: 18px; }
-        .title { font-size: 20px; font-weight: 700; margin: 0; }
-        .muted { color: #64748b; margin: 2px 0; }
-        .meta-table { width: 100%; margin-top: 10px; border-collapse: collapse; }
-        .meta-table td { padding: 4px 0; }
-        table.items { width: 100%; border-collapse: collapse; margin-top: 18px; }
-        table.items th, table.items td { border: 1px solid #cbd5e1; padding: 8px; }
-        table.items th { background: #f1f5f9; text-align: left; }
-        .text-center { text-align: center; }
-        .text-end { text-align: right; }
-        .total-row td { font-weight: 700; background: #f8fafc; }
-        .notes { margin-top: 14px; }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <p class="title">Invoice {{ $invoice->strInvoiceNo }}</p>
-        <p class="muted">Date: {{ \Carbon\Carbon::parse($invoice->InvoiceDate)->format('d F Y') }}</p>
-        <table class="meta-table">
-            <tr>
-                <td><strong>Showroom:</strong> {{ optional($invoice->showroom)->strShowRoomName ?? '—' }}</td>
-                <td><strong>Created By:</strong> {{ optional($invoice->createdBy)->strUserName ?: optional($invoice->createdBy)->first_name ?? '—' }}</td>
-            </tr>
-            <tr>
-                <td><strong>Status:</strong> {{ strtoupper($invoice->status ?? 'draft') }}</td>
-                <td><strong>Total:</strong> ₹{{ number_format((float) $invoice->total_amount, 2) }}</td>
-            </tr>
-            <tr>
-                <td><strong>Payment Mode:</strong> {{ ucfirst($invoice->payment_mode ?? 'cash') }}</td>
-                <td><strong>Payment Received:</strong> {{ $invoice->payment_received ? 'Yes' : 'No' }}</td>
-            </tr>
-        </table>
-    </div>
+ <!DOCTYPE html>
+ <html lang="en">
 
-    <table class="items">
-        <thead>
-            <tr>
-                <th style="width: 6%;">#</th>
-                <th>Category</th>
-                <th>Product</th>
-                <th class="text-center" style="width: 10%;">Qty</th>
-                <th style="width: 18%;">Remark</th>
-                <th class="text-end" style="width: 18%;">Unit Price</th>
-                <th class="text-end" style="width: 18%;">Amount</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($invoice->items as $i => $item)
+ <head>
+     <meta charset="UTF-8">
+     <title>Invoice {{ $invoice->strInvoiceNo }}</title>
+     <style>
+         body {
+             font-family: DejaVu Sans, sans-serif;
+             color: #0f172a;
+             font-size: 11px;
+             margin: 26px;
+         }
+
+         .heading {
+             font-size: 38px;
+             font-weight: 800;
+             color: #153e75;
+             margin: 0 0 2px 0;
+             letter-spacing: .4px;
+         }
+
+         .invoice-no {
+             margin: 0 0 14px 0;
+             color: #334155;
+         }
+
+         .box {
+             width: 100%;
+             border-collapse: collapse;
+             margin-bottom: 14px;
+         }
+
+         .box td {
+             border: 1px solid #cbd5e1;
+             padding: 8px 10px;
+             vertical-align: top;
+         }
+
+         .meta td {
+             width: 50%;
+         }
+
+         .meta-title {
+             display: inline-block;
+             min-width: 108px;
+             font-weight: 700;
+             color: #0f172a;
+         }
+
+         .split td {
+             width: 50%;
+         }
+
+         .section-title {
+             font-size: 13px;
+             font-weight: 700;
+             margin: 0 0 3px 0;
+             color: #0f172a;
+         }
+
+         .muted {
+             color: #475569;
+             line-height: 1.5;
+         }
+
+         .items {
+             width: 100%;
+             border-collapse: collapse;
+             margin-top: 8px;
+         }
+
+         .items th,
+         .items td {
+             border: 1px solid #cbd5e1;
+             padding: 8px;
+         }
+
+         .items th {
+             background: #e2e8f0;
+             color: #0f172a;
+             text-align: left;
+         }
+
+         .center {
+             text-align: center;
+         }
+
+         .right {
+             text-align: right;
+         }
+
+         .summary {
+             width: 40%;
+             margin-left: auto;
+             border-collapse: collapse;
+             margin-top: 10px;
+         }
+
+         .summary td {
+             border: 1px solid #cbd5e1;
+             padding: 7px 9px;
+         }
+
+         .summary .lbl {
+             font-weight: 700;
+             text-align: right;
+         }
+
+         .summary .grand td {
+             font-weight: 800;
+             background: #f1f5f9;
+         }
+         .notes {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+
+        .notes td {
+            padding: 0;
+            vertical-align: top;
+        }
+
+
+         .sign {
+             margin-top: 28px;
+             width: 100%;
+         }
+
+         .sign .line {
+             width: 220px;
+             border-top: 1px solid #334155;
+             margin-left: auto;
+             padding-top: 6px;
+             text-align: center;
+             font-weight: 700;
+         }
+        .detail-section { margin-top: 14px; }
+        .section-title { background: #e2e8f0; padding: 6px 8px; font-weight: 700; }
+        .section-body { border: 1px solid #cbd5e1; border-top: 0; padding: 8px; white-space: pre-line; }
+     </style>
+ </head>
+
+ <body>
+
+     <p class="heading">INVOICE</p>
+     <p class="invoice-no">Invoice No: <strong>{{ $invoice->strInvoiceNo }}</strong></p>
+
+     <table class="box meta">
+         <tr>
+             <td>
+                 <div><span class="meta-title">Invoice
+                         Date</span>{{ \Carbon\Carbon::parse($invoice->InvoiceDate)->format('d F Y') }}</div>
+                 <div><span class="meta-title">Showroom</span>{{ optional($invoice->showroom)->strShowRoomName ?? '—' }}
+                 </div>
+                 <div><span class="meta-title">Payment Mode</span>{{ ucfirst($invoice->payment_mode ?? 'cash') }}</div>
+                 <div><span class="meta-title">Status</span>{{ strtoupper($invoice->status ?? 'draft') }}</div>
+             </td>
+             <td>
+                 <div><span class="meta-title">Created
+                         By</span>{{ optional($invoice->createdBy)->strUserName ?: optional($invoice->createdBy)->first_name ?? '—' }}
+                 </div>
+                 <div><span class="meta-title">Payment Received</span>{{ $invoice->payment_received ? 'Yes' : 'No' }}
+                 </div>
+                 <div><span class="meta-title">Subtotal</span>₹{{ number_format((float) $invoice->total_amount, 2) }}
+                 </div>
+                 <div><span class="meta-title">Total</span>₹{{ number_format((float) $invoice->total_amount, 2) }}</div>
+             </td>
+         </tr>
+     </table>
+
+     <table class="box split">
+         <tr>
+             <td>
+                 <p class="section-title">Bill To</p>
+                 <div class="muted">{{ $invoice->customer_name ?: 'Customer Name' }}</div>
+                 <div class="muted">{{ $invoice->customer_mobile ?: 'Mobile Number' }}</div>
+                 <div class="muted">{{ $invoice->customer_address ?: 'Address' }}</div>
+             </td>
+             <td>
+                 <p class="section-title">Business Details</p>
+                 <div class="muted">{{ optional($invoice->showroom)->strShowRoomName ?? 'Company / Showroom' }}</div>
+                 <div class="muted">Invoice generated by Store Manager</div>
+             </td>
+         </tr>
+     </table>
+
+     <table class="items">
+         <thead>
+             <tr>
+
+                 <th style="width: 5%;">#</th>
+                 <th style="width: 17%;">Category</th>
+                 <th>Product</th>
+
+                 <th class="center" style="width: 8%;">Qty</th>
+                 <th style="width: 18%;">Remark</th>
+
+                 <th class="right" style="width: 16%;">Unit Price</th>
+                 <th class="right" style="width: 16%;">Amount</th>
+             </tr>
+         </thead>
+         <tbody>
+             @foreach ($invoice->items as $i => $item)
+                 <tr>
+                     <td>{{ $i + 1 }}</td>
+                     <td>{{ optional($item->category)->strCategoryName ?? '—' }}</td>
+                     <td>{{ optional($item->product)->strProductName ?? '—' }}</td>
+
+                     <td class="center">{{ $item->quantity }}</td>
+                     <td>{{ $item->item_remark ?: '—' }}</td>
+
+                     <td class="right">₹{{ number_format((float) $item->unit_price, 2) }}</td>
+                     <td class="right">₹{{ number_format((float) $item->iAmount, 2) }}</td>
+                 </tr>
+             @endforeach
+         </tbody>
+
+     </table>
+
+
+     <table class="notes">
+    <tr>
+        <td style="width: 55%; vertical-align: top; padding: 0; border: 0;">
+            <table style="width:100%; border-collapse: collapse;">
                 <tr>
-                    <td>{{ $i + 1 }}</td>
-                    <td>{{ optional($item->category)->strCategoryName ?? '—' }}</td>
-                    <td>{{ optional($item->product)->strProductName ?? '—' }}</td>
-                    <td class="text-center">{{ $item->quantity }}</td>
-                    <td>{{ $item->item_remark ?: '—' }}</td>
-                    <td class="text-end">₹{{ number_format((float) $item->unit_price, 2) }}</td>
-                    <td class="text-end">₹{{ number_format((float) $item->iAmount, 2) }}</td>
+                    <td style="background:#6b7280; color:#fff; font-weight:700; padding:6px 10px; border:1px solid #cbd5e1;">
+                        Invoice Amount In Words
+                    </td>
                 </tr>
-            @endforeach
-        </tbody>
-        <tfoot>
-            <tr class="total-row">
-                <td colspan="6" class="text-end">TOTAL</td>
-                <td class="text-end">₹{{ number_format((float) $invoice->total_amount, 2) }}</td>
-            </tr>
-        </tfoot>
-    </table>
+                <tr>
+                    <td style="border:1px solid #cbd5e1; padding:8px 10px;">
+                        {{ \NumberFormatter::create('en_IN', \NumberFormatter::SPELLOUT)->format((float) $invoice->total_amount) }}
+                        Rupees only
+                    </td>
+                </tr>
+                <tr>
+                    <td style="background:#6b7280; color:#fff; font-weight:700; padding:6px 10px; border:1px solid #cbd5e1; border-top:0;">
+                        Notes
+                    </td>
+                </tr>
+                <tr>
+                    <td style="border:1px solid #cbd5e1; border-top:0; padding:8px 10px;">
+                        {{ $invoice->strNotes ?: '—' }}
+                    </td>
+                </tr>
+            </table>
+        </td>
 
-    @if($invoice->strNotes)
-        <div class="notes">
-            <strong>Notes:</strong> {{ $invoice->strNotes }}
+        <td style="width: 3%; border:0;"></td>
+
+        <td style="width: 42%; vertical-align: top; padding: 0; border: 0;">
+            <table style="width:100%; border-collapse: collapse;">
+                <tr>
+                    <td colspan="2" style="background:#6b7280; color:#fff; font-weight:700; padding:6px 10px; border:1px solid #cbd5e1;">
+                        Amounts
+                    </td>
+                </tr>
+                <tr>
+                    <td style="border:1px solid #cbd5e1; padding:8px 10px;">Sub Total</td>
+                    <td style="border:1px solid #cbd5e1; padding:8px 10px; text-align:right;">
+                        ₹{{ number_format((float) $invoice->total_amount, 2) }}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="border:1px solid #cbd5e1; padding:8px 10px; font-weight:700;">Total</td>
+                    <td style="border:1px solid #cbd5e1; padding:8px 10px; text-align:right; font-weight:700;">
+                        ₹{{ number_format((float) $invoice->total_amount, 2) }}
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+    @if(!empty(optional($invoicePdfSetting)->terms_and_conditions))
+        <div class="detail-section">
+            <div class="section-title">Terms and Conditions</div>
+            <div class="section-body">{{ $invoicePdfSetting->terms_and_conditions }}</div>
         </div>
     @endif
-</body>
-</html>
+    @if(!empty(optional($invoicePdfSetting)->bank_details))
+        <div class="detail-section">
+            <div class="section-title">Bank Details</div>
+            <div class="section-body">{{ $invoicePdfSetting->bank_details }}</div>
+        </div>
+    @endif
+
+     <div class="sign">
+         <div class="line">Authorized Signature</div>
+     </div>
+ </body>
+
+ </html>

@@ -55,21 +55,9 @@
             @include('common.alert')
 
             @php
-                $existingItems = old('items', $activeQuotations->map(function ($q) {
-                         return array(
-                        'iProductCategoryId' => $q->iProductCategoryId,
-                        'iProductId' => $q->iProductId,
-                        'unit_of_measurement' => $q->unit_of_measurement ?? '',
-                        'shape_id' => $q->shape_id ?? '',
-                        'feature_id' => $q->feature_id ?? '',
-                        'remarks' => $q->remarks ?? '',
-                        'quantity' => $q->quantity ?? 1,
-                        'decHeight' => $q->decHeight,
-                        'decWidth' => $q->decWidth,
-                        'decRatePerSqft' => $q->decRatePerSqft,
-                        'iAmount' => $q->iAmount ?? '',
-                    );
-                })->toArray());
+                // Always start quotation form with fresh rows.
+                // Old input is preserved only after validation errors.
+                $existingItems = old('items', []);
 
                 if (empty($existingItems)) {
                     $existingItems = array(
@@ -354,6 +342,13 @@
                             <div class="col-md-4 mb-4">
                                 <label class="form-label">Grand Total</label>
                                 <input type="text" id="grandTotalAmount" class="form-control" readonly>
+                            </div>
+                            <div class="col-md-12 mb-4">
+                                <label class="form-label">Comment</label>
+                                <textarea name="strComments" class="form-control" rows="3" placeholder="Enter quotation comment">{{ old('strComments') }}</textarea>
+                                @error('strComments')
+                                    <span class="text-danger d-block">{{ $message }}</span>
+                                @enderror
                             </div>
                         </div>
 

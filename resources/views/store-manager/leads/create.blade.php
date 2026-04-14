@@ -173,6 +173,14 @@
                                         <span class="text-danger">{{ $errors->first('design_followup_date') }}</span>
                                     @endif
                                 </div>
+                                <div class="col-md-12 mb-4">
+                                    <label class="form-label">Comment</label>
+                                    <textarea name="strComments" class="form-control" rows="3" placeholder="Enter lead comment">{{ old('strComments') }}</textarea>
+                                    @if ($errors->has('strComments'))
+                                        <span class="text-danger">{{ $errors->first('strComments') }}</span>
+                                    @endif
+                                </div>
+
 
                                 <div class="col-md-12">
                                     <button type="submit" class="btn btn-primary">Submit</button>

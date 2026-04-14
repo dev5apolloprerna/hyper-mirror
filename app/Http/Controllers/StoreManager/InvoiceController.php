@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\Showroom;
 use Illuminate\Http\Request;
+use App\Models\InvoicePdfSetting;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Validation\Rule;
@@ -46,23 +47,22 @@ class InvoiceController extends Controller
             ->showrooms()
             ->pluck('showrooms.iShowroomId');
 
-/*        if ($request->filled('search')) {
+        /*        if ($request->filled('search')) {
             $s = trim($request->search);
             $query->where(function ($q) use ($s) {
                 $q->where('strInvoiceNo', 'like', "%{$s}%")
                     ->orWhereHas('showroom', fn($sub) => $sub->where('strShowRoomName', 'like', "%{$s}%"));*/
-                     $query = Invoice::with(['showroom', 'createdBy', 'items.category', 'items.product'])
+        $query = Invoice::with(['showroom', 'createdBy', 'items.category', 'items.product'])
             ->when($assignedShowroomIds->isNotEmpty(), function ($q) use ($assignedShowroomIds) {
                 $q->whereIn('iShowroomId', $assignedShowroomIds);
-
             });
         //}
 
-                    $this->applyFilters($query, $request);
+        $this->applyFilters($query, $request);
         $query->orderByDesc('iInvoiceId');
 
         $invoices  = $query->paginate(15)->withQueryString();
-       // $showrooms = Showroom::orderBy('strShowRoomName')->get();
+        // $showrooms = Showroom::orderBy('strShowRoomName')->get();
 
         $showrooms = Showroom::query()
             ->when($assignedShowroomIds->isNotEmpty(), function ($q) use ($assignedShowroomIds) {
@@ -81,19 +81,19 @@ class InvoiceController extends Controller
             $totalQuery->where(function ($q) use ($s) {
                 $q->where('strInvoiceNo', 'like', "%{$s}%")
                     ->orWhereHas('showroom', fn($sub) => $sub->where('strShowRoomName', 'like', "%{$s}%"));*/
-                            $totalQuery = Invoice::query()
+        $totalQuery = Invoice::query()
             ->when($assignedShowroomIds->isNotEmpty(), function ($q) use ($assignedShowroomIds) {
                 $q->whereIn('iShowroomId', $assignedShowroomIds);
             });
         //}
 
-                    $this->applyFilters($totalQuery, $request);
+        $this->applyFilters($totalQuery, $request);
 
         $filteredIds    = $totalQuery->pluck('iInvoiceId');
         $grandTotal     = (float) InvoiceItem::whereIn('iInvoiceId', $filteredIds)->sum('iAmount');
         $totalInvoices  = $filteredIds->count();
 
-                $overallUnpaid  = (float) InvoiceItem::whereIn('iInvoiceId', (clone $totalQuery)->where('payment_received', false)->pluck('iInvoiceId'))->sum('iAmount');
+        $overallUnpaid  = (float) InvoiceItem::whereIn('iInvoiceId', (clone $totalQuery)->where('payment_received', false)->pluck('iInvoiceId'))->sum('iAmount');
 
         $todayBaseQuery = Invoice::query()
             ->when($assignedShowroomIds->isNotEmpty(), function ($q) use ($assignedShowroomIds) {
@@ -123,7 +123,10 @@ class InvoiceController extends Controller
             'showrooms',
             'grandTotal',
             'totalInvoices',
-            'overallUnpaid', 'todayCashAmount', 'todayBankAmount', 'todayUnpaidAmount'
+            'overallUnpaid',
+            'todayCashAmount',
+            'todayBankAmount',
+            'todayUnpaidAmount'
         ));
     }
 
@@ -168,6 +171,9 @@ class InvoiceController extends Controller
             'iShowroomId'              => ['required', 'exists:showrooms,iShowroomId', Rule::in($assignedShowroomIds)],
             'InvoiceDate'              => 'required|date',
             //'strNotes'                 => 'nullable|string|max:500',
+            'customer_name'            => 'nullable|string|max:120',
+            'customer_mobile'          => 'nullable|string|max:20',
+            'customer_address'         => 'nullable|string|max:500',
             'strNotes'                 => 'nullable|string|max:500|required_if:payment_received,0',
             'payment_mode'             => ['required', Rule::in(['cash', 'bank'])],
             'payment_received'         => ['required', Rule::in(['0', '1'])],
@@ -195,6 +201,9 @@ class InvoiceController extends Controller
                 'strInvoiceNo' => $invoiceNo,
                 'iShowroomId'  => $request->iShowroomId,
                 'iCreatedBy'   => auth()->id(),
+                'customer_name' => $request->customer_name,
+                'customer_mobile' => $request->customer_mobile,
+                'customer_address' => $request->customer_address,
                 'InvoiceDate'  => $request->InvoiceDate,
                 'strNotes'     => $request->strNotes,
                 'status'       => 'confirmed',
@@ -246,7 +255,7 @@ class InvoiceController extends Controller
             return back()->withInput()->with('error', $th->getMessage());
         }
     }
-     private function applyFilters($query, Request $request): void
+    private function applyFilters($query, Request $request): void
     {
         if ($request->filled('iShowroomId')) {
             $query->where('iShowroomId', $request->iShowroomId);
@@ -284,8 +293,9 @@ class InvoiceController extends Controller
     {
         $this->authorise();
         $invoice->load(['showroom', 'createdBy', 'items.category', 'items.product']);
+        $invoicePdfSetting = InvoicePdfSetting::query()->first();
 
-        $pdf = Pdf::loadView('store-manager.invoice.pdf', compact('invoice'));
+        $pdf = Pdf::loadView('store-manager.invoice.pdf', compact('invoice', 'invoicePdfSetting'));
         $pdf->setPaper('a4', 'portrait');
 
         return $pdf->stream($invoice->strInvoiceNo . '.pdf');
@@ -338,7 +348,8 @@ class InvoiceController extends Controller
     // ── Delete ───────────────────────────────────────────────────────────────
     public function destroy(Invoice $invoice)
     {
-        $this->authorise();
+        // $this->authorise();
+        abort_unless(optional(auth()->user()->crmRole)->slug === 'admin', 403);
         $invoice->delete();
         return redirect()->route('store.invoice.index')
             ->with('success', 'Invoice deleted successfully.');
