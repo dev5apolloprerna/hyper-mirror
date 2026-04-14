@@ -97,7 +97,8 @@
                     <a href="{{ route('store.invoice.pdf', $invoice->iInvoiceId) }}" class="btn btn-primary" target="_blank">
                         <i class="fas fa-file-pdf me-1"></i> View PDF
                     </a>
-                    @if (optional(auth()->user()->crmRole)->slug === 'admin')
+                    @php($roleSlug = optional(auth()->user()->crmRole)->slug)
+                    @if (blank($roleSlug) || $roleSlug === 'admin')
                         <form action="{{ route('store.invoice.destroy', $invoice->iInvoiceId) }}" method="POST"
                             onsubmit="return confirm('Delete this invoice?')">
                             @csrf

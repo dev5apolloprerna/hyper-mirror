@@ -96,7 +96,7 @@
                         </a>
                     </li>
                 @endif
-                @if ($roleSlug === 'storemanager')
+                @if (in_array($roleSlug, ['storemanager', 'admin'], true))
                     <li class="nav-item">
                         <a href="{{ route('store.invoice.index') }}"
                             class="nav-link {{ request()->is('store-manager/invoice*') ? 'active' : '' }}">

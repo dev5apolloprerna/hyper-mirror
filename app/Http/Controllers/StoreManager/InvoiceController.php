@@ -22,11 +22,15 @@ class InvoiceController extends Controller
     {
         $this->middleware('auth');
     }
+    
+
 
     // ── Listing ──────────────────────────────────────────────────────────────
     public function index(Request $request)
     {
+
         $this->authorise();
+        $isAdmin = $this->isAdminLike();
 
         /*$query = Invoice::with(['showroom', 'createdBy', 'items.category', 'items.product'])
             ->orderByDesc('iInvoiceId');
@@ -43,9 +47,9 @@ class InvoiceController extends Controller
             $query->whereDate('InvoiceDate', '<=', $request->to_date);
         }*/
 
-        $assignedShowroomIds = auth()->user()
-            ->showrooms()
-            ->pluck('showrooms.iShowroomId');
+        $assignedShowroomIds = $isAdmin
+            ? collect()
+            : auth()->user()->showrooms()->pluck('showrooms.iShowroomId');
 
         /*        if ($request->filled('search')) {
             $s = trim($request->search);
@@ -135,9 +139,11 @@ class InvoiceController extends Controller
     {
         $this->authorise();
 
-        $assignedShowroomIds = auth()->user()
-            ->showrooms()
-            ->pluck('showrooms.iShowroomId');
+        $isAdmin = $this->isAdminLike();
+        $assignedShowroomIds = $isAdmin
+            ? collect()
+            : auth()->user()->showrooms()->pluck('showrooms.iShowroomId');
+
 
         $showrooms = Showroom::query()
             ->when($assignedShowroomIds->isNotEmpty(), function ($query) use ($assignedShowroomIds) {
@@ -161,14 +167,18 @@ class InvoiceController extends Controller
     {
 
         $this->authorise();
+        $isAdmin = $this->isAdminLike();
 
-        $assignedShowroomIds = auth()->user()
-            ->showrooms()
-            ->pluck('showrooms.iShowroomId')
-            ->all();
+        $assignedShowroomIds = $isAdmin
+            ? []
+            : auth()->user()->showrooms()->pluck('showrooms.iShowroomId')->all();
 
         $request->validate([
-            'iShowroomId'              => ['required', 'exists:showrooms,iShowroomId', Rule::in($assignedShowroomIds)],
+            'iShowroomId'              => array_filter([
+                'required',
+                'exists:showrooms,iShowroomId',
+                !$isAdmin ? Rule::in($assignedShowroomIds) : null,
+            ]),
             'InvoiceDate'              => 'required|date',
             //'strNotes'                 => 'nullable|string|max:500',
             'customer_name'            => 'nullable|string|max:120',
@@ -349,7 +359,7 @@ class InvoiceController extends Controller
     public function destroy(Invoice $invoice)
     {
         // $this->authorise();
-        abort_unless(optional(auth()->user()->crmRole)->slug === 'admin', 403);
+        abort_unless($this->isAdminLike(), 403);
         $invoice->delete();
         return redirect()->route('store.invoice.index')
             ->with('success', 'Invoice deleted successfully.');
@@ -368,6 +378,17 @@ class InvoiceController extends Controller
     // ── Guard ────────────────────────────────────────────────────────────────
     private function authorise(): void
     {
-        abort_unless(optional(auth()->user()->crmRole)->slug === 'storemanager', 403);
+        abort_unless($this->isStoreManager() || $this->isAdminLike(), 403);
+    }
+
+    private function isStoreManager(): bool
+    {
+        return optional(auth()->user()->crmRole)->slug === 'storemanager';
+    }
+
+    private function isAdminLike(): bool
+    {
+        $roleSlug = optional(auth()->user()->crmRole)->slug;
+        return blank($roleSlug) || $roleSlug === 'admin';
     }
 }
