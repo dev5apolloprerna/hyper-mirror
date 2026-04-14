@@ -10,9 +10,9 @@
             @include('common.alert')
 
             @php
-                $totalReceived = (float) $payments->sum('iPaidAmount');
-                $leadAmount = (float) ($lead->iLeadAmount ?? 0);
-                $pendingAmount = max(0, $leadAmount - $totalReceived);
+            $totalReceived = (float) $payments->sum('iPaidAmount');
+            $leadAmount = (float) ($lead->iLeadAmount ?? 0);
+            $pendingAmount = max(0, $leadAmount - $totalReceived);
             @endphp
 
             <div class="row g-3 mb-3">
@@ -51,36 +51,42 @@
                         </div>
                         <div class="card-body">
                             @if($canManagePayments)
-                                <form action="{{ route('store.leads.payments.store', $lead->iLeadId) }}" method="POST">
-                                    @csrf
-
-                                    <div class="mb-3">
-                                        <label class="form-label">Paid Amount <span class="text-danger">*</span></label>
-                                        <input type="number" step="0.01" min="0.01" name="iPaidAmount" class="form-control" value="{{ old('iPaidAmount') }}" placeholder="Enter paid amount" required>
-                                        @error('iPaidAmount') <span class="text-danger">{{ $message }}</span> @enderror
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label class="form-label">Payment Date <span class="text-danger">*</span></label>
-                                        <input type="date" name="PaymentDate" class="form-control" value="{{ old('PaymentDate') }}" required>
-                                        @error('PaymentDate') <span class="text-danger">{{ $message }}</span> @enderror
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label class="form-label">Payment Mode <span class="text-danger">*</span></label>
-                                        <input type="text" name="PaymentMode" class="form-control" value="{{ old('PaymentMode') }}" placeholder="Cash / UPI / Bank" required>
-                                        @error('PaymentMode') <span class="text-danger">{{ $message }}</span> @enderror
-                                    </div>
-
-                                    <button type="submit" class="btn btn-primary">Submit</button>
-                                    <a href="{{ route('store.leads.index') }}" class="btn btn-secondary">Back</a>
-                                </form>
-                            @else
-                                <div class="alert alert-info mb-3">
-                                    Sales/store users can view received payment details.
-                                    Payment entries are managed by accountant login only.
+                            <form action="{{ route('store.leads.payments.store', $lead->iLeadId) }}" method="POST">
+                                @csrf
+                                <input type="hidden" id="maxAmount" value="{{ $pendingAmount }}">
+                                <div class="mb-3">
+                                    <label class="form-label">Paid Amount <span class="text-danger">*</span></label>
+                                    <input type="number" id="iPaidAmounts" step="0.01" min="0.01" max="{{ $pendingAmount }}" name="iPaidAmount" class="form-control" value="{{ old('iPaidAmount') }}" placeholder="Enter paid amount" required>
+                                    <small id="amountError" class="text-danger"></small>
+                                    @error('iPaidAmount') <span class="text-danger">{{ $message }}</span> @enderror
                                 </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Payment Date <span class="text-danger">*</span></label>
+                                    <input type="date" name="PaymentDate" class="form-control" value="{{ old('PaymentDate') }}" required>
+                                    @error('PaymentDate') <span class="text-danger">{{ $message }}</span> @enderror
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Payment Mode <span class="text-danger">*</span></label>
+                                    <select name="PaymentMode" class="form-select @error('PaymentMode') is-invalid @enderror" required>
+                                        <option value="cash" {{ old('payment_mode', 'cash') === 'cash' ? 'selected' : '' }}>Cash</option>
+                                        <option value="bank" {{ old('payment_mode') === 'bank' ? 'selected' : '' }}>Bank</option>
+                                    </select>
+
+                                    <!--                                         <input type="text" name="PaymentMode" class="form-control" value="{{ old('PaymentMode') }}" placeholder="Cash / UPI / Bank" required> -->
+                                    @error('PaymentMode') <span class="text-danger">{{ $message }}</span> @enderror
+                                </div>
+
+                                <button type="submit" class="btn btn-primary">Submit</button>
                                 <a href="{{ route('store.leads.index') }}" class="btn btn-secondary">Back</a>
+                            </form>
+                            @else
+                            <div class="alert alert-info mb-3">
+                                Sales/store users can view received payment details.
+                                Payment entries are managed by accountant login only.
+                            </div>
+                            <a href="{{ route('store.leads.index') }}" class="btn btn-secondary">Back</a>
                             @endif
                         </div>
                     </div>
@@ -92,9 +98,9 @@
                             <div class="d-flex justify-content-between align-items-center">
                                 <h5 class="mb-0">Payment Listing</h5>
                                 @if($canManagePayments)
-                                    <button type="button" class="btn btn-danger btn-sm" id="bulkDeleteBtn">
-                                        <i class="fas fa-trash"></i> Bulk Delete
-                                    </button>
+                                <!-- <button type="button" class="btn btn-danger btn-sm" id="bulkDeleteBtn">
+                                    <i class="fas fa-trash"></i> Bulk Delete
+                                </button> -->
                                 @endif
                             </div>
                         </div>
@@ -116,58 +122,58 @@
                                     <thead>
                                         <tr>
                                             @if($canManagePayments)
-                                                <th width="5%"><input type="checkbox" id="selectAll"></th>
+                                            <th width="5%"><input type="checkbox" id="selectAll"></th>
                                             @endif
                                             <th>Paid Amount</th>
                                             <th>Payment Date</th>
                                             <th>Payment Mode</th>
                                             <th>Entered By</th>
                                             @if($canManagePayments)
-                                                <th width="12%">Action</th>
+                                            <th width="12%">Action</th>
                                             @endif
                                         </tr>
                                     </thead>
                                     <tbody>
                                         @forelse($payments as $payment)
-                                            <tr>
-                                                @if($canManagePayments)
-                                                    <td><input type="checkbox" class="record-checkbox" value="{{ $payment->iLeadPaymentId }}"></td>
-                                                @endif
-                                                <td>₹{{ number_format((float)$payment->iPaidAmount, 2) }}</td>
-                                                <td>{{ $payment->PaymentDate }}</td>
-                                                <td>{{ $payment->PaymentMode }}</td>
-                                                 <td>
-                                                    {{ $payment->user->full_name
+                                        <tr>
+                                            @if($canManagePayments)
+                                            <td><input type="checkbox" class="record-checkbox" value="{{ $payment->iLeadPaymentId }}"></td>
+                                            @endif
+                                            <td>₹{{ number_format((float)$payment->iPaidAmount, 2) }}</td>
+                                            <td>{{ $payment->PaymentDate }}</td>
+                                            <td>{{ $payment->PaymentMode }}</td>
+                                            <td>
+                                                {{ $payment->user->full_name
                                                         ?: ($payment->user->name
                                                             ?? ($payment->user->strUserName ?? '—')) }}
-                                                </td>
-                                                @if($canManagePayments)
-                                                    <td>
-                                                        <a href="javascript:void(0);"
-                                                           class="text-primary me-2 edit-payment-btn"
-                                                           title="Edit"
-                                                           data-id="{{ $payment->iLeadPaymentId }}"
-                                                           data-amount="{{ $payment->iPaidAmount }}"
-                                                           data-date="{{ $payment->PaymentDate }}"
-                                                           data-mode="{{ $payment->PaymentMode }}">
-                                                            <i class="fas fa-edit"></i>
-                                                        </a>
+                                            </td>
+                                            @if($canManagePayments)
+                                            <td>
+                                                <!-- <a href="javascript:void(0);"
+                                                    class="text-primary me-2 edit-payment-btn"
+                                                    title="Edit"
+                                                    data-id="{{ $payment->iLeadPaymentId }}"
+                                                    data-amount="{{ $payment->iPaidAmount }}"
+                                                    data-date="{{ $payment->PaymentDate }}"
+                                                    data-mode="{{ $payment->PaymentMode }}">
+                                                    <i class="fas fa-edit"></i>
+                                                </a> -->
 
-                                                        <a href="javascript:void(0);" class="text-danger delete-record" data-id="{{ $payment->iLeadPaymentId }}" title="Delete">
-                                                            <i class="fas fa-trash"></i>
-                                                        </a>
+                                                <a href="javascript:void(0);" class="text-danger delete-record" data-id="{{ $payment->iLeadPaymentId }}" title="Delete">
+                                                    <i class="fas fa-trash"></i>
+                                                </a>
 
-                                                        <form id="delete-form-{{ $payment->iLeadPaymentId }}" action="{{ route('store.leads.payments.delete', [$lead->iLeadId, $payment->iLeadPaymentId]) }}" method="POST" style="display:none;">
-                                                            @csrf
-                                                            @method('DELETE')
-                                                        </form>
-                                                    </td>
-                                                @endif
-                                            </tr>
+                                                <form id="delete-form-{{ $payment->iLeadPaymentId }}" action="{{ route('store.leads.payments.delete', [$lead->iLeadId, $payment->iLeadPaymentId]) }}" method="POST" style="display:none;">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                </form>
+                                            </td>
+                                            @endif
+                                        </tr>
                                         @empty
-                                            <tr>
-                                                <td colspan="{{ $canManagePayments ? 6 : 4 }}" class="text-center">No payments found.</td>
-                                            </tr>
+                                        <tr>
+                                            <td colspan="{{ $canManagePayments ? 6 : 4 }}" class="text-center">No payments found.</td>
+                                        </tr>
                                         @endforelse
                                     </tbody>
                                 </table>
@@ -227,65 +233,83 @@
 @section('scripts')
 @if($canManagePayments)
 <script>
-$(document).ready(function () {
-    $('#selectAll').on('click', function () {
-        $('.record-checkbox').prop('checked', $(this).prop('checked'));
-    });
-
-    $('.delete-record').on('click', function () {
-        const id = $(this).data('id');
-        if (confirm('Are you sure you want to delete this payment?')) {
-            $('#delete-form-' + id).submit();
-        }
-    });
-
-    $('#bulkDeleteBtn').on('click', function () {
-        let ids = [];
-        $('.record-checkbox:checked').each(function () {
-            ids.push($(this).val());
+    $(document).ready(function() {
+        $('#selectAll').on('click', function() {
+            $('.record-checkbox').prop('checked', $(this).prop('checked'));
         });
 
-        if (ids.length === 0) {
-            alert('Please select at least one record.');
-            return;
-        }
+        $('.delete-record').on('click', function() {
+            const id = $(this).data('id');
+            if (confirm('Are you sure you want to delete this payment?')) {
+                $('#delete-form-' + id).submit();
+            }
+        });
 
-        if (confirm('Are you sure you want to delete selected payments?')) {
-            $.ajax({
-                url: "{{ route('store.leads.payments.bulk-delete', $lead->iLeadId) }}",
-                type: "POST",
-                data: {
-                    _token: "{{ csrf_token() }}",
-                    ids: ids
-                },
-                success: function (response) {
-                    if (response.status) {
-                        location.reload();
-                    } else {
-                        alert(response.message || 'Something went wrong.');
-                    }
-                },
-                error: function () {
-                    alert('Something went wrong.');
-                }
+        $('#bulkDeleteBtn').on('click', function() {
+            let ids = [];
+            $('.record-checkbox:checked').each(function() {
+                ids.push($(this).val());
             });
-        }
+
+            if (ids.length === 0) {
+                alert('Please select at least one record.');
+                return;
+            }
+
+            if (confirm('Are you sure you want to delete selected payments?')) {
+                $.ajax({
+                    url: "{{ route('store.leads.payments.bulk-delete', $lead->iLeadId) }}",
+                    type: "POST",
+                    data: {
+                        _token: "{{ csrf_token() }}",
+                        ids: ids
+                    },
+                    success: function(response) {
+                        if (response.status) {
+                            location.reload();
+                        } else {
+                            alert(response.message || 'Something went wrong.');
+                        }
+                    },
+                    error: function() {
+                        alert('Something went wrong.');
+                    }
+                });
+            }
+        });
+
+        $('.edit-payment-btn').on('click', function() {
+            const id = $(this).data('id');
+            const amount = $(this).data('amount');
+            const date = $(this).data('date');
+            const mode = $(this).data('mode');
+
+            $('#edit_iPaidAmount').val(amount);
+            $('#edit_PaymentDate').val(date);
+            $('#edit_PaymentMode').val(mode);
+            $('#editPaymentForm').attr('action', "{{ url('store-manager/leads/' . $lead->iLeadId . '/payments') }}/" + id + "/update");
+
+            $('#editPaymentModal').modal('show');
+        });
     });
-
-    $('.edit-payment-btn').on('click', function () {
-        const id = $(this).data('id');
-        const amount = $(this).data('amount');
-        const date = $(this).data('date');
-        const mode = $(this).data('mode');
-
-        $('#edit_iPaidAmount').val(amount);
-        $('#edit_PaymentDate').val(date);
-        $('#edit_PaymentMode').val(mode);
-        $('#editPaymentForm').attr('action', "{{ url('store-manager/leads/' . $lead->iLeadId . '/payments') }}/" + id + "/update");
-
-        $('#editPaymentModal').modal('show');
-    });
-});
 </script>
 @endif
+<script>
+    $(document).ready(function() {
+
+        let maxAmount = parseFloat($('#maxAmount').val()) || 0;
+
+        $('#iPaidAmounts').on('input', function() {
+            let entered = parseFloat($(this).val()) || 0;
+
+            if (entered > maxAmount) {
+                $('#amountError').text('❌ Amount cannot be more than pending (₹' + maxAmount + ')');
+                $(this).val(maxAmount);
+            } else {
+                $('#amountError').text('');
+            }
+        });
+
+    });
+</script>
 @endsection

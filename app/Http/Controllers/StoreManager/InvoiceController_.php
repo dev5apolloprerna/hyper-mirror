@@ -27,7 +27,7 @@ class InvoiceController extends Controller
     {
         $this->authorise();
 
-        /*$query = Invoice::with(['showroom', 'createdBy', 'items.category', 'items.product'])
+        $query = Invoice::with(['showroom', 'createdBy', 'items.category', 'items.product'])
             ->orderByDesc('iInvoiceId');
 
         if ($request->filled('iShowroomId')) {
@@ -40,39 +40,21 @@ class InvoiceController extends Controller
 
         if ($request->filled('to_date')) {
             $query->whereDate('InvoiceDate', '<=', $request->to_date);
-        }*/
+        }
 
-        $assignedShowroomIds = auth()->user()
-            ->showrooms()
-            ->pluck('showrooms.iShowroomId');
-
-/*        if ($request->filled('search')) {
+        if ($request->filled('search')) {
             $s = trim($request->search);
             $query->where(function ($q) use ($s) {
                 $q->where('strInvoiceNo', 'like', "%{$s}%")
-                    ->orWhereHas('showroom', fn($sub) => $sub->where('strShowRoomName', 'like', "%{$s}%"));*/
-                     $query = Invoice::with(['showroom', 'createdBy', 'items.category', 'items.product'])
-            ->when($assignedShowroomIds->isNotEmpty(), function ($q) use ($assignedShowroomIds) {
-                $q->whereIn('iShowroomId', $assignedShowroomIds);
-
+                    ->orWhereHas('showroom', fn($sub) => $sub->where('strShowRoomName', 'like', "%{$s}%"));
             });
-        //}
-
-                    $this->applyFilters($query, $request);
-        $query->orderByDesc('iInvoiceId');
+        }
 
         $invoices  = $query->paginate(15)->withQueryString();
-       // $showrooms = Showroom::orderBy('strShowRoomName')->get();
-
-        $showrooms = Showroom::query()
-            ->when($assignedShowroomIds->isNotEmpty(), function ($q) use ($assignedShowroomIds) {
-                $q->whereIn('iShowroomId', $assignedShowroomIds);
-            })
-            ->orderBy('strShowRoomName')
-            ->get();
+        $showrooms = Showroom::orderBy('strShowRoomName')->get();
 
         // Grand totals for filtered set (no pagination)
-        /*$totalQuery = Invoice::query();
+        $totalQuery = Invoice::query();
         if ($request->filled('iShowroomId'))  $totalQuery->where('iShowroomId', $request->iShowroomId);
         if ($request->filled('from_date'))    $totalQuery->whereDate('InvoiceDate', '>=', $request->from_date);
         if ($request->filled('to_date'))      $totalQuery->whereDate('InvoiceDate', '<=', $request->to_date);
@@ -80,50 +62,18 @@ class InvoiceController extends Controller
             $s = trim($request->search);
             $totalQuery->where(function ($q) use ($s) {
                 $q->where('strInvoiceNo', 'like', "%{$s}%")
-                    ->orWhereHas('showroom', fn($sub) => $sub->where('strShowRoomName', 'like', "%{$s}%"));*/
-                            $totalQuery = Invoice::query()
-            ->when($assignedShowroomIds->isNotEmpty(), function ($q) use ($assignedShowroomIds) {
-                $q->whereIn('iShowroomId', $assignedShowroomIds);
+                    ->orWhereHas('showroom', fn($sub) => $sub->where('strShowRoomName', 'like', "%{$s}%"));
             });
-        //}
-
-                    $this->applyFilters($totalQuery, $request);
-
+        }
         $filteredIds    = $totalQuery->pluck('iInvoiceId');
         $grandTotal     = (float) InvoiceItem::whereIn('iInvoiceId', $filteredIds)->sum('iAmount');
         $totalInvoices  = $filteredIds->count();
-
-                $overallUnpaid  = (float) InvoiceItem::whereIn('iInvoiceId', (clone $totalQuery)->where('payment_received', false)->pluck('iInvoiceId'))->sum('iAmount');
-
-        $todayBaseQuery = Invoice::query()
-            ->when($assignedShowroomIds->isNotEmpty(), function ($q) use ($assignedShowroomIds) {
-                $q->whereIn('iShowroomId', $assignedShowroomIds);
-            })
-            ->when($request->filled('iShowroomId'), function ($q) use ($request) {
-                $q->where('iShowroomId', $request->iShowroomId);
-            })
-            ->whereDate('InvoiceDate', now()->toDateString());
-
-        $todayCashIds = (clone $todayBaseQuery)
-            ->where('payment_mode', 'cash')
-            ->pluck('iInvoiceId');
-        $todayBankIds = (clone $todayBaseQuery)
-            ->where('payment_mode', 'bank')
-            ->pluck('iInvoiceId');
-        $todayUnpaidIds = (clone $todayBaseQuery)
-            ->where('payment_received', false)
-            ->pluck('iInvoiceId');
-
-        $todayCashAmount = (float) InvoiceItem::whereIn('iInvoiceId', $todayCashIds)->sum('iAmount');
-        $todayBankAmount = (float) InvoiceItem::whereIn('iInvoiceId', $todayBankIds)->sum('iAmount');
-        $todayUnpaidAmount = (float) InvoiceItem::whereIn('iInvoiceId', $todayUnpaidIds)->sum('iAmount');
 
         return view('store-manager.invoice.index', compact(
             'invoices',
             'showrooms',
             'grandTotal',
-            'totalInvoices',
-            'overallUnpaid', 'todayCashAmount', 'todayBankAmount', 'todayUnpaidAmount'
+            'totalInvoices'
         ));
     }
 
@@ -244,40 +194,6 @@ class InvoiceController extends Controller
         } catch (\Throwable $th) {
             DB::rollBack();
             return back()->withInput()->with('error', $th->getMessage());
-        }
-    }
-     private function applyFilters($query, Request $request): void
-    {
-        if ($request->filled('iShowroomId')) {
-            $query->where('iShowroomId', $request->iShowroomId);
-        }
-
-        if ($request->filled('from_date')) {
-            $query->whereDate('InvoiceDate', '>=', $request->from_date);
-        }
-
-        if ($request->filled('to_date')) {
-            $query->whereDate('InvoiceDate', '<=', $request->to_date);
-        }
-
-        if ($request->filled('payment_status')) {
-            if ($request->payment_status === 'paid') {
-                $query->where('payment_received', true);
-            } elseif ($request->payment_status === 'unpaid') {
-                $query->where('payment_received', false);
-            }
-        }
-
-        if ($request->filled('search')) {
-            $s = strtolower(trim($request->search));
-            $query->where(function ($q) use ($s) {
-                $q->where('strInvoiceNo', 'like', "%{$s}%")
-                    ->orWhereHas('showroom', fn($sub) => $sub->where('strShowRoomName', 'like', "%{$s}%"));
-
-                if (in_array($s, ['paid', 'unpaid'], true)) {
-                    $q->orWhere('payment_received', $s === 'paid');
-                }
-            });
         }
     }
     public function pdf(Invoice $invoice)

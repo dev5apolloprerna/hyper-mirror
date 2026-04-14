@@ -155,13 +155,7 @@
             <h4>Challan Details</h4>
             <p><strong>Lead No:</strong> {{ $lead->strLeadNo }}</p>
             <p><strong>Challan Date:</strong> {{ now()->format('d-m-Y') }}</p>
-            @if($lead->expected_delivery_date)
-                <p><strong>Expected Delivery:</strong> {{ \Carbon\Carbon::parse($lead->expected_delivery_date)->format('d-m-Y') }}</p>
-            @endif
-            <p><strong>Status:</strong> {{ $lead->iCurrentLeadStatus }}</p>
-            @if($lead->MeasurementVisitDate)
-                <p><strong>Measurement Date:</strong> {{ \Carbon\Carbon::parse($lead->MeasurementVisitDate)->format('d-m-Y') }}</p>
-            @endif
+            
         </div>
     </div>
 

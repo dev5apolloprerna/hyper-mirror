@@ -135,6 +135,24 @@
                                             <td class="text-muted">Measurement</td>
                                             <td>{{ $lead->IsMeasureMentRequired ? 'Required' : 'Not Required' }}</td>
                                         </tr>
+                                        <tr>
+                                            <td class="text-muted">Only Fitting Quotation</td>
+                                            <td>{{ (int) ($lead->isFittingLeadOnly ?? 0) === 1 ? 'Yes' : 'No' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted">Fitting Required</td>
+                                            <td>{{ (int) ($lead->isFittingRequired ?? 0) === 1 ? 'Yes' : 'No' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted">Fitting Charge Type</td>
+                                            <td>
+                                                @if((int) ($lead->isFittingRequired ?? 0) !== 1)
+                                                    N/A
+                                                @else
+                                                    {{ (int) ($lead->isFittingChargeIncluded ?? 0) === 1 ? 'Included' : 'Extra' }}
+                                                @endif
+                                            </td>
+                                        </tr>
                                         @if($lead->MeasurementVisitDate)
                                             <tr>
                                                 <td class="text-muted">Measurement Date</td>
@@ -240,7 +258,7 @@
                                                         <td>{{ $q->unit_of_measurement ?? '—' }}</td>
                                                         <td>{{ $q->quantity ?? 1 }}</td>
                                                         <td>{{ $q->decHeight }} × {{ $q->decWidth }}</td>
-                                                        @if(in_array($roleSlug, ['storemanager', 'account']))
+                                                        @if(in_array($roleSlug, ['storemanager', 'account']) && $canViewFinancial)
                                                             <td>₹{{ number_format((float)$q->decRatePerSqft, 2) }}</td>
                                                             <td>₹{{ number_format((float)$q->iAmount, 2) }}</td>
                                                         @endif
@@ -249,10 +267,41 @@
                                             </tbody>
 
                                             @if(in_array($roleSlug, ['storemanager', 'account']) && $canViewFinancial)
+                                             @php
+                                                    $subtotalAmount = (float) $activeQuotations->sum('iAmount');
+                                                    $fittingCharges = (float) ($lead->iFittingCharges ?? 0);
+                                                    $discountAmount = ((int) ($lead->isDiscountApplicable ?? 0) === 1) ? (float) ($lead->decDiscountAmount ?? 0) : 0;
+                                                    $amountAfterDiscount = max(($subtotalAmount + $fittingCharges) - $discountAmount, 0);
+                                                    $gstAmount = ((int) ($lead->isGstApplicable ?? 0) === 1) ? (float) ($lead->decGstAmount ?? 0) : 0;
+                                                @endphp
+
                                                 <tfoot>
                                                     <tr>
+                                                        <th colspan="7" class="text-end">Subtotal</th>
+                                                        <th>₹{{ number_format($subtotalAmount, 2) }}</th>
+                                                    </tr>
+                                                    @if($fittingCharges > 0)
+                                                        <tr>
+                                                            <th colspan="7" class="text-end">Fitting Charges</th>
+                                                            <th>₹{{ number_format($fittingCharges, 2) }}</th>
+                                                        </tr>
+                                                    @endif
+                                                    @if((int) ($lead->isDiscountApplicable ?? 0) === 1 && $discountAmount > 0)
+                                                        <tr>
+                                                            <th colspan="7" class="text-end">Discount</th>
+                                                            <th>- ₹{{ number_format($discountAmount, 2) }}</th>
+                                                        </tr>
+                                                    @endif
+                                                    @if((int) ($lead->isGstApplicable ?? 0) === 1 && $gstAmount > 0)
+                                                        <tr>
+                                                            <th colspan="7" class="text-end">GST (18%)</th>
+                                                            <th>₹{{ number_format($gstAmount, 2) }}</th>
+                                                        </tr>
+                                                    @endif
+
+                                                    <tr>
                                                         <th colspan="7" class="text-end">Total</th>
-                                                        <th>₹{{ number_format((float)$lead->iLeadAmount, 2) }}</th>
+                                                        <th>₹{{ number_format((float)($lead->iLeadAmount ?? ($amountAfterDiscount + $gstAmount)), 2) }}</th>
                                                     </tr>
                                                 </tfoot>
                                             @endif
