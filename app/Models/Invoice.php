@@ -18,8 +18,11 @@ class Invoice extends Model
         'iCreatedBy',
         'InvoiceDate',
         'strNotes',
+        'customer_name',
+        'customer_mobile',
+        'customer_address',
         'status',
-         'payment_mode',
+        'payment_mode',
         'payment_received',
     ];
 
@@ -46,7 +49,7 @@ class Invoice extends Model
     {
         return (float) $this->items->sum('iAmount');
     }
-        public function getUnpaidAmountAttribute(): float
+    public function getUnpaidAmountAttribute(): float
     {
         return $this->payment_received ? 0.0 : $this->total_amount;
     }

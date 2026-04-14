@@ -97,13 +97,16 @@
                     <a href="{{ route('store.invoice.pdf', $invoice->iInvoiceId) }}" class="btn btn-primary" target="_blank">
                         <i class="fas fa-file-pdf me-1"></i> View PDF
                     </a>
-                    {{-- <form action="{{ route('store.invoice.destroy', $invoice->iInvoiceId) }}"
-              method="POST" onsubmit="return confirm('Delete this invoice?')">
-            @csrf @method('DELETE')
-            <button class="btn btn-outline-danger">
-                <i class="fas fa-trash me-1"></i> Delete
-            </button>
-        </form> --}}
+                    @if (optional(auth()->user()->crmRole)->slug === 'admin')
+                        <form action="{{ route('store.invoice.destroy', $invoice->iInvoiceId) }}" method="POST"
+                            onsubmit="return confirm('Delete this invoice?')">
+                            @csrf
+                            @method('DELETE')
+                            <button class="btn btn-outline-danger">
+                                <i class="fas fa-trash me-1"></i> Delete
+                            </button>
+                        </form>
+                    @endif
                 </div>
 
                 <div class="card inv-card">
@@ -158,6 +161,18 @@
                         <div>
                             <div class="lbl">Payment Received</div>
                             <div class="val">{{ $invoice->payment_received ? 'Yes' : 'No' }}</div>
+                        </div>
+                        <div>
+                            <div class="lbl">Customer Name</div>
+                            <div class="val">{{ $invoice->customer_name ?: '—' }}</div>
+                        </div>
+                        <div>
+                            <div class="lbl">Customer Mobile</div>
+                            <div class="val">{{ $invoice->customer_mobile ?: '—' }}</div>
+                        </div>
+                        <div style="grid-column:span 2;">
+                            <div class="lbl">Customer Address</div>
+                            <div class="val">{{ $invoice->customer_address ?: '—' }}</div>
                         </div>
                         @if ($invoice->strNotes)
                             <div style="grid-column:span 2;">

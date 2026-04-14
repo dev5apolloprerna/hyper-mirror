@@ -37,7 +37,7 @@
 
                             @if($roleSlug === 'storemanager')
                                 <a href="{{ route('store.leads.quotation', $lead->iLeadId) }}" class="btn btn-success btn-sm">
-                                    <i class="fas fa-file-signature"></i> Quotation
+                                    <i class="fas fa-plus-circle"></i> Create Quotation                                
                                 </a>
 
                                 @if($lead->quotation)
@@ -68,6 +68,11 @@
                                     <i class="fas fa-truck"></i> Delivery Challan
                                 </a>
                             @endif
+                             <!--  @if($roleSlug === 'production' && $lead->designs->count())
+                                <a href="{{ route('store.leads.designs.index', $lead->iLeadId) }}" class="btn btn-outline-info btn-sm" title="View Design">
+                                    <i class="fas fa-eye"></i> View Design
+                                </a>
+                            @endif -->
                         </div>
                     </div>
                 </div>
@@ -309,6 +314,40 @@
                                     </div>
                                 </div>
                             @endif
+
+                             @if($lead->designs && $lead->designs->count())
+                                <div class="mt-3 pt-3 border-top">
+                                    <h6 class="fw-semibold mb-2">Uploaded Designs</h6>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-bordered mb-0">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th style="width:60px">#</th>
+                                                    <th>Title</th>
+                                                    <th style="width:120px">View</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach($lead->designs as $index => $design)
+                                                    <tr>
+                                                        <td>{{ $index + 1 }}</td>
+                                                        <td>{{ $design->strTitle ?: 'Design File' }}</td>
+                                                        <td>
+                                                            <a href="{{ asset('uploads/lead-designs/' . $design->strFilename) }}"
+                                                               target="_blank"
+                                                               class="btn btn-outline-info btn-sm"
+                                                               title="View Design">
+                                                                <i class="fas fa-eye"></i>
+                                                            </a>
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            @endif
+
                         </div>
                     </div>
                 </div>

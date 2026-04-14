@@ -35,7 +35,7 @@ class LeadHistoryController extends Controller
         // Determine allowed statuses for the status-change form
         $allowedStatuses = LeadWorkflow::allowedTransitionsFor(auth()->user(), $lead);
 
-        $lead->load(['customer', 'quotation', 'quotations.product', 'quotations.category', 'quotations.shape', 'createdBy']);
+        $lead->load(['customer', 'quotation', 'quotations.product', 'quotations.category', 'quotations.shape', 'createdBy', 'designs']);
         $canViewFinancial = (bool) auth()->user()->can_view_financial;
 
         // For "Deal Done": check if payments match quotation amount
@@ -165,8 +165,9 @@ class LeadHistoryController extends Controller
 
             DB::commit();
 
-            return redirect()->route('store.leads.histories.index', $lead->iLeadId)
-                ->with('success', 'Lead updated to "' . $request->iStatus . '" successfully.');
+            return redirect()->route('store.leads.index')->with('success', 'Quotation status changed successfully.');
+
+            //return redirect()->route('store.leads.histories.index', $lead->iLeadId)->with('success', 'Lead updated to "' . $request->iStatus . '" successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
             return back()->withInput()->with('error', $th->getMessage());

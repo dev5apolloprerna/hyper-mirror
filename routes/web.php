@@ -25,6 +25,7 @@ use App\Http\Controllers\StoreManager\InvoiceController;
 use App\Http\Controllers\ComplainMasterController;
 use App\Http\Controllers\AccountUser\AccountPaymentController;
 use App\Http\Controllers\Admin\AdminPaymentController;
+use App\Http\Controllers\Admin\InvoicePdfSettingController;
 
 use App\Http\Controllers\StoreManager\LedgerController;
 
@@ -132,6 +133,8 @@ Route::middleware('auth')->prefix('store-manager')->name('store.')->group(functi
     Route::get('leads', [LeadController::class, 'index'])->name('leads.index');
     Route::get('leads/create', [LeadController::class, 'create'])->name('leads.create');
     Route::post('leads/store', [LeadController::class, 'store'])->name('leads.store');
+    Route::get('leads/{lead}/edit', [LeadController::class, 'edit'])->name('leads.edit');
+    Route::post('leads/{lead}/update', [LeadController::class, 'update'])->name('leads.update');
     Route::post('leads/check-customer', [LeadController::class, 'checkCustomer'])->name('leads.check-customer');
 
     // Quotation
@@ -193,6 +196,9 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::post('users/password-update/{user}', [CrmUserController::class, 'updatePassword'])->name('users.password.update');
     Route::delete('users/delete/{user}', [CrmUserController::class, 'destroy'])->name('users.destroy');
     Route::get('reports/business', [BusinessReportController::class, 'index'])->name('reports.business');
+
+    Route::get('invoice-settings', [InvoicePdfSettingController::class, 'edit'])->name('invoice-settings.edit');
+    Route::post('invoice-settings', [InvoicePdfSettingController::class, 'update'])->name('invoice-settings.update');
 });
 
 Route::middleware('auth')->prefix('complaints')->name('complaints.')->group(function () {
