@@ -2,7 +2,7 @@
 
     <meta charset="utf-8" />
     {{--  <title>Sign In | Velzon - Admin & Dashboard Template</title>  --}}
-    <title>{{ env('APP_NAME') }} | @yield('title')</title>
+<title>{{ config('app.name', 'Laravel') }} | @yield('title')</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     {{--  <meta content="WealthcubeTech.com has been specially set up for Wealthcube Team and its exclusive partners."
         name="description" />  --}}

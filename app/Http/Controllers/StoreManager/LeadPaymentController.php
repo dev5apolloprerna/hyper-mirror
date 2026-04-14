@@ -7,6 +7,10 @@ use App\Models\Lead;
 use App\Models\LeadPayment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+
+use App\Helpers\LedgerHelper;
+
 
 class LeadPaymentController extends Controller
 {
@@ -35,11 +39,11 @@ class LeadPaymentController extends Controller
                     ->orWhere('PaymentDate', 'like', "%{$search}%")
                     ->orWhere('PaymentMode', 'like', "%{$search}%")
                     ->orWhereHas('user', function ($sub) use ($search) {
-            $sub->where('name', 'like', "%{$search}%")
-                ->orWhere('first_name', 'like', "%{$search}%")
-                ->orWhere('last_name', 'like', "%{$search}%")
-                ->orWhereRaw("CONCAT(COALESCE(first_name,''), ' ', COALESCE(last_name,'')) like ?", ["%{$search}%"])
-                ->orWhere('strUserName', 'like', "%{$search}%");
+                        $sub->where('name', 'like', "%{$search}%")
+                            ->orWhere('first_name', 'like', "%{$search}%")
+                            ->orWhere('last_name', 'like', "%{$search}%")
+                            ->orWhereRaw("CONCAT(COALESCE(first_name,''), ' ', COALESCE(last_name,'')) like ?", ["%{$search}%"])
+                            ->orWhere('strUserName', 'like', "%{$search}%");
                     });
             });
         }
@@ -49,7 +53,7 @@ class LeadPaymentController extends Controller
 
         return view('store-manager.lead-payments.index', compact('lead', 'payments', 'canManagePayments'));
 
-       // return view('store-manager.lead-payments.index', compact('lead', 'payments'));
+        // return view('store-manager.lead-payments.index', compact('lead', 'payments'));
     }
 
     public function store(Request $request, Lead $lead)
@@ -72,6 +76,42 @@ class LeadPaymentController extends Controller
                 'PaymentMode' => $request->PaymentMode,
                 'iUserID' => auth()->id(),
             ]);
+
+            $auth = Auth::user()->id;
+            $invoiceIds = $lead->iLeadId ?? 0;
+            $paymentmode = strtolower($request->PaymentMode) === 'cash' ? 0 : 1;
+
+            if ($paymentmode == 0) {
+                $Cr_emp_id = $auth;
+                $invoices_Id  =  $invoiceIds;
+                $amount = $request->iPaidAmount;
+                $dr_emp_id = 0;
+
+                $Account_get_data = DB::table('cash_payment_ledger')
+                    ->where('emp_id', $Cr_emp_id)
+                    ->where('UserType', 2)
+                    ->orderByDesc('cash_payment_ledger_id')
+                    ->first();
+
+                $AccountOpening = $Account_get_data->close ?? 0;
+                $Accountcredit = $amount ?? 0;
+                $Accountdebit = 0;
+                $AccountClose = $AccountOpening + $amount ?? 0;
+
+                DB::table('cash_payment_ledger')->insert([
+                    'emp_id' => $Cr_emp_id,
+                    'invoices_Id' => $invoices_Id,
+                    'open' => $AccountOpening,
+                    'credit' => $Accountcredit,
+                    'debit' => $Accountdebit,
+                    'close' => $AccountClose,
+                    'credit_emp_id' => $Cr_emp_id,
+                    'debit_emp_id' => 0,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                    'UserType'   => 2,
+                ]);
+            }
 
             DB::commit();
 
@@ -118,11 +158,41 @@ class LeadPaymentController extends Controller
 
     public function destroy(Lead $lead, LeadPayment $payment)
     {
-        $this->assertAccountantOnly();
 
+        $this->assertAccountantOnly();
         if ($payment->iLeadId != $lead->iLeadId) {
             abort(404);
         }
+        $auth = Auth::user()->id;
+        $amount = $payment->iPaidAmount;
+        $iLeadId = $payment->iLeadId;
+        $Cr_emp_id = $auth;
+        $dr_emp_id = 0;
+
+        $Get_data = DB::table('cash_payment_ledger')
+            ->where('emp_id', $Cr_emp_id)
+            ->where('UserType', 2)
+            ->orderByDesc('cash_payment_ledger_id')
+            ->first();
+
+        $Open = $Get_data->close ?? 0;
+        $credit = 0;
+        $debit = $amount;
+        $Close = $Open - $amount;
+
+        DB::table('cash_payment_ledger')->insert([
+            'emp_id' => $Cr_emp_id,
+            'invoices_Id' => $iLeadId,
+            'open' => $Open,
+            'credit' => $credit,
+            'debit' => $debit,
+            'close' => $Close,
+            'credit_emp_id' => 0,
+            'debit_emp_id' => $Cr_emp_id,
+            'UserType' => 2,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
 
         $payment->delete();
 

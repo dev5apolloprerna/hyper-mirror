@@ -14,6 +14,7 @@ use App\Models\ProductFeature;
 use App\Support\LeadWorkflow;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class LeadController extends Controller
 {
@@ -28,7 +29,8 @@ class LeadController extends Controller
         $roleSlug = optional(auth()->user()->crmRole)->slug;
         $query    = Lead::with(['customer', 'quotation'])->latest('iLeadId');
 
-        if ($roleSlug !== 'storemanager') {
+        if ($roleSlug !== 'storemanager') 
+        {
             $queue = LeadWorkflow::roleQueueStatuses($roleSlug);
             if (!empty($queue)) {
                 $query->whereIn('iCurrentLeadStatus', $queue);
@@ -99,6 +101,7 @@ class LeadController extends Controller
     // ── Store new lead ───────────────────────────────────────────────────────
     public function store(Request $request)
     {
+
         abort_unless(optional(auth()->user()->crmRole)->slug === 'storemanager', 403);
 
         $data = $request->validate([
@@ -108,6 +111,18 @@ class LeadController extends Controller
             'SiteAddress'           => 'nullable|string',
             'customer_type'         => 'required|in:B2B,Retail',
             'company_name'          => 'nullable|string|max:150',
+             'IsOnlyFittingQuotation'=> 'required|in:0,1',
+            'isFittingRequired'     => [
+                'nullable',
+                'in:0,1',
+                Rule::requiredIf(fn () => (int) $request->input('IsOnlyFittingQuotation') !== 1),
+            ],
+            'isFittingChargeIncluded' => [
+                'nullable',
+                'in:0,1',
+                Rule::requiredIf(fn () => (int) $request->input('IsOnlyFittingQuotation') === 1 || (int) $request->input('isFittingRequired') === 1),
+            ],
+
             'IsMeasureMentRequired' => 'required|in:0,1',
             'MeasurementVisitDate'  => 'nullable|date|required_if:IsMeasureMentRequired,1',
             'design_followup_date'  => 'nullable|date|required_if:IsMeasureMentRequired,0',
@@ -146,6 +161,9 @@ class LeadController extends Controller
             $leadNo    = $fy . '-' . str_pad($leadCount, 4, '0', STR_PAD_LEFT);
 
             $isMeasurementRequired = (int) $data['IsMeasureMentRequired'] === 1;
+            $isOnlyFittingQuotation = (int) $data['IsOnlyFittingQuotation'] === 1;
+            $isFittingRequired = $isOnlyFittingQuotation ? 1 : (int) ($data['isFittingRequired'] ?? 0);
+            $isFittingChargeIncluded = $isFittingRequired ? (int) ($data['isFittingChargeIncluded'] ?? 0) : 0;
             $status = $isMeasurementRequired
                 ? LeadWorkflow::STATUS_IN_MEASUREMENT
                 : LeadWorkflow::STATUS_IN_DESIGN;
@@ -164,6 +182,9 @@ class LeadController extends Controller
                 'CreatedDate'           => now(),
                 'iCurrentLeadStatus'    => $status,
                 'NetFollowupdate'       => $nextFollowDate,
+                'isFittingLeadOnly'     => $isOnlyFittingQuotation ? 1 : 0,
+                'isFittingRequired'     => $isFittingRequired,
+                'isFittingChargeIncluded' => $isFittingChargeIncluded,
                 'iCreatedBy'            => auth()->id(),
             ]);
 

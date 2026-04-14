@@ -5,6 +5,7 @@ namespace App\Http\Controllers\StoreManager;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class LedgerController extends Controller
 {
@@ -20,6 +21,8 @@ class LedgerController extends Controller
         $query = DB::table('cash_payment_ledger as ledger')
             ->leftJoin('invoices as inv', 'inv.iInvoiceId', '=', 'ledger.invoices_Id')
             ->leftJoin('users as emp', 'emp.id', '=', 'ledger.emp_id')
+            ->leftJoin('users as credit_user', 'credit_user.id', '=', 'ledger.credit_emp_id')
+            ->leftJoin('users as debit_user', 'debit_user.id', '=', 'ledger.debit_emp_id')
             ->select([
                 'ledger.cash_payment_ledger_id',
                 'ledger.emp_id',
@@ -36,7 +39,13 @@ class LedgerController extends Controller
                 'inv.strInvoiceNo',
                 'emp.first_name as emp_first_name',
                 'emp.strUserName as emp_user_name',
+                'credit_user.first_name as credit_first_name',
+                'credit_user.strUserName as credit_user_name',
+                'debit_user.first_name as debit_first_name',
+                'debit_user.strUserName as debit_user_name',
             ]);
+
+        $query->where('ledger.emp_id', auth()->id());
 
         if ($request->filled('invoice_no')) {
             $invoiceNo = trim((string) $request->invoice_no);
@@ -55,13 +64,16 @@ class LedgerController extends Controller
             $query->where('ledger.UserType', $request->user_type);
         }
 
-        $ledgerEntries = $query
+ $auth = Auth::user()->id;
+
+        $ledgerEntries = $query->where(['emp_id'=>$auth])
             ->orderByDesc('ledger.created_at')
             ->paginate(20)
             ->withQueryString();
 
         $userTypes = DB::table('cash_payment_ledger')
             ->select('UserType')
+            ->where('emp_id', auth()->id())
             ->whereNotNull('UserType')
             ->distinct()
             ->orderBy('UserType')
@@ -72,6 +84,7 @@ class LedgerController extends Controller
 
     private function authorise(): void
     {
-        abort_unless(optional(auth()->user()->crmRole)->slug === 'storemanager', 403);
+        $allowedRoles = ['storemanager', 'account','fitting'];
+        abort_unless(in_array(optional(auth()->user()->crmRole)->slug, $allowedRoles, true), 403);
     }
 }

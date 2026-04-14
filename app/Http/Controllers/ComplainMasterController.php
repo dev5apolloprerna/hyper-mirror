@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\ComplainMaster;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Auth;
+use App\Helpers\LedgerHelper;
+use Illuminate\Support\Facades\DB;
 
 class ComplainMasterController extends Controller
 {
@@ -66,6 +69,7 @@ class ComplainMasterController extends Controller
 
     public function resolve(Request $request, ComplainMaster $complaint)
     {
+
         $validated = $request->validate([
             'resolve_comment' => 'required|string|max:2000',
             'resolve_date' => 'required|date',
@@ -80,6 +84,34 @@ class ComplainMasterController extends Controller
             'resolve_date' => $validated['resolve_date'],
             'payment_type' => $validated['payment_type'],
             'amount' => $validated['amount'],
+        ]);
+
+        $auth = Auth::user()->id;
+        $Cr_emp_id = $auth;
+        $invoices_Id  =  $complaint->complain_id ?? 0;
+        $amount = $request->amount;
+        $dr_emp_id = 0;
+
+        $fromLast = DB::table('cash_payment_ledger')
+            ->where('emp_id', $Cr_emp_id)
+            ->where('UserType', 4)
+            ->orderByDesc('cash_payment_ledger_id')
+            ->first();
+        $Open = $fromLast->close ?? 0;
+        $Close = $Open + $amount;
+
+        DB::table('cash_payment_ledger')->insert([
+            'emp_id' => $Cr_emp_id,
+            'invoices_Id' => $invoices_Id,
+            'open' => $Open,
+            'credit' => $amount,
+            'debit' => 0,
+            'close' => $Close,
+            'credit_emp_id' => $Cr_emp_id,
+            'debit_emp_id' => 0,
+            'created_at' => now(),
+            'updated_at' => now(),
+            'UserType'   => 4,
         ]);
 
         return redirect()->route('complaints.index')

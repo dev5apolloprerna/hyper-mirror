@@ -1,4 +1,5 @@
 <?php
+
 use App\Http\Controllers\Front\FrontController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\UserController;
@@ -21,10 +22,13 @@ use App\Http\Controllers\StoreManager\LeadDesignController;
 use App\Http\Controllers\StoreManager\LeadHistoryController;
 use App\Http\Controllers\StoreManager\LeadPaymentController;
 use App\Http\Controllers\StoreManager\InvoiceController;
-
 use App\Http\Controllers\ComplainMasterController;
+use App\Http\Controllers\AccountUser\AccountPaymentController;
+use App\Http\Controllers\Admin\AdminPaymentController;
 
 use App\Http\Controllers\StoreManager\LedgerController;
+
+
 Route::fallback(function () {
     return view('errors.404');
 });
@@ -164,9 +168,10 @@ Route::middleware('auth')->prefix('store-manager')->name('store.')->group(functi
     Route::get('invoice/{invoice}/pdf',      [InvoiceController::class, 'pdf'])->name('invoice.pdf');
     Route::post('invoice/{invoice}/update-payment', [InvoiceController::class, 'updatePayment'])->name('invoice.update-payment');
     Route::get('invoice/{invoice}',          [InvoiceController::class, 'show'])->name('invoice.show');
-    Route::delete('invoice/{invoice}/delete',[InvoiceController::class, 'destroy'])->name('invoice.destroy');
-    Route::get('invoice/products-by-category',[InvoiceController::class,'productsByCategory'])->name('invoice.products-by-category');
+    Route::delete('invoice/{invoice}/delete', [InvoiceController::class, 'destroy'])->name('invoice.destroy');
+    Route::get('invoice/products-by-category', [InvoiceController::class, 'productsByCategory'])->name('invoice.products-by-category');
     Route::get('ledger', [LedgerController::class, 'index'])->name('ledger.index');
+
 });
 
 // Store Manager: Payments (separate group for clarity)
@@ -187,16 +192,30 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::post('users/update/{user}', [CrmUserController::class, 'update'])->name('users.update');
     Route::post('users/password-update/{user}', [CrmUserController::class, 'updatePassword'])->name('users.password.update');
     Route::delete('users/delete/{user}', [CrmUserController::class, 'destroy'])->name('users.destroy');
-   Route::get('reports/business', [BusinessReportController::class, 'index'])->name('reports.business');
+    Route::get('reports/business', [BusinessReportController::class, 'index'])->name('reports.business');
 });
 
 Route::middleware('auth')->prefix('complaints')->name('complaints.')->group(function () {
     Route::get('/', [ComplainMasterController::class, 'index'])->name('index');
     Route::post('/store', [ComplainMasterController::class, 'store'])->name('store');
     Route::post('/{complaint}/resolve', [ComplainMasterController::class, 'resolve'])
-        ->middleware('crm.role:account')
+        ->middleware('crm.role:fitting')
         ->name('resolve');
 });
 
+# Account route
+Route::middleware('auth')->prefix('Accountuser')->name('Accountuser.')->group(function () {
+    Route::get('Accountpayments', [AccountPaymentController::class, 'index'])->name('Accountpayments');
+    Route::get('Create-payments', [AccountPaymentController::class, 'Create'])->name('Create');
+    Route::post('Store-payments', [AccountPaymentController::class, 'Store'])->name('Store');
+    Route::get('payment-delete/{id?}/{emp_id?}', [AccountPaymentController::class, 'delete'])
+        ->name('deletePayment');
+});
 
-
+Route::prefix('admin')->name('Paymentcollection.')->middleware('auth')->group(function () {
+    Route::get('Payment-index', [AdminPaymentController::class, 'index'])->name('index');
+    Route::get('Create-payments', [AdminPaymentController::class, 'Create'])->name('Create');
+    Route::post('Store-payments', [AdminPaymentController::class, 'Store'])->name('Store');
+    Route::get('payment-delete/{id?}/{emp_id?}', [AdminPaymentController::class, 'delete'])
+        ->name('deletePayment');
+});

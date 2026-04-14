@@ -32,7 +32,7 @@
 
                                 <div class="card-body p-4">
                                     <div class="text-center mt-2">
-                                        <h5 class="text-primary">Welcome To {{ env('APP_NAME') }}!</h5>
+                                        <h5 class="text-primary">Welcome To {{ config('app.name') }}!</h5>
                                     </div>
                                     @if (session('error'))
                                         <span class="text-danger"> {{ session('error') }}</span>
