@@ -249,7 +249,13 @@
                                             <label class="form-label">Qty <span style="color:red;">*</span></label>
                                             <input type="number" min="1" name="items[{{ $index }}][quantity]" class="form-control quantity" value="{{ $item['quantity'] ?? 1 }}" required>
                                         </div>
-
+ <div class="col-md-1">
+                                            <label class="form-label">Calc By <span style="color:red;">*</span></label>
+                                            <select name="items[{{ $index }}][calculation_multiple]" class="form-control calc-multiple" required>
+                                                <option value="3" {{ (string)($item['calculation_multiple'] ?? '3') === '3' ? 'selected' : '' }}>3</option>
+                                                <option value="6" {{ (string)($item['calculation_multiple'] ?? '') === '6' ? 'selected' : '' }}>6</option>
+                                            </select>
+                                        </div>
                                         <div class="col-md-1">
                                             <label class="form-label">Height <span style="color:red;">*</span></label>
                                             <input type="number" step="0.01" min="0" name="items[{{ $index }}][decHeight]" class="form-control decHeight" value="{{ $item['decHeight'] ?? '' }}" required>
@@ -259,6 +265,7 @@
                                             <label class="form-label">Width <span style="color:red;">*</span></label>
                                             <input type="number" step="0.01" min="0" name="items[{{ $index }}][decWidth]" class="form-control decWidth" value="{{ $item['decWidth'] ?? '' }}" required>
                                         </div>
+                                       
 
                                         <div class="col-md-1">
                                             <label class="form-label">Rate <span style="color:red;">*</span></label>
@@ -399,6 +406,7 @@
                 $(this).find('input.decWidth').attr('name', 'items[' + index + '][decWidth]');
                 $(this).find('input.decRatePerSqft').attr('name', 'items[' + index + '][decRatePerSqft]');
                 $(this).find('input.lineAmount').attr('name', 'items[' + index + '][iAmount]');
+                $(this).find('select.calc-multiple').attr('name', 'items[' + index + '][calculation_multiple]');
             });
 
             $('.remove-row').prop('disabled', $('#quotationRows .quotation-row').length === 1);
@@ -457,8 +465,14 @@
                 const height = parseFloat($(this).find('.decHeight').val()) || 0;
                 const width = parseFloat($(this).find('.decWidth').val()) || 0;
                 const rate = parseFloat($(this).find('.decRatePerSqft').val()) || 0;
+                const multiple = parseInt($(this).find('.calc-multiple').val(), 10) || 3;
 
-                const lineAmount = qty * height * width * rate;
+               // const lineAmount = qty * height * width * rate;
+
+                const calculationHeight = normalizeDimensionForAmount(height, multiple);
+                const calculationWidth = normalizeDimensionForAmount(width, multiple);
+                const lineAmount = qty * calculationHeight * calculationWidth * rate;
+
 
                 subtotal += lineAmount;
                 $(this).find('.lineAmount').val(lineAmount.toFixed(2));
@@ -481,6 +495,14 @@
             $('#subtotalAmount').val(subtotal.toFixed(2));
             $('#gstAmount').val(gst.toFixed(2));
             $('#grandTotalAmount').val((afterDiscount + gst).toFixed(2));
+        }
+        function normalizeDimensionForAmount(value, multiple) {
+            if (!value || value <= 0) {
+                return 0;
+            }
+
+            const selectedMultiple = multiple === 6 ? 6 : 3;
+            return Math.ceil(value / selectedMultiple) * selectedMultiple;
         }
 
         function addItemRow() {
@@ -550,7 +572,13 @@
                 <label class="form-label">Qty <span style="color:red;">*</span></label>
                 <input type="number" min="1" name="items[${nextIndex}][quantity]" class="form-control quantity" value="1" required>
             </div>
-
+<div class="col-md-1">
+                <label class="form-label">Calc By <span style="color:red;">*</span></label>
+                <select name="items[${nextIndex}][calculation_multiple]" class="form-control calc-multiple" required>
+                    <option value="3" selected>3</option>
+                    <option value="6">6</option>
+                </select>
+            </div>
             <div class="col-md-1">
                 <label class="form-label">Height <span style="color:red;">*</span></label>
                 <input type="number" step="0.01" min="0" name="items[${nextIndex}][decHeight]" class="form-control decHeight" required>
@@ -560,7 +588,7 @@
                 <label class="form-label">Width <span style="color:red;">*</span></label>
                 <input type="number" step="0.01" min="0" name="items[${nextIndex}][decWidth]" class="form-control decWidth" required>
             </div>
-
+            
             <div class="col-md-1">
                 <label class="form-label">Rate <span style="color:red;">*</span></label>
                 <input type="number" step="0.01" min="0" name="items[${nextIndex}][decRatePerSqft]" class="form-control decRatePerSqft" required>
@@ -605,7 +633,7 @@
             recalculateTotals();
         });
 
-        $(document).on('keyup change', '.quantity, .decHeight, .decWidth, .decRatePerSqft, #iFittingCharges, .row-product-select, #isDiscountApplicable, #discountAmount, #isGstApplicable', function () {
+        $(document).on('keyup change', '.quantity, .decHeight, .decWidth, .calc-multiple, .decRatePerSqft, #iFittingCharges, .row-product-select, #isDiscountApplicable, #discountAmount, #isGstApplicable', function () {
             toggleDiscountBox();
             recalculateTotals();
         });
