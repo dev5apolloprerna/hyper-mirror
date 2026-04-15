@@ -16,6 +16,13 @@
                 </li>
 
                 @if (!$roleSlug)
+                <li class="nav-item">
+                    <a class="nav-link" href="#sidebarMore" data-bs-toggle="collapse" role="button"
+                        aria-expanded="true" aria-controls="sidebarMore">
+                        <i class="ri-briefcase-2-line text-white"></i> Product Master</a>
+                    <div class="menu-dropdown collapse show" id="sidebarMore" style="">
+                        <ul class="nav nav-sm flex-column">
+
                     <li class="nav-item">
                         <a href="{{ route('admin.product-category.index') }}"
                             class="nav-link {{ request()->is('admin/product-category*') ? 'active' : '' }}"><i
@@ -34,6 +41,9 @@
                                 class="nav-icon fas fa-draw-polygon"></i>Product Shape
                         </a>
                     </li>
+                    </ul>
+            </div>
+
                     <li class="nav-item">
                         <a href="{{ route('admin.showroom.index') }}"
                             class="nav-link {{ request()->is('admin/showroom*') ? 'active' : '' }}"><i
@@ -61,6 +71,13 @@
                             <p class="mb-0">Payment</p>
                         </a>
                     </li>
+                    <li class="nav-item">
+                    <a class="nav-link" href="#sidebarMore" data-bs-toggle="collapse" role="button"
+                        aria-expanded="true" aria-controls="sidebarMore">
+                        <i class="ri-briefcase-2-line text-white"></i> Invoices</a>
+                    <div class="menu-dropdown collapse show" id="sidebarMore" style="">
+                        <ul class="nav nav-sm flex-column">
+
                      <li class="nav-item">
                         <a href="{{ route('admin.invoice-settings.edit') }}"
                             class="nav-link {{ request()->is('admin/invoice-settings*') ? 'active' : '' }}">
@@ -75,6 +92,9 @@
                             <p class="mb-0">Invoices</p>
                         </a>
                     </li>
+                </ul>
+            </div>
+                
                 @else
                     <li class="nav-item">
                         <a href="{{ route('store.leads.index') }}"

@@ -351,6 +351,7 @@ class LeadController extends Controller
             'items.*.decHeight'                        => 'required|numeric|min:0',
             'items.*.decWidth'                         => 'required|numeric|min:0',
             'items.*.decRatePerSqft'                   => 'required|numeric|min:0',
+            'items.*.calculation_multiple'             => 'required|integer|in:3,6',
             'followup_date'                            => 'required|date',
             'iFittingCharges'                          => $requiresManualFittingCharge
                                                             ? 'required|numeric|min:0'
@@ -390,9 +391,21 @@ class LeadController extends Controller
 
             foreach ($data['items'] as $item) {
                 $qty    = (int) $item['quantity'];
-                $sqft   = (float) $item['decHeight'] * (float) $item['decWidth'];
-                $amount = $qty * $sqft * (float) $item['decRatePerSqft'];
+                /*$sqft   = (float) $item['decHeight'] * (float) $item['decWidth'];
+                $amount = $qty * $sqft * (float) $item['decRatePerSqft'];*/
 
+                $height = (float) $item['decHeight'];
+                $width  = (float) $item['decWidth'];
+                $calculationMultiple = (int) ($item['calculation_multiple'] ?? 3);
+
+                $actualSqft = $height * $width;
+                $calculationHeight = $this->normalizeDimensionForAmount($height, $calculationMultiple);
+                $calculationWidth  = $this->normalizeDimensionForAmount($width, $calculationMultiple);
+                $calculationSqft   = $calculationHeight * $calculationWidth;
+
+                $amount = $qty * $calculationSqft * (float) $item['decRatePerSqft'];
+
+                
                 $quotation = LeadQuotation::create([
                     'iLeadId'             => $lead->iLeadId,
                     'quotation_batch_id'  => $nextBatchId,
@@ -403,10 +416,12 @@ class LeadController extends Controller
                     'feature_id'          => $item['feature_id'],
                     'remarks'             => $item['remarks'] ?? null,
                     'quantity'            => $qty,
-                    'decHeight'           => $item['decHeight'],
-                    'decWidth'            => $item['decWidth'],
+                    /*'decHeight'           => $item['decHeight'],
+                    'decWidth'            => $item['decWidth'],*/
+                    'decHeight'           => $height,
+                    'decWidth'            => $width,
                     'decRatePerSqft'      => $item['decRatePerSqft'],
-                    'decTotalSqft'        => $sqft,
+                    'decTotalSqft'        => $actualSqft,
                     'iAmount'             => $amount,
                 ]);
 
@@ -584,6 +599,16 @@ class LeadController extends Controller
             DB::rollBack();
             return back()->with('error', $th->getMessage());
         }
+    }
+     private function normalizeDimensionForAmount(float $value, int $multiple): float
+    {
+        if ($value <= 0) {
+            return 0;
+        }
+
+        $normalizedMultiple = $multiple === 6 ? 6 : 3;
+
+        return (float) (ceil($value / $normalizedMultiple) * $normalizedMultiple);
     }
         public function deliveryChallan(Lead $lead)
     {
