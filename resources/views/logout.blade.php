@@ -9,7 +9,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta content="Themesbrand" name="author" />
     <!-- App favicon -->
-    <link rel="shortcut icon" href="{{asset('assets/frontassets/image/logo/logo.png')}}">
+    <link rel="shortcut icon" href="{{ asset('assets/frontassets/image/logo/logo.png') }}">
 
     <!-- Layout config Js -->
     <script src="assets/js/layout.js"></script>
@@ -46,7 +46,7 @@
                     <div class="col-lg-12">
                         <div class="text-center mt-sm-5 mb-4 text-white-50">
                             <div>
-                                <img src="assets/images/logo.png" alt="" height="190">
+                                <img src="assets/images/logo.png" alt="" height="150">
                             </div>
                         </div>
                     </div>
