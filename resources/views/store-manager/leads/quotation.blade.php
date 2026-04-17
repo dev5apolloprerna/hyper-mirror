@@ -44,6 +44,60 @@
             margin-top: 12px;
             padding-top: 4px;
         }
+         .quotation-history-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+        }
+
+        .quotation-history-card .card-body {
+            padding: 1.25rem;
+        }
+
+        .quotation-history-table thead th {
+            font-size: 0.82rem;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+            color: #334155;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            white-space: nowrap;
+        }
+
+        .quotation-history-table tbody td {
+            vertical-align: middle;
+            padding-top: 0.75rem;
+            padding-bottom: 0.75rem;
+        }
+
+        .history-version-badge {
+            font-weight: 600;
+            font-size: 0.78rem;
+            background: #eef2ff;
+            color: #3730a3;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            padding: 0.35rem 0.6rem;
+        }
+
+        .history-eye-btn {
+            width: 34px;
+            height: 34px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .history-modal-header {
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .history-modal-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
     </style>
 @endsection
 
@@ -55,26 +109,47 @@
                 @include('common.alert')
 
                 @php
-                    // Always start quotation form with fresh rows.
-                    // Old input is preserved only after validation errors.
+                    // Preserve old input on validation errors.
+                    // Otherwise prefill with last generated quotation (active batch).
                     $existingItems = old('items', []);
 
                     if (empty($existingItems)) {
-                        $existingItems = [
-                            [
-                                'iProductCategoryId' => '',
-                                'iProductId' => '',
-                                'unit_of_measurement' => '',
-                                'shape_id' => '',
-                                'feature_id' => '',
-                                'remarks' => '',
-                                'quantity' => 1,
-                                'decHeight' => '',
-                                'decWidth' => '',
-                                'decRatePerSqft' => '',
-                                'iAmount' => '',
-                            ],
-                        ];
+                         $existingItems = $activeQuotations
+                            ->map(function ($quotation) {
+                                return [
+                                    'iProductCategoryId' => $quotation->iProductCategoryId,
+                                    'iProductId' => $quotation->iProductId,
+                                    'unit_of_measurement' => $quotation->unit_of_measurement,
+                                    'shape_id' => $quotation->shape_id,
+                                    'feature_id' => $quotation->feature_id,
+                                    'remarks' => $quotation->remarks,
+                                    'quantity' => $quotation->quantity,
+                                    'calculation_multiple' => 3,
+                                    'decHeight' => $quotation->decHeight,
+                                    'decWidth' => $quotation->decWidth,
+                                    'decRatePerSqft' => $quotation->decRatePerSqft,
+                                    'iAmount' => $quotation->iAmount,
+                                ];
+                            })
+                            ->values()
+                            ->toArray();
+                    }
+
+                    if (empty($existingItems)) {
+                        $existingItems = [[
+                            'iProductCategoryId' => '',
+                            'iProductId' => '',
+                            'unit_of_measurement' => '',
+                            'shape_id' => '',
+                            'feature_id' => '',
+                            'remarks' => '',
+                            'quantity' => 1,
+                            'calculation_multiple' => 3,
+                            'decHeight' => '',
+                            'decWidth' => '',
+                            'decRatePerSqft' => '',
+                            'iAmount' => '',
+                        ]];
                     }
 
                     $productOptions = $products
@@ -228,7 +303,7 @@
                                                 <label class="form-label">Unit <span style="color:red;">*</span></label>
                                                 <select name="items[{{ $index }}][unit_of_measurement]"
                                                     class="form-control unit-of-measurement" required>
-                                                    <option value="">Unit</option>
+
                                                     <option value="inch"
                                                         {{ ($item['unit_of_measurement'] ?? '') === 'inch' ? 'selected' : '' }}>
                                                         Inch</option>
@@ -335,6 +410,27 @@
                             </div>
 
                             <div class="row mt-2 card-body">
+                                {{-- new code 17-04-2026 --}}
+                                <div class="row mt-2 card-body">
+
+                                    <div class="col-md-4 mb-4 fitting-charge-box">
+                                        <label class="form-label">Fitting Charges</label>
+                                        <input type="number" step="0.01" min="0" name="iFittingCharges"
+                                            id="iFittingCharges" class="form-control"
+                                            value="{{ old('iFittingCharges', $lead->iFittingCharges) }}">
+                                        @error('iFittingCharges')
+                                            <span class="text-danger d-block">{{ $message }}</span>
+                                        @enderror
+                                    </div>
+
+                                    <div class="col-md-4 mb-4">
+                                        <label class="form-label">Delivery Charges</label>
+                                        <input type="number" step="0.01" min="0" name="delivery_charges"
+                                            id="deliveryCharges" class="form-control"
+                                            value="{{ old('delivery_charges', 0) }}">
+                                    </div>
+                                </div>
+                                {{-- new code 17-04-2026 --}}
                                 <div class="col-md-4 mb-4">
                                     <label class="form-label">Subtotal</label>
                                     <input type="text" id="subtotalAmount" class="form-control" readonly>
@@ -363,7 +459,7 @@
                                         readonly>
                                 </div>
 
-                                <div class="col-md-4 mb-4 fitting-charge-box">
+                                {{-- <div class="col-md-4 mb-4 fitting-charge-box">
                                     <label class="form-label">Fitting Charges</label>
                                     <input type="number" step="0.01" min="0" name="iFittingCharges"
                                         id="iFittingCharges" class="form-control"
@@ -371,7 +467,7 @@
                                     @error('iFittingCharges')
                                         <span class="text-danger d-block">{{ $message }}</span>
                                     @enderror
-                                </div>
+                                </div> --}}
                                 <div class="col-md-4 mb-4">
                                     <label class="form-label">Discount?</label>
                                     <select name="isDiscountApplicable" id="isDiscountApplicable" class="form-control"
@@ -431,9 +527,163 @@
                     </div>
                 </div>
 
+  <div class="card mt-3">
+                    <div class="card-body">
+                        <h5 class="mb-3">Quotation Preview (Current Form)</h5>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-striped align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 70px;">#</th>
+                                        <th>Category</th>
+                                        <th>Product</th>
+                                        <th style="width: 80px;">Qty</th>
+                                        <th style="width: 120px;">Width</th>
+                                        <th style="width: 120px;">Height</th>
+                                        <th style="width: 120px;">Rate</th>
+                                        <th style="width: 140px;">Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="previewTableBody">
+                                    <tr>
+                                        <td colspan="8" class="text-center text-muted">Fill quotation data to see preview.</td>
+                                    </tr>
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <th colspan="7" class="text-end">Subtotal</th>
+                                        <th id="previewSubtotal">₹0.00</th>
+                                    </tr>
+                                    <tr>
+                                        <th colspan="7" class="text-end">GST (18%)</th>
+                                        <th id="previewGst">₹0.00</th>
+                                    </tr>
+                                    <tr>
+                                        <th colspan="7" class="text-end">Grand Total</th>
+                                        <th id="previewGrandTotal">₹0.00</th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                @if (($quotationHistoryBatches ?? collect())->isNotEmpty())
+                    <div class="card mt-4 quotation-history-card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                <h5 class="mb-0">Quotation History (All Versions)</h5>
+                                <small class="text-muted">Click the eye icon to view product details</small>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover quotation-history-table align-middle mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Version</th>
+                                            <th>Date</th>
+                                            <th>Line Items</th>
+                                            <th>Subtotal</th>
+                                            <th style="width: 100px;">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach ($quotationHistoryBatches as $batch)
+                                            <tr>
+                                                <td>
+                                                    <span class="history-version-badge">
+                                                        #{{ $batch->quotation_batch_id }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    {{ optional($batch->created_at)->format('d-m-Y h:i A') ?: '-' }}
+                                                </td>
+                                                <td>{{ $batch->line_items }}</td>
+                                                <td>₹{{ number_format((float) $batch->subtotal, 2) }}</td>
+                                                <td>
+                                                    <button type="button"
+                                                        class="btn btn-sm btn-outline-primary history-eye-btn"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#quotationBatchModal{{ $batch->quotation_batch_id }}"
+                                                        title="View product details">
+                                                        <i class="fas fa-eye"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
             </div>
         </div>
     </div>
+  @if (($quotationHistoryBatches ?? collect())->isNotEmpty())
+        @foreach ($quotationHistoryBatches as $batch)
+            <div class="modal fade" id="quotationBatchModal{{ $batch->quotation_batch_id }}" tabindex="-1"
+                aria-labelledby="quotationBatchModalLabel{{ $batch->quotation_batch_id }}" aria-hidden="true">
+                <div class="modal-dialog modal-xl modal-dialog-scrollable">
+                    <div class="modal-content">
+                        <div class="modal-header history-modal-header">
+                            <h5 class="modal-title history-modal-title"
+                                id="quotationBatchModalLabel{{ $batch->quotation_batch_id }}">
+                                Quotation Version #{{ $batch->quotation_batch_id }} — Product Details
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-sm align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Category</th>
+                                            <th>Product</th>
+                                            <th>Shape</th>
+                                            <th>Feature</th>
+                                            <th>Qty</th>
+                                            <th>Unit</th>
+                                            <th>Width</th>
+                                            <th>Height</th>
+                                            <th>Rate</th>
+                                            <th>Amount</th>
+                                            <th>Remarks</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach ($batch->items as $itemIndex => $historyItem)
+                                            <tr>
+                                                <td>{{ $itemIndex + 1 }}</td>
+                                                <td>{{ $historyItem->category->strCategoryName ?? '-' }}</td>
+                                                <td>{{ $historyItem->product->strProductName ?? '-' }}</td>
+                                                <td>{{ $historyItem->shape->shape_title ?? '-' }}</td>
+                                                <td>{{ $historyItem->feature->feature_name ?? '-' }}</td>
+                                                <td>{{ (int) ($historyItem->quantity ?? 0) }}</td>
+                                                <td>{{ $historyItem->unit_of_measurement ?? '-' }}</td>
+                                                <td>{{ number_format((float) ($historyItem->decWidth ?? 0), 2) }}</td>
+                                                <td>{{ number_format((float) ($historyItem->decHeight ?? 0), 2) }}</td>
+                                                <td>₹{{ number_format((float) ($historyItem->decRatePerSqft ?? 0), 2) }}</td>
+                                                <td>₹{{ number_format((float) ($historyItem->iAmount ?? 0), 2) }}</td>
+                                                <td>{{ $historyItem->remarks ?? '-' }}</td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <th colspan="10" class="text-end">Subtotal</th>
+                                            <th colspan="2">₹{{ number_format((float) $batch->subtotal, 2) }}</th>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endforeach
+    @endif
 @endsection
 
 @section('scripts')
@@ -505,19 +755,24 @@
             }
 
             function toggleFittingCharges() {
-                if (leadFittingRequired === '1' && leadFittingChargeIncluded === '0') {
-                    $('.fitting-type-box').show();
-                    $('.fitting-charge-box').show();
-                } else if (leadFittingRequired === '1' && leadFittingChargeIncluded === '1') {
-                    $('.fitting-type-box').show();
-                    $('.fitting-charge-box').hide();
-                    $('#iFittingCharges').val(0);
-                } else {
-                    $('.fitting-type-box').hide();
-                    $('.fitting-charge-box').hide();
-                    $('#iFittingCharges').val(0);
-                }
+                // ❌ remove all conditions
+                $('.fitting-type-box').show();
+                $('.fitting-charge-box').show();
             }
+            // function toggleFittingCharges() {
+            //     if (leadFittingRequired === '1' && leadFittingChargeIncluded === '0') {
+            //         $('.fitting-type-box').show();
+            //         $('.fitting-charge-box').show();
+            //     } else if (leadFittingRequired === '1' && leadFittingChargeIncluded === '1') {
+            //         $('.fitting-type-box').show();
+            //         $('.fitting-charge-box').hide();
+            //         $('#iFittingCharges').val(0);
+            //     } else {
+            //         $('.fitting-type-box').hide();
+            //         $('.fitting-charge-box').hide();
+            //         $('#iFittingCharges').val(0);
+            //     }
+            // }
 
             function toggleDiscountBox() {
                 const isDiscountApplicable = $('#isDiscountApplicable').val() === '1';
@@ -532,6 +787,7 @@
 
             function recalculateTotals() {
                 let subtotal = 0;
+                const previewRows = [];
 
                 $('#quotationRows .quotation-row').each(function() {
                     const qty = parseFloat($(this).find('.quantity').val()) || 0;
@@ -540,22 +796,49 @@
                     const rate = parseFloat($(this).find('.decRatePerSqft').val()) || 0;
                     const multiple = parseInt($(this).find('.calc-multiple').val(), 10) || 3;
 
-                    // const lineAmount = qty * height * width * rate;
+                    //code 
+                    const unit = $(this).find('.unit-of-measurement').val();
+                    let finalHeight = 0;
+                    let finalWidth = 0;
+                    if (unit === 'Feet') {
+                        finalHeight = height;
+                        finalWidth = width;
+                    } else {
+                        const hData = calculateAdjustedValues(height, unit, multiple);
+                        const wData = calculateAdjustedValues(width, unit, multiple);
 
-                    const calculationHeight = normalizeDimensionForAmount(height, multiple);
-                    const calculationWidth = normalizeDimensionForAmount(width, multiple);
-                    const lineAmount = qty * calculationHeight * calculationWidth * rate;
+                        finalHeight = hData.feet;
+                        finalWidth = wData.feet;
+                        console.log("Width:", wData);
+                        console.log("Height:", hData);
+                    }
+                    const lineAmount = qty * finalHeight * finalWidth * rate;
 
+                    // const calculationHeight = normalizeDimensionForAmount(height, multiple);
+                    // const calculationWidth = normalizeDimensionForAmount(width, multiple);
+                    // const lineAmount = qty * calculationHeight * calculationWidth * rate;
 
                     subtotal += lineAmount;
                     $(this).find('.lineAmount').val(lineAmount.toFixed(2));
+                    const categoryLabel = $(this).find('.row-category-select option:selected').text().trim();
+                    const productLabel = $(this).find('.row-product-select option:selected').text().trim();
+                    previewRows.push({
+                        category: categoryLabel && categoryLabel !== 'Select Category' ? categoryLabel : '-',
+                        product: productLabel && productLabel !== 'Select Product' ? productLabel : '-',
+                        qty,
+                        width,
+                        height,
+                        rate,
+                        lineAmount
+                    });
                 });
 
-                const fitting = (leadFittingRequired === '1' && leadFittingChargeIncluded === '0') ?
-                    (parseFloat($('#iFittingCharges').val()) || 0) :
-                    0;
+                // 17-04-2026
+                const fitting = parseFloat($('#iFittingCharges').val()) || 0;
+                const delivery = parseFloat($('#deliveryCharges').val()) || 0;
+                const baseAmount = subtotal + fitting + delivery;
+                // 17-04-2026
 
-                const baseAmount = subtotal + fitting;
                 const isDiscountApplicable = $('#isDiscountApplicable').val() === '1';
                 const discount = isDiscountApplicable ? (parseFloat($('#discountAmount').val()) || 0) : 0;
                 const discountAmount = Math.min(discount, baseAmount);
@@ -565,19 +848,87 @@
                 const gst = isGstApplicable ? (afterDiscount * 0.18) : 0;
 
 
-                $('#subtotalAmount').val(subtotal.toFixed(2));
+                $('#subtotalAmount').val(baseAmount.toFixed(2));
                 $('#gstAmount').val(gst.toFixed(2));
                 $('#grandTotalAmount').val((afterDiscount + gst).toFixed(2));
+            renderPreviewTable(previewRows, subtotal, gst, (afterDiscount + gst));
             }
 
-            function normalizeDimensionForAmount(value, multiple) {
-                if (!value || value <= 0) {
-                    return 0;
+            function renderPreviewTable(rows, subtotal, gst, grandTotal) {
+                const $tbody = $('#previewTableBody');
+                $tbody.empty();
+
+                if (!rows.length) {
+                    $tbody.append(
+                        '<tr><td colspan="8" class="text-center text-muted">Fill quotation data to see preview.</td></tr>'
+                    );
+                } else {
+                    rows.forEach(function(row, index) {
+                        $tbody.append(`
+                            <tr>
+                                <td>${index + 1}</td>
+                                <td>${row.category}</td>
+                                <td>${row.product}</td>
+                                <td>${Number(row.qty || 0).toFixed(0)}</td>
+                                <td>${Number(row.width || 0).toFixed(2)}</td>
+                                <td>${Number(row.height || 0).toFixed(2)}</td>
+                                <td>₹${Number(row.rate || 0).toFixed(2)}</td>
+                                <td>₹${Number(row.lineAmount || 0).toFixed(2)}</td>
+                            </tr>
+                        `);
+                    });
                 }
 
-                const selectedMultiple = multiple === 6 ? 6 : 3;
-                return Math.ceil(value / selectedMultiple) * selectedMultiple;
+                $('#previewSubtotal').text('₹' + Number(subtotal || 0).toFixed(2));
+                $('#previewGst').text('₹' + Number(gst || 0).toFixed(2));
+                $('#previewGrandTotal').text('₹' + Number(grandTotal || 0).toFixed(2));
             }
+
+            function calculateAdjustedValues(value, unit, multiple) {
+
+                if (!value || value <= 0) {
+                    return {
+                        inch: 0,
+                        adjustedInch: 0,
+                        feet: 0
+                    };
+                }
+
+                let inchValue = value;
+
+                // 🔹 MM → Inch
+                if (unit === 'MM') {
+                    inchValue = value / 25.4;
+                }
+
+                // 🔹 Feet direct
+                if (unit === 'Feet') {
+                    return {
+                        inch: value * 12,
+                        adjustedInch: value * 12,
+                        feet: value
+                    };
+                }
+
+                // 🔹 Excel logic (IMPORTANT)
+                let adjustedInch = Math.ceil(inchValue / multiple) * multiple;
+
+                let feet = adjustedInch / 12;
+
+                return {
+                    inch: inchValue,
+                    adjustedInch: adjustedInch,
+                    feet: feet
+                };
+            }
+            // function normalizeDimensionForAmount(value, multiple) {
+            //     if (!value || value <= 0) {
+            //         return 0;
+            //     }
+
+            //     const selectedMultiple = multiple === 6 ? 6 : 3;
+            //     return Math.ceil(value / selectedMultiple) * selectedMultiple;
+            // }
 
             function addItemRow() {
                 const nextIndex = $('#quotationRows .quotation-row').length;
@@ -615,7 +966,7 @@
             <div class="col-md-1">
                 <label class="form-label">Unit <span style="color:red;">*</span></label>
                 <select name="items[${nextIndex}][unit_of_measurement]" class="form-control unit-of-measurement" required>
-                    <option value="">Unit</option>
+                    
                     <option value="inch">Inch</option>
                     <option value="MM">MM</option>
                     <option value="Feet">Feet</option>
@@ -653,14 +1004,15 @@
                     <option value="6">6</option>
                 </select>
             </div>
-            <div class="col-md-1">
-                <label class="form-label">Height <span style="color:red;">*</span></label>
-                <input type="number" step="0.01" min="0" name="items[${nextIndex}][decHeight]" class="form-control decHeight" required>
-            </div>
+          
 
             <div class="col-md-1">
                 <label class="form-label">Width <span style="color:red;">*</span></label>
                 <input type="number" step="0.01" min="0" name="items[${nextIndex}][decWidth]" class="form-control decWidth" required>
+            </div>
+            <div class="col-md-1">
+                <label class="form-label">Height <span style="color:red;">*</span></label>
+                <input type="number" step="0.01" min="0" name="items[${nextIndex}][decHeight]" class="form-control decHeight" required>
             </div>
             
             <div class="col-md-1">
@@ -707,8 +1059,8 @@
                 recalculateTotals();
             });
 
-            $(document).on('keyup change',
-                '.quantity, .decHeight, .decWidth, .calc-multiple, .decRatePerSqft, #iFittingCharges, .row-product-select, #isDiscountApplicable, #discountAmount, #isGstApplicable',
+            $(document).on('input change',
+                '.quantity, .decHeight, .decWidth, .calc-multiple, .decRatePerSqft, #iFittingCharges, #deliveryCharges, .row-product-select, #isDiscountApplicable, #discountAmount, #isGstApplicable',
                 function() {
                     toggleDiscountBox();
                     recalculateTotals();

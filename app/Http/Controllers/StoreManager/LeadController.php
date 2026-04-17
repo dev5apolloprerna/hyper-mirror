@@ -32,8 +32,7 @@ class LeadController extends Controller
         $roleSlug = optional(auth()->user()->crmRole)->slug;
         $query    = Lead::with(['customer', 'quotation'])->latest('iLeadId');
 
-        if ($roleSlug !== 'storemanager') 
-        {
+        if ($roleSlug !== 'storemanager') {
             $queue = LeadWorkflow::roleQueueStatuses($roleSlug);
             if (!empty($queue)) {
                 $query->whereIn('iCurrentLeadStatus', $queue);
@@ -61,19 +60,18 @@ class LeadController extends Controller
 
             $hasDispatchedDateColumn = Schema::hasColumn('leads', 'DispatchedDate');
 
-            if ($roleSlug === 'fitting' && $hasDispatchedDateColumn) 
-            {
+            if ($roleSlug === 'fitting' && $hasDispatchedDateColumn) {
                 $query->where(function ($q) use ($today, $operator) {
                     $q->whereDate('NetFollowupdate', $operator, $today)
-                      ->orWhere(function ($sub) use ($today, $operator) {
-                          $sub->whereNull('NetFollowupdate')
-                              ->whereDate('DispatchedDate', $operator, $today);
-                      });
+                        ->orWhere(function ($sub) use ($today, $operator) {
+                            $sub->whereNull('NetFollowupdate')
+                                ->whereDate('DispatchedDate', $operator, $today);
+                        });
                 });
             } else {
                 $query->whereDate('NetFollowupdate', $operator, $today);
             }
-        
+
 
             /*$isTodayFilter = $request->followup === 'today';
 
@@ -97,17 +95,17 @@ class LeadController extends Controller
             $search = trim($request->search);
             $query->where(function ($q) use ($search) {
                 $q->where('strLeadNo', 'like', "%{$search}%")
-                  ->orWhere('iCurrentLeadStatus', 'like', "%{$search}%")
-                  ->orWhereHas('customer', function ($sub) use ($search) {
-                      $sub->where('strCustomer', 'like', "%{$search}%")
-                          ->orWhere('strMobile', 'like', "%{$search}%")
-                          ->orWhere('company_name', 'like', "%{$search}%")
-                          ->orWhere('customer_type', 'like', "%{$search}%");
-                });
+                    ->orWhere('iCurrentLeadStatus', 'like', "%{$search}%")
+                    ->orWhereHas('customer', function ($sub) use ($search) {
+                        $sub->where('strCustomer', 'like', "%{$search}%")
+                            ->orWhere('strMobile', 'like', "%{$search}%")
+                            ->orWhere('company_name', 'like', "%{$search}%")
+                            ->orWhere('customer_type', 'like', "%{$search}%");
+                    });
             });
         }
 
-         if ($request->filled('from_date')) {
+        if ($request->filled('from_date')) {
             $query->whereDate('CreatedDate', '>=', $request->from_date);
         }
         if ($request->filled('to_date')) {
@@ -160,16 +158,16 @@ class LeadController extends Controller
             'SiteAddress'           => 'nullable|string',
             'customer_type'         => 'required|in:B2B,Retail',
             'company_name'          => 'nullable|string|max:150',
-             'IsOnlyFittingQuotation'=> 'required|in:0,1',
+            'IsOnlyFittingQuotation' => 'required|in:0,1',
             'isFittingRequired'     => [
                 'nullable',
                 'in:0,1',
-                Rule::requiredIf(fn () => (int) $request->input('IsOnlyFittingQuotation') !== 1),
+                Rule::requiredIf(fn() => (int) $request->input('IsOnlyFittingQuotation') !== 1),
             ],
             'isFittingChargeIncluded' => [
                 'nullable',
                 'in:0,1',
-                Rule::requiredIf(fn () => (int) $request->input('IsOnlyFittingQuotation') === 1 || (int) $request->input('isFittingRequired') === 1),
+                Rule::requiredIf(fn() => (int) $request->input('IsOnlyFittingQuotation') === 1 || (int) $request->input('isFittingRequired') === 1),
             ],
 
             'IsMeasureMentRequired' => 'required|in:0,1',
@@ -188,13 +186,14 @@ class LeadController extends Controller
                     'strAddress' => $data['strAddress'] ?? null,
                     'customer_type' => $data['customer_type'],
                     'company_name' => $data['company_name'] ?? null,
-                ]            );
+                ]
+            );
 
             if (!$customer->wasRecentlyCreated) {
                 $customer->update([
                     'strCustomer' => $data['strCustomer'],
                     'strAddress'  => $data['strAddress'] ?? null,
-                                        'customer_type' => $data['customer_type'],
+                    'customer_type' => $data['customer_type'],
                     'company_name' => $data['company_name'] ?? null,
                 ]);
             }
@@ -249,14 +248,14 @@ class LeadController extends Controller
 
             DB::commit();
             return redirect()->route('store.leads.index')
-          //  return redirect()->route('store.leads.histories.index', $lead->iLeadId)
+                //  return redirect()->route('store.leads.histories.index', $lead->iLeadId)
                 ->with('success', 'Lead created successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
             return back()->withInput()->with('error', $th->getMessage());
         }
     }
-        public function update(Request $request, Lead $lead)
+    public function update(Request $request, Lead $lead)
     {
         abort_unless(optional(auth()->user()->crmRole)->slug === 'storemanager', 403);
 
@@ -270,12 +269,12 @@ class LeadController extends Controller
             'isFittingRequired'   => [
                 'nullable',
                 'in:0,1',
-                Rule::requiredIf(fn () => (int) $request->input('IsOnlyFittingQuotation') !== 1),
+                Rule::requiredIf(fn() => (int) $request->input('IsOnlyFittingQuotation') !== 1),
             ],
             'isFittingChargeIncluded' => [
                 'nullable',
                 'in:0,1',
-                Rule::requiredIf(fn () => (int) $request->input('IsOnlyFittingQuotation') === 1 || (int) $request->input('isFittingRequired') === 1),
+                Rule::requiredIf(fn() => (int) $request->input('IsOnlyFittingQuotation') === 1 || (int) $request->input('isFittingRequired') === 1),
             ],
             'IsMeasureMentRequired' => 'required|in:0,1',
             'MeasurementVisitDate'  => 'nullable|date|required_if:IsMeasureMentRequired,1',
@@ -347,7 +346,7 @@ class LeadController extends Controller
 
         return view('store-manager.leads.quotation', compact('lead', 'categories', 'products', 'shapes', 'features'));*/
 
-                $activeQuotation = $lead->quotation;
+        $activeQuotation = $lead->quotation;
         $activeBatchId = $activeQuotation?->quotation_batch_id;
 
         $activeQuotations = $activeBatchId
@@ -360,6 +359,25 @@ class LeadController extends Controller
             ->orderByDesc('quotation_batch_id')
             ->get();
 
+        $quotationHistoryBatches = $lead->quotations()
+            ->with(['category', 'product', 'shape', 'feature'])
+            ->orderByDesc('quotation_batch_id')
+            ->orderBy('iQuotationId')
+            ->get()
+            ->groupBy('quotation_batch_id')
+            ->map(function ($items, $batchId) {
+                return (object) [
+                    'quotation_batch_id' => (int) $batchId,
+                    'items'              => $items->values(),
+                    'line_items'         => $items->count(),
+                    'subtotal'           => (float) $items->sum('iAmount'),
+                    'created_at'         => optional($items->max('created_at')),
+                ];
+            })
+            ->sortByDesc('quotation_batch_id')
+            ->values();
+
+
         return view('store-manager.leads.quotation', compact(
             'lead',
             'categories',
@@ -367,16 +385,22 @@ class LeadController extends Controller
             'shapes',
             'features',
             'activeQuotations',
-            'quotationVersions'
+            'quotationVersions',
+            'quotationHistoryBatches'
+
         ));
     }
 
     // ── Save quotation ───────────────────────────────────────────────────────
     public function saveQuotation(Request $request, Lead $lead)
     {
-        abort_unless(optional(auth()->user()->crmRole)->slug === 'storemanager', 403);
 
-        $requiresManualFittingCharge = (int) $lead->isFittingRequired === 1 && (int) $lead->isFittingChargeIncluded === 0;
+        abort_unless(optional(auth()->user()->crmRole)->slug === 'storemanager', 403);
+        if ($request->iFittingCharges > 0) {
+            $requiresManualFittingCharge = 1;
+        } else {
+            $requiresManualFittingCharge = 0;
+        }
 
         $rules = [
             //'iProductCategoryId'                      => 'required|exists:product_categories,iCategoryId',
@@ -394,12 +418,15 @@ class LeadController extends Controller
             'items.*.calculation_multiple'             => 'required|integer|in:3,6',
             'followup_date'                            => 'required|date',
             'iFittingCharges'                          => $requiresManualFittingCharge
-                                                            ? 'required|numeric|min:0'
-                                                            : 'nullable|numeric|min:0',
+                ? 'required|numeric|min:0'
+                : 'nullable|numeric|min:0',
             'isDiscountApplicable'                     => 'required|in:0,1',
             'discount_amount'                          => 'nullable|numeric|min:0',
             'isGstApplicable'                          => 'required|in:0,1',
-            'strComments'                              => 'nullable|string|max:2000',                                               
+            'strComments'                              => 'nullable|string|max:2000',
+            'delivery_charges'                          => $requiresManualFittingCharge
+                ? 'required|numeric|min:0'
+                : 'nullable|numeric|min:0',
         ];
 
         $data = $request->validate($rules);
@@ -430,38 +457,34 @@ class LeadController extends Controller
             $nextBatchId = ((int) LeadQuotation::where('iLeadId', $lead->iLeadId)->max('quotation_batch_id')) + 1;
 
             foreach ($data['items'] as $item) {
-                $qty    = (int) $item['quantity'];
-                /*$sqft   = (float) $item['decHeight'] * (float) $item['decWidth'];
-                $amount = $qty * $sqft * (float) $item['decRatePerSqft'];*/
 
-                $height = (float) $item['decHeight'];
-                $width  = (float) $item['decWidth'];
-                $calculationMultiple = (int) ($item['calculation_multiple'] ?? 3);
+                $qty      = (int) $item['quantity'];
+                $height   = (float) $item['decHeight'];
+                $width    = (float) $item['decWidth'];
+                $rate     = (float) $item['decRatePerSqft'];
+                $unit     = $item['unit_of_measurement'];
+                $multiple = (int) $item['calculation_multiple'];
 
-                $actualSqft = $height * $width;
-                $calculationHeight = $this->normalizeDimensionForAmount($height, $calculationMultiple);
-                $calculationWidth  = $this->normalizeDimensionForAmount($width, $calculationMultiple);
-                $calculationSqft   = $calculationHeight * $calculationWidth;
+                $heightFeet = $this->convertToFeet($height, $unit, $multiple);
+                $widthFeet  = $this->convertToFeet($width, $unit, $multiple);
 
-                $amount = $qty * $calculationSqft * (float) $item['decRatePerSqft'];
+                $sqft   = $widthFeet * $heightFeet;
+                $amount = $qty * $sqft * $rate;
 
-                
                 $quotation = LeadQuotation::create([
                     'iLeadId'             => $lead->iLeadId,
                     'quotation_batch_id'  => $nextBatchId,
                     'iProductCategoryId'  => $item['iProductCategoryId'],
                     'iProductId'          => $item['iProductId'],
-                    'unit_of_measurement' => $item['unit_of_measurement'],
+                    'unit_of_measurement' => $unit,
                     'shape_id'            => $item['shape_id'],
                     'feature_id'          => $item['feature_id'],
                     'remarks'             => $item['remarks'] ?? null,
                     'quantity'            => $qty,
-                    /*'decHeight'           => $item['decHeight'],
-                    'decWidth'            => $item['decWidth'],*/
                     'decHeight'           => $height,
                     'decWidth'            => $width,
-                    'decRatePerSqft'      => $item['decRatePerSqft'],
-                    'decTotalSqft'        => $actualSqft,
+                    'decRatePerSqft'      => $rate,
+                    'decTotalSqft'        => $sqft,
                     'iAmount'             => $amount,
                 ]);
 
@@ -472,69 +495,230 @@ class LeadController extends Controller
                 $subtotal += $amount;
             }
 
-            $fittingCharges = $requiresManualFittingCharge
-                ? (float) ($data['iFittingCharges'] ?? 0)
-                : 0;
+            $fittingCharges = (float) ($data['iFittingCharges'] ?? 0);
+            $deliveryCharges = (float) ($data['delivery_charges'] ?? 0);
+            $baseAmount = $subtotal + $fittingCharges + $deliveryCharges;
 
-            //$grandTotal = $subtotal + $fittingCharges;
+            $discountApplicable = (int) $data['isDiscountApplicable'] === 1;
+            $rawDiscount = (float) ($data['discount_amount'] ?? 0);
+            $discount = $discountApplicable ? min($rawDiscount, $baseAmount) : 0;
 
-            $discountApplicable = (int) ($data['isDiscountApplicable'] ?? 0) === 1;
-            $rawDiscountAmount = (float) ($data['discount_amount'] ?? 0);
-            $baseAmount = $subtotal + $fittingCharges;
-            $discountAmount = $discountApplicable ? min($rawDiscountAmount, $baseAmount) : 0;
-            $amountAfterDiscount = $baseAmount - $discountAmount;
+            $afterDiscount = $baseAmount - $discount;
 
-            $gstApplicable = (int) ($data['isGstApplicable'] ?? 0) === 1;
-            $gstAmount = $gstApplicable ? ($amountAfterDiscount * 0.18) : 0;
+            // ✅ GST
+            $gstApplicable = (int) $data['isGstApplicable'] === 1;
+            $gstAmount = $gstApplicable ? ($afterDiscount * 0.18) : 0;
 
-            $grandTotal = $amountAfterDiscount + $gstAmount;
-
+            $grandTotal = $afterDiscount + $gstAmount;
 
             $lead->update([
-                /*'iQuotationId'       => $firstQuotation ? $firstQuotation->iQuotationId : null,
-                'iLeadAmount'        => $grandTotal,
-                'iCurrentLeadStatus' => LeadWorkflow::STATUS_QUOTATION_SENT,
-                'NetFollowupdate'    => $data['followup_date'],
-                'iFittingCharges'    => $fittingCharges,
-*/
-                'iQuotationId'          => $firstQuotation ? $firstQuotation->iQuotationId : null,
+                'iQuotationId'          => $firstQuotation?->iQuotationId,
                 'iLeadAmount'           => $grandTotal,
-                //'iCurrentLeadStatus'    => LeadWorkflow::STATUS_QUOTATION_SENT,
                 'NetFollowupdate'       => $data['followup_date'],
                 'iFittingCharges'       => $fittingCharges,
                 'isDiscountApplicable'  => $discountApplicable ? 1 : 0,
-                'decDiscountAmount'     => $discountAmount,
+                'decDiscountAmount'     => $discount,
                 'isGstApplicable'       => $gstApplicable ? 1 : 0,
                 'decGstAmount'          => $gstAmount,
+                'delivery_charges'      => $deliveryCharges ?? 0,
             ]);
 
             LeadHistory::create([
                 'iLeadId'         => $lead->iLeadId,
                 'strComments'     => $data['strComments'] ?? ('Quotation generated. Version #' . $nextBatchId),
                 'NetFolloupwdate' => $data['followup_date'],
-                //'iStatus'         => LeadWorkflow::STATUS_QUOTATION_SENT,
                 'iStatus'         => $lead->iCurrentLeadStatus,
                 'iEnterBy'        => auth()->id(),
                 'EntryDate'       => now(),
             ]);
-
             DB::commit();
-
-            //return redirect()->route('store.leads.histories.index', $lead->iLeadId)
-              
             return redirect()->route('store.leads.index')->with('success', 'Quotation generated successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
             return back()->withInput()->with('error', $th->getMessage());
         }
     }
+    private function convertToFeet($value, $unit, $multiple)
+    {
+        if (!$value || $value <= 0) {
+            return 0;
+        }
+        if ($unit === 'MM') {
+            $inch = $value / 25.4;
+        } elseif ($unit === 'inch') {
+            $inch = $value;
+        } elseif ($unit === 'Feet') {
+            return $value;
+        } else {
+            $inch = $value;
+        }
+        $adjustedInch = ceil($inch / $multiple) * $multiple;
+        return $adjustedInch / 12;
+    }
+
+    // public function saveQuotation(Request $request, Lead $lead)
+    // {
+    //     abort_unless(optional(auth()->user()->crmRole)->slug === 'storemanager', 403);
+
+    //     $requiresManualFittingCharge = (int) $lead->isFittingRequired === 1 && (int) $lead->isFittingChargeIncluded === 0;
+
+    //     $rules = [
+    //         //'iProductCategoryId'                      => 'required|exists:product_categories,iCategoryId',
+    //         'items'                                    => 'required|array|min:1',
+    //         'items.*.iProductCategoryId'               => 'required|exists:product_categories,iCategoryId',
+    //         'items.*.iProductId'                       => 'required|exists:products,iProductId',
+    //         'items.*.unit_of_measurement'              => 'required|in:inch,MM,Feet',
+    //         'items.*.shape_id'                         => 'required|exists:product_shape,shape_id',
+    //         'items.*.feature_id'                       => 'required|exists:product_feature,feature_id',
+    //         'items.*.remarks'                          => 'nullable|string|max:255',
+    //         'items.*.quantity'                         => 'required|integer|min:1',
+    //         'items.*.decHeight'                        => 'required|numeric|min:0',
+    //         'items.*.decWidth'                         => 'required|numeric|min:0',
+    //         'items.*.decRatePerSqft'                   => 'required|numeric|min:0',
+    //         'items.*.calculation_multiple'             => 'required|integer|in:3,6',
+    //         'followup_date'                            => 'required|date',
+    //         'iFittingCharges'                          => $requiresManualFittingCharge
+    //                                                         ? 'required|numeric|min:0'
+    //                                                         : 'nullable|numeric|min:0',
+    //         'isDiscountApplicable'                     => 'required|in:0,1',
+    //         'discount_amount'                          => 'nullable|numeric|min:0',
+    //         'isGstApplicable'                          => 'required|in:0,1',
+    //         'strComments'                              => 'nullable|string|max:2000',                                               
+    //     ];
+
+    //     $data = $request->validate($rules);
+
+    //     $productCategoryMap = Product::query()
+    //         ->whereIn('iProductId', collect($data['items'])->pluck('iProductId')->all())
+    //         ->pluck('iCategoryId', 'iProductId');
+
+    //     foreach ($data['items'] as $index => $item) {
+    //         $selectedProductCategory = (int) ($productCategoryMap[$item['iProductId']] ?? 0);
+    //         if ($selectedProductCategory !== (int) $item['iProductCategoryId']) {
+    //             return back()
+    //                 ->withInput()
+    //                 ->withErrors([
+    //                     "items.$index.iProductId" => 'Selected product does not belong to selected category for this row.',
+    //                 ]);
+    //         }
+    //     }
+
+
+    //     DB::beginTransaction();
+
+    //     try {
+    //         $subtotal       = 0;
+    //         $firstQuotation = null;
+
+    //         //LeadQuotation::where('iLeadId', $lead->iLeadId)->delete();
+    //         $nextBatchId = ((int) LeadQuotation::where('iLeadId', $lead->iLeadId)->max('quotation_batch_id')) + 1;
+
+    //         foreach ($data['items'] as $item) {
+    //             $qty    = (int) $item['quantity'];
+    //             /*$sqft   = (float) $item['decHeight'] * (float) $item['decWidth'];
+    //             $amount = $qty * $sqft * (float) $item['decRatePerSqft'];*/
+
+    //             $height = (float) $item['decHeight'];
+    //             $width  = (float) $item['decWidth'];
+    //             $calculationMultiple = (int) ($item['calculation_multiple'] ?? 3);
+
+    //             $actualSqft = $height * $width;
+    //             $calculationHeight = $this->normalizeDimensionForAmount($height, $calculationMultiple);
+    //             $calculationWidth  = $this->normalizeDimensionForAmount($width, $calculationMultiple);
+    //             $calculationSqft   = $calculationHeight * $calculationWidth;
+
+    //             $amount = $qty * $calculationSqft * (float) $item['decRatePerSqft'];
+
+
+    //             $quotation = LeadQuotation::create([
+    //                 'iLeadId'             => $lead->iLeadId,
+    //                 'quotation_batch_id'  => $nextBatchId,
+    //                 'iProductCategoryId'  => $item['iProductCategoryId'],
+    //                 'iProductId'          => $item['iProductId'],
+    //                 'unit_of_measurement' => $item['unit_of_measurement'],
+    //                 'shape_id'            => $item['shape_id'],
+    //                 'feature_id'          => $item['feature_id'],
+    //                 'remarks'             => $item['remarks'] ?? null,
+    //                 'quantity'            => $qty,
+    //                 /*'decHeight'           => $item['decHeight'],
+    //                 'decWidth'            => $item['decWidth'],*/
+    //                 'decHeight'           => $height,
+    //                 'decWidth'            => $width,
+    //                 'decRatePerSqft'      => $item['decRatePerSqft'],
+    //                 'decTotalSqft'        => $actualSqft,
+    //                 'iAmount'             => $amount,
+    //             ]);
+
+    //             if (!$firstQuotation) {
+    //                 $firstQuotation = $quotation;
+    //             }
+
+    //             $subtotal += $amount;
+    //         }
+
+    //         $fittingCharges = $requiresManualFittingCharge
+    //             ? (float) ($data['iFittingCharges'] ?? 0)
+    //             : 0;
+
+    //         //$grandTotal = $subtotal + $fittingCharges;
+
+    //         $discountApplicable = (int) ($data['isDiscountApplicable'] ?? 0) === 1;
+    //         $rawDiscountAmount = (float) ($data['discount_amount'] ?? 0);
+    //         $baseAmount = $subtotal + $fittingCharges;
+    //         $discountAmount = $discountApplicable ? min($rawDiscountAmount, $baseAmount) : 0;
+    //         $amountAfterDiscount = $baseAmount - $discountAmount;
+
+    //         $gstApplicable = (int) ($data['isGstApplicable'] ?? 0) === 1;
+    //         $gstAmount = $gstApplicable ? ($amountAfterDiscount * 0.18) : 0;
+
+    //         $grandTotal = $amountAfterDiscount + $gstAmount;
+
+
+    //         $lead->update([
+    //             /*'iQuotationId'       => $firstQuotation ? $firstQuotation->iQuotationId : null,
+    //             'iLeadAmount'        => $grandTotal,
+    //             'iCurrentLeadStatus' => LeadWorkflow::STATUS_QUOTATION_SENT,
+    //             'NetFollowupdate'    => $data['followup_date'],
+    //             'iFittingCharges'    => $fittingCharges,
+    //       */
+    //             'iQuotationId'          => $firstQuotation ? $firstQuotation->iQuotationId : null,
+    //             'iLeadAmount'           => $grandTotal,
+    //             //'iCurrentLeadStatus'    => LeadWorkflow::STATUS_QUOTATION_SENT,
+    //             'NetFollowupdate'       => $data['followup_date'],
+    //             'iFittingCharges'       => $fittingCharges,
+    //             'isDiscountApplicable'  => $discountApplicable ? 1 : 0,
+    //             'decDiscountAmount'     => $discountAmount,
+    //             'isGstApplicable'       => $gstApplicable ? 1 : 0,
+    //             'decGstAmount'          => $gstAmount,
+    //         ]);
+
+    //         LeadHistory::create([
+    //             'iLeadId'         => $lead->iLeadId,
+    //             'strComments'     => $data['strComments'] ?? ('Quotation generated. Version #' . $nextBatchId),
+    //             'NetFolloupwdate' => $data['followup_date'],
+    //             //'iStatus'         => LeadWorkflow::STATUS_QUOTATION_SENT,
+    //             'iStatus'         => $lead->iCurrentLeadStatus,
+    //             'iEnterBy'        => auth()->id(),
+    //             'EntryDate'       => now(),
+    //         ]);
+
+    //         DB::commit();
+
+    //         //return redirect()->route('store.leads.histories.index', $lead->iLeadId)
+
+    //         return redirect()->route('store.leads.index')->with('success', 'Quotation generated successfully.');
+    //     } catch (\Throwable $th) {
+    //         DB::rollBack();
+    //         return back()->withInput()->with('error', $th->getMessage());
+    //     }
+    // }
 
     // ── Quotation view (HTML) ────────────────────────────────────────────────
     public function quotationView(Lead $lead)
     {
         abort_unless(
             LeadWorkflow::canAccessLead(auth()->user(), $lead) ||
-            optional(auth()->user()->crmRole)->slug === 'storemanager',
+                optional(auth()->user()->crmRole)->slug === 'storemanager',
             403
         );
 
@@ -562,13 +746,13 @@ class LeadController extends Controller
     {
         abort_unless(
             LeadWorkflow::canAccessLead(auth()->user(), $lead) ||
-            optional(auth()->user()->crmRole)->slug === 'storemanager',
+                optional(auth()->user()->crmRole)->slug === 'storemanager',
             403
         );
 
         $lead->load(['customer', 'quotation']);
 
-        
+
         if (!$lead->quotation) {
             return redirect()->back()->with('error', 'Quotation not found for this lead.');
         }
@@ -589,8 +773,8 @@ class LeadController extends Controller
         $pdf->setPaper('a4', 'portrait');
 
         return $pdf->stream('quotation-' . $lead->strLeadNo . '.pdf');
-        
-     //   return view('store-manager.leads.quotation-pdf', compact('lead', 'canViewFinancial'));
+
+        //   return view('store-manager.leads.quotation-pdf', compact('lead', 'canViewFinancial'));
     }
 
     // ── Update status (legacy — kept for compatibility) ─────────────────────
@@ -613,8 +797,10 @@ class LeadController extends Controller
             ]);
         }
 
-        if ($roleSlug !== 'storemanager' &&
-            !in_array($data['iStatus'], LeadWorkflow::allowedTransitionsFor(auth()->user(), $lead), true)) {
+        if (
+            $roleSlug !== 'storemanager' &&
+            !in_array($data['iStatus'], LeadWorkflow::allowedTransitionsFor(auth()->user(), $lead), true)
+        ) {
             return back()->withInput()->with('error', 'You cannot move this lead to the selected status.');
         }
 
@@ -643,7 +829,7 @@ class LeadController extends Controller
             return back()->with('error', $th->getMessage());
         }
     }
-     private function normalizeDimensionForAmount(float $value, int $multiple): float
+    private function normalizeDimensionForAmount(float $value, int $multiple): float
     {
         if ($value <= 0) {
             return 0;
@@ -653,7 +839,7 @@ class LeadController extends Controller
 
         return (float) (ceil($value / $normalizedMultiple) * $normalizedMultiple);
     }
-        public function deliveryChallan(Lead $lead)
+    public function deliveryChallan(Lead $lead)
     {
         // Accessible by dispatch role and storemanager
         $roleSlug = optional(auth()->user()->crmRole)->slug;
@@ -662,21 +848,20 @@ class LeadController extends Controller
             403,
             'Delivery Challan is only accessible to dispatch users.'
         );
- 
+
         if (!$lead->quotation) {
             return redirect()->back()->with('error', 'No quotation found for this lead.');
         }
- 
+
         $lead->load(['customer', 'quotation']);
- 
+
         $activeBatchId   = $lead->quotation->quotation_batch_id;
         $quotationItems  = $lead->quotations()
             ->where('quotation_batch_id', $activeBatchId)
-            ->with(['category', 'product', 'shape', 'feature']) 
+            ->with(['category', 'product', 'shape', 'feature'])
             //->with(['product', 'shape'])
             ->get();
- 
+
         return view('store-manager.leads.delivery-challan', compact('lead', 'quotationItems'));
     }
-
 }
