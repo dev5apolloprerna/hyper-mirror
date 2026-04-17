@@ -410,9 +410,10 @@
                             </div>
 
                             <div class="row mt-2 card-body">
-                                {{-- new code 17-04-2026 --}}
+                                 {{-- new code 17-04-2026 --}}
                                 <div class="row mt-2 card-body">
 
+                                    <!--
                                     <div class="col-md-4 mb-4 fitting-charge-box">
                                         <label class="form-label">Fitting Charges</label>
                                         <input type="number" step="0.01" min="0" name="iFittingCharges"
@@ -421,14 +422,29 @@
                                         @error('iFittingCharges')
                                             <span class="text-danger d-block">{{ $message }}</span>
                                         @enderror
-                                    </div>
+                                    </div> -->
+                                    <div class="col-md-4 mb-4 fitting-charge-box">
+                                    <label class="form-label">Fitting Charges</label>
+                                    <input type="number" step="0.01" min="0" name="iFittingCharges"
+                                        id="iFittingCharges" class="form-control"
+                                        value="{{ old('iFittingCharges', $lead->iFittingCharges) }}">
+                                    @error('iFittingCharges')
+                                        <span class="text-danger d-block">{{ $message }}</span>
+                                    @enderror
+                                </div>
 
-                                    <div class="col-md-4 mb-4">
+                                    <!-- <div class="col-md-4 mb-4">
                                         <label class="form-label">Delivery Charges</label>
                                         <input type="number" step="0.01" min="0" name="delivery_charges"
                                             id="deliveryCharges" class="form-control"
                                             value="{{ old('delivery_charges', 0) }}">
-                                    </div>
+                                    </div> -->
+                                    <div class="col-md-4 mb-4">
+                                    <label class="form-label">Delivery Charges</label>
+                                    <input type="number" step="0.01" min="0" name="delivery_charges"
+                                        id="deliveryCharges" class="form-control"
+                                        value="{{ old('delivery_charges', (float) ($lead->delivery_charges ?? 0)) }}">
+                                        </div>
                                 </div>
                                 {{-- new code 17-04-2026 --}}
                                 <div class="col-md-4 mb-4">
@@ -499,6 +515,10 @@
                                             Yes</option>
                                     </select>
                                 </div>
+                                <div class="col-md-4 mb-4">
+                                    <label class="form-label">Amount Before GST</label>
+                                    <input type="text" id="amountBeforeGst" class="form-control" readonly>
+                                </div>
 
                                 <div class="col-md-4 mb-4">
                                     <label class="form-label">GST Amount</label>
@@ -527,46 +547,6 @@
                     </div>
                 </div>
 
-  <div class="card mt-3">
-                    <div class="card-body">
-                        <h5 class="mb-3">Quotation Preview (Current Form)</h5>
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-striped align-middle mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th style="width: 70px;">#</th>
-                                        <th>Category</th>
-                                        <th>Product</th>
-                                        <th style="width: 80px;">Qty</th>
-                                        <th style="width: 120px;">Width</th>
-                                        <th style="width: 120px;">Height</th>
-                                        <th style="width: 120px;">Rate</th>
-                                        <th style="width: 140px;">Amount</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="previewTableBody">
-                                    <tr>
-                                        <td colspan="8" class="text-center text-muted">Fill quotation data to see preview.</td>
-                                    </tr>
-                                </tbody>
-                                <tfoot>
-                                    <tr>
-                                        <th colspan="7" class="text-end">Subtotal</th>
-                                        <th id="previewSubtotal">₹0.00</th>
-                                    </tr>
-                                    <tr>
-                                        <th colspan="7" class="text-end">GST (18%)</th>
-                                        <th id="previewGst">₹0.00</th>
-                                    </tr>
-                                    <tr>
-                                        <th colspan="7" class="text-end">Grand Total</th>
-                                        <th id="previewGrandTotal">₹0.00</th>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                        </div>
-                    </div>
-                </div>
 
                 @if (($quotationHistoryBatches ?? collect())->isNotEmpty())
                     <div class="card mt-4 quotation-history-card">
@@ -787,7 +767,6 @@
 
             function recalculateTotals() {
                 let subtotal = 0;
-                const previewRows = [];
 
                 $('#quotationRows .quotation-row').each(function() {
                     const qty = parseFloat($(this).find('.quantity').val()) || 0;
@@ -809,8 +788,6 @@
 
                         finalHeight = hData.feet;
                         finalWidth = wData.feet;
-                        console.log("Width:", wData);
-                        console.log("Height:", hData);
                     }
                     const lineAmount = qty * finalHeight * finalWidth * rate;
 
@@ -820,17 +797,7 @@
 
                     subtotal += lineAmount;
                     $(this).find('.lineAmount').val(lineAmount.toFixed(2));
-                    const categoryLabel = $(this).find('.row-category-select option:selected').text().trim();
-                    const productLabel = $(this).find('.row-product-select option:selected').text().trim();
-                    previewRows.push({
-                        category: categoryLabel && categoryLabel !== 'Select Category' ? categoryLabel : '-',
-                        product: productLabel && productLabel !== 'Select Product' ? productLabel : '-',
-                        qty,
-                        width,
-                        height,
-                        rate,
-                        lineAmount
-                    });
+                    
                 });
 
                 // 17-04-2026
@@ -848,40 +815,11 @@
                 const gst = isGstApplicable ? (afterDiscount * 0.18) : 0;
 
 
-                $('#subtotalAmount').val(baseAmount.toFixed(2));
+                $('#subtotalAmount').val(subtotal.toFixed(2));
+                $('#amountBeforeGst').val(afterDiscount.toFixed(2));
                 $('#gstAmount').val(gst.toFixed(2));
                 $('#grandTotalAmount').val((afterDiscount + gst).toFixed(2));
-            renderPreviewTable(previewRows, subtotal, gst, (afterDiscount + gst));
-            }
 
-            function renderPreviewTable(rows, subtotal, gst, grandTotal) {
-                const $tbody = $('#previewTableBody');
-                $tbody.empty();
-
-                if (!rows.length) {
-                    $tbody.append(
-                        '<tr><td colspan="8" class="text-center text-muted">Fill quotation data to see preview.</td></tr>'
-                    );
-                } else {
-                    rows.forEach(function(row, index) {
-                        $tbody.append(`
-                            <tr>
-                                <td>${index + 1}</td>
-                                <td>${row.category}</td>
-                                <td>${row.product}</td>
-                                <td>${Number(row.qty || 0).toFixed(0)}</td>
-                                <td>${Number(row.width || 0).toFixed(2)}</td>
-                                <td>${Number(row.height || 0).toFixed(2)}</td>
-                                <td>₹${Number(row.rate || 0).toFixed(2)}</td>
-                                <td>₹${Number(row.lineAmount || 0).toFixed(2)}</td>
-                            </tr>
-                        `);
-                    });
-                }
-
-                $('#previewSubtotal').text('₹' + Number(subtotal || 0).toFixed(2));
-                $('#previewGst').text('₹' + Number(gst || 0).toFixed(2));
-                $('#previewGrandTotal').text('₹' + Number(grandTotal || 0).toFixed(2));
             }
 
             function calculateAdjustedValues(value, unit, multiple) {
