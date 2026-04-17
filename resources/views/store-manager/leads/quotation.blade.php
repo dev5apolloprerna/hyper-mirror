@@ -815,7 +815,7 @@
                 const gst = isGstApplicable ? (afterDiscount * 0.18) : 0;
 
 
-                $('#subtotalAmount').val(subtotal.toFixed(2));
+                $('#subtotalAmount').val(baseAmount.toFixed(2));
                 $('#amountBeforeGst').val(afterDiscount.toFixed(2));
                 $('#gstAmount').val(gst.toFixed(2));
                 $('#grandTotalAmount').val((afterDiscount + gst).toFixed(2));
