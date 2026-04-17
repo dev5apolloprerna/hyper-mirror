@@ -23,13 +23,13 @@
                 <!-- Form Card -->
                 <div class="card">
                     <div class="card-body">
-                        <form action="{{ route('Accountuser.Store') }}" method="POST">
+                        <form action="{{ route('Accountuser.Store') }}" method="POST" id="paymentCollectionForm">
                             @csrf
                             <div class="row">
                                 <!-- User Dropdown -->
                                 <div class="col-md-6 mb-4">
                                     <label class="form-label">Select User <span style="color:red;">*</span></label>
-                                    <select name="user_id" class="form-control" required>
+                                    <select name="user_id" id="user_id" class="form-control" required>
                                         <option value="">Select User</option>
                                         @foreach ($getuser as $user)
                                             <option value="{{ $user->id }}"
@@ -42,12 +42,16 @@
                                     @if ($errors->has('user_id'))
                                         <span class="text-danger">{{ $errors->first('user_id') }}</span>
                                     @endif
+                                    <small id="availableAmountText" class="text-primary d-block mt-2">
+                                        Available Collection Amount: ₹0.00
+                                    </small>
                                 </div>
                                 <!-- Amount -->
                                 <div class="col-md-6 mb-4">
                                     <label class="form-label">Amount <span style="color:red;">*</span></label>
-                                    <input type="number" step="0.01" name="amount" class="form-control"
-                                        value="{{ old('amount') }}" placeholder="0.00" required>
+                                    <input type="number" step="0.01" min="1" name="amount" id="amount"
+                                        class="form-control" value="{{ old('amount') }}" placeholder="0.00" required>
+                                    <small id="amountValidationError" class="text-danger d-none"></small>
                                     @if ($errors->has('amount'))
                                         <span class="text-danger">{{ $errors->first('amount') }}</span>
                                     @endif
@@ -57,11 +61,10 @@
                                     <label class="form-label">Payment Mode <span style="color:red;">*</span></label>
                                     <select name="payment_mode" class="form-control" required>
                                         <option value="">Select Mode</option>
-                                        <option value="Cash" {{ old('payment_mode') == 'Cash' ? 'selected' : '' }}>Cash
+                                        <option value="Cash"
+                                            {{ old('payment_mode', 'Cash') == 'Cash' ? 'selected' : '' }}>
+                                            Cash
                                         </option>
-                                        <option value="Online" {{ old('payment_mode') == 'Online' ? 'selected' : '' }}>
-                                            Online</option>
-
                                     </select>
                                     @if ($errors->has('payment_mode'))
                                         <span class="text-danger">{{ $errors->first('payment_mode') }}</span>
@@ -89,3 +92,67 @@
         </div>
     </div>
 @endsection
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const userSelect = document.getElementById('user_id');
+        const amountInput = document.getElementById('amount');
+        const paymentCollectionForm = document.getElementById('paymentCollectionForm');
+        const availableAmountText = document.getElementById('availableAmountText');
+        const amountValidationError = document.getElementById('amountValidationError');
+        let availableAmount = 0;
+
+        const resetAmountDisplay = () => {
+            availableAmount = 0;
+            amountInput.removeAttribute('max');
+            availableAmountText.innerText = 'Available Collection Amount: ₹0.00';
+            amountValidationError.classList.add('d-none');
+            amountValidationError.innerText = '';
+        };
+
+        const validateAmount = () => {
+            const enteredAmount = parseFloat(amountInput.value || 0);
+            if (enteredAmount > availableAmount && availableAmount >= 0) {
+                amountValidationError.innerText =
+                    `Amount cannot be greater than available collection amount (₹${availableAmount.toFixed(2)}).`;
+                amountValidationError.classList.remove('d-none');
+                return;
+            }
+
+            amountValidationError.classList.add('d-none');
+            amountValidationError.innerText = '';
+        };
+
+        userSelect.addEventListener('change', async function() {
+            const userId = this.value;
+            amountInput.value = '';
+
+            if (!userId) {
+                resetAmountDisplay();
+                return;
+            }
+
+            try {
+                const response = await fetch(
+                    `{{ url('Accountuser/available-amount') }}/${userId}`);
+                const data = await response.json();
+                availableAmount = parseFloat(data.available_amount || 0);
+                amountInput.setAttribute('max', availableAmount.toFixed(2));
+                availableAmountText.innerText =
+                    `Available Collection Amount: ₹${availableAmount.toFixed(2)}`;
+                validateAmount();
+            } catch (error) {
+                resetAmountDisplay();
+            }
+        });
+
+        amountInput.addEventListener('input', validateAmount);
+
+        paymentCollectionForm.addEventListener('submit', function(e) {
+            const enteredAmount = parseFloat(amountInput.value || 0);
+            if (enteredAmount > availableAmount) {
+                e.preventDefault();
+                validateAmount();
+            }
+        });
+    });
+</script>

@@ -27,7 +27,7 @@
                                 @csrf
                                 <div class="mb-3">
                                     <label class="form-label">Terms and Conditions</label>
-                                    <textarea
+                                    <textarea id="terms_and_conditions"
                                         name="terms_and_conditions"
                                         class="form-control"
                                         rows="9"
@@ -39,7 +39,7 @@
 
                                 <div class="mb-3">
                                     <label class="form-label">Bank Details</label>
-                                    <textarea
+                                    <textarea id="bank_details"
                                         name="bank_details"
                                         class="form-control"
                                         rows="7"
@@ -58,4 +58,29 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+    <script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
+    <script>
+        ['terms_and_conditions', 'bank_details'].forEach(function(editorId) {
+            const element = document.getElementById(editorId);
+            if (!element) {
+                return;
+            }
+
+            ClassicEditor
+                .create(element, {
+                    toolbar: [
+                        'heading', '|',
+                        'bold', 'italic', 'underline', 'link', '|',
+                        'bulletedList', 'numberedList', '|',
+                        'undo', 'redo'
+                    ]
+                })
+                .catch(function(error) {
+                    console.error('CKEditor init failed for ' + editorId, error);
+                });
+        });
+    </script>
 @endsection

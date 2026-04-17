@@ -104,13 +104,13 @@
             background: #f5f5f5;
         }
 
-        .notice {
+        /* .notice {
             margin-top: 12px;
             padding: 8px;
             border: 1px solid #facc15;
             background: #fffbeb;
             font-size: 10px;
-        }
+        } */
 
         .signatures {
             margin-top: 42px;
@@ -127,6 +127,52 @@
             border-top: 1px solid #444;
             width: 180px;
             margin: 0 auto 5px;
+        }
+
+        .signatures {
+            width: 100%;
+            margin-top: 80px;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        .signatures td {
+            width: 50%;
+            vertical-align: top;
+        }
+
+        .left-sign {
+            text-align: left;
+        }
+
+        .right-sign {
+            text-align: right;
+        }
+
+        .sign-line {
+            width: 180px;
+            border-top: 1px solid #888;
+            margin-bottom: 8px;
+        }
+
+        .left-sign .sign-line {
+            margin-left: 0;
+            margin-right: auto;
+        }
+
+        .right-sign .sign-line {
+            margin-left: auto;
+            margin-right: 0;
+        }
+
+        .sign-text-left {
+            width: 100%;
+            text-align: left;
+        }
+
+        .sign-text-right {
+            width: 100%;
+            text-align: right;
         }
     </style>
 </head>
@@ -158,7 +204,8 @@
         </tr>
         <tr>
             <td class="label">Measurement Date</td>
-            <td>{{ $lead->MeasurementVisitDate ? \Carbon\Carbon::parse($lead->MeasurementVisitDate)->format('d-m-Y') : '—' }}</td>
+            <td>{{ $lead->MeasurementVisitDate ? \Carbon\Carbon::parse($lead->MeasurementVisitDate)->format('d-m-Y') : '—' }}
+            </td>
             <td class="label">Customer Mobile</td>
             <td>{{ $lead->customer->strMobile ?? '—' }}</td>
         </tr>
@@ -182,11 +229,11 @@
         </table>
     </div>
 
-    @if (!$canViewFinancial)
+    {{-- @if (!$canViewFinancial)
         <div class="notice">
             This quotation includes only product, measurement, and quantity details. Pricing columns are hidden for your access level.
         </div>
-    @endif
+    @endif --}}
 
     <div class="section-title">Quotation Items</div>
     <table class="items-table">
@@ -199,8 +246,8 @@
                 <th style="width:10%">Feature</th>
                 <th style="width:7%">Unit</th>
                 <th style="width:5%">Qty</th>
-                <th style="width:6%">Height</th>
                 <th style="width:6%">Width</th>
+                <th style="width:6%">Height</th>
                 @if ($canViewFinancial)
                     <th style="width:8%">Rate/Sqft</th>
                     <th style="width:8%">Sqft</th>
@@ -221,8 +268,8 @@
                     <td>{{ optional($item->feature)->feature_name ?? '—' }}</td>
                     <td>{{ $item->unit_of_measurement ?? '—' }}</td>
                     <td>{{ $item->quantity ?? 1 }}</td>
-                    <td>{{ $item->decHeight }}</td>
                     <td>{{ $item->decWidth }}</td>
+                    <td>{{ $item->decHeight }}</td>
                     @if ($canViewFinancial)
                         <td class="text-right">{{ number_format((float) ($item->decRatePerSqft ?? 0), 2) }}</td>
                         <td class="text-right">{{ number_format((float) ($item->decTotalSqft ?? 0), 2) }}</td>
@@ -267,7 +314,8 @@
                 @endif
                 <tr class="total">
                     <td>Grand Total</td>
-                    <td class="text-right">₹{{ number_format((float) ($lead->iLeadAmount ?? $netAmount + $gstAmount), 2) }}</td>
+                    <td class="text-right">
+                        ₹{{ number_format((float) ($lead->iLeadAmount ?? $netAmount + $gstAmount), 2) }}</td>
                 </tr>
             </table>
         </div>
@@ -275,15 +323,16 @@
 
     <table class="signatures">
         <tr>
-            <td>
+            <td class="left-sign">
                 <div class="sign-line"></div>
-                Customer Signature
+                <div class="sign-text-left">Customer Signature</div>
             </td>
-            <td>
+            <td class="right-sign">
                 <div class="sign-line"></div>
-                Authorized Signature
+                <div class="sign-text-right">Authorized Signature</div>
             </td>
         </tr>
     </table>
 </body>
+
 </html>

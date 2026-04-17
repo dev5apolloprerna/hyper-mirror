@@ -196,4 +196,23 @@ class AccountPaymentController extends Controller
             return back()->with('error', $e->getMessage());
         }
     }
+    public function getUserAvailableAmount($userId)
+    {
+        $availableAmount = $this->getAvailableAmountForUser((int) $userId);
+
+        return response()->json([
+            'available_amount' => $availableAmount,
+        ]);
+    }
+
+    private function getAvailableAmountForUser(int $userId): float
+    {
+        $ledger = DB::table('cash_payment_ledger')
+            ->where('emp_id', $userId)
+            ->where('UserType', 1)
+            ->orderByDesc('cash_payment_ledger_id')
+            ->first();
+
+        return max(0, (float) ($ledger->close ?? 0));
+    }
 }

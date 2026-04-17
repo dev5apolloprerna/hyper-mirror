@@ -241,8 +241,8 @@
                 <th>Feature</th>
                 <th>Unit</th>
                 <th>Qty</th>
-                <th>Height</th>
                 <th>Width</th>
+                <th>Height</th>
                 @if ($canViewFinancial)
                     <th>Rate/Sqft</th>
                     <th>Sqft</th>
@@ -263,8 +263,8 @@
                     <td>{{ optional($item->feature)->feature_name ?? '—' }}</td>
                     <td>{{ $item->unit_of_measurement ?? '—' }}</td>
                     <td>{{ $item->quantity ?? 1 }}</td>
-                    <td>{{ $item->decHeight }}</td>
                     <td>{{ $item->decWidth }}</td>
+                    <td>{{ $item->decHeight }}</td>
                     @if ($canViewFinancial)
                         <td>{{ number_format((float) ($item->decRatePerSqft ?? 0), 2) }}</td>
                         <td>{{ number_format((float) ($item->decTotalSqft ?? 0), 2) }}</td>

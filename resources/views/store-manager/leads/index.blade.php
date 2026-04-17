@@ -214,7 +214,8 @@
 
                                                 {{-- Store manager extras --}}
                                                 @if($roleSlug === 'storemanager')
-                                                @if($lead->iCurrentLeadStatus !== 'Quotation Approved')
+                                               
+                                                @if(\App\Support\LeadWorkflow::canEditLeadDetails($lead->iCurrentLeadStatus))
                                                  <a href="{{ route('store.leads.edit', $lead->iLeadId) }}"
                                                        class="btn btn-sm btn-outline-info"
                                                        title="Edit Lead">
