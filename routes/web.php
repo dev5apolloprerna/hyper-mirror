@@ -174,7 +174,6 @@ Route::middleware('auth')->prefix('store-manager')->name('store.')->group(functi
     Route::delete('invoice/{invoice}/delete', [InvoiceController::class, 'destroy'])->name('invoice.destroy');
     Route::get('invoice/products-by-category', [InvoiceController::class, 'productsByCategory'])->name('invoice.products-by-category');
     Route::get('ledger', [LedgerController::class, 'index'])->name('ledger.index');
-
 });
 
 // Store Manager: Payments (separate group for clarity)
@@ -213,6 +212,7 @@ Route::middleware('auth')->prefix('complaints')->name('complaints.')->group(func
 Route::middleware('auth')->prefix('Accountuser')->name('Accountuser.')->group(function () {
     Route::get('Accountpayments', [AccountPaymentController::class, 'index'])->name('Accountpayments');
     Route::get('Create-payments', [AccountPaymentController::class, 'Create'])->name('Create');
+    Route::get('available-amount/{userId}', [AccountPaymentController::class, 'getUserAvailableAmount'])->name('availableAmount');
     Route::post('Store-payments', [AccountPaymentController::class, 'Store'])->name('Store');
     Route::get('payment-delete/{id?}/{emp_id?}', [AccountPaymentController::class, 'delete'])
         ->name('deletePayment');

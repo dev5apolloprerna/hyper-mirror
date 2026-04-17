@@ -9,6 +9,7 @@ use App\Models\LeadPayment;
 use App\Support\LeadWorkflow;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class LeadHistoryController extends Controller
 {
@@ -83,6 +84,10 @@ class LeadHistoryController extends Controller
         $isRejection = $request->iStatus === LeadWorkflow::STATUS_LEAD_REJECTED;
         $isDealDone  = $request->iStatus === LeadWorkflow::STATUS_DEAL_DONE;
         $isQuotationApproved = $request->iStatus === LeadWorkflow::STATUS_QUOTATION_APPROVED;
+        $shouldClearFollowup = in_array($request->iStatus, [
+            LeadWorkflow::STATUS_DISPATCHED,
+            LeadWorkflow::STATUS_RECEIVED_AT_NAROL,
+        ], true);
 
         $rules = [
             'iStatus'        => 'required|string|in:' . implode(',', LeadWorkflow::allStatuses()),
@@ -151,18 +156,28 @@ class LeadHistoryController extends Controller
                 'strComments'     => $isQuotationApproved
                     ? $comments . "\nExpected Delivery Date: " . $request->expected_delivery_date
                     : $comments,
-                'NetFolloupwdate' => $isRejection ? null : $request->NetFolloupwdate,
+               // 'NetFolloupwdate' => $isRejection ? null : $request->NetFolloupwdate,
+                'NetFolloupwdate' => ($isRejection || $shouldClearFollowup) ? null : $request->NetFolloupwdate,
                 'iStatus'         => $request->iStatus,
                 'iEnterBy'        => auth()->id(),
                 'EntryDate'       => now(),
             ]);
 
-            $lead->update([
+            //$lead->update([
+            $leadUpdateData = [
                 'iCurrentLeadStatus' => $request->iStatus,
-                'NetFollowupdate'    => $isRejection ? null : $request->NetFolloupwdate,
+                //'NetFollowupdate'    => $isRejection ? null : $request->NetFolloupwdate,
+                'NetFollowupdate'    => ($isRejection || $shouldClearFollowup) ? null : $request->NetFolloupwdate,
                 'expected_delivery_date' => $isQuotationApproved ? $request->expected_delivery_date : $lead->expected_delivery_date,
-            ]);
+             ];
 
+            if (Schema::hasColumn('leads', 'DispatchedDate')) {
+                $leadUpdateData['DispatchedDate'] = $request->iStatus === LeadWorkflow::STATUS_DISPATCHED
+                    ? now()->toDateString()
+                    : $lead->DispatchedDate;
+            }
+
+            $lead->update($leadUpdateData);
             DB::commit();
 
             return redirect()->route('store.leads.index')->with('success', 'Quotation status changed successfully.');

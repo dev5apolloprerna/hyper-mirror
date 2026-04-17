@@ -20,8 +20,7 @@
                                 {{ $lead->customer->strMobile ?? '' }}
                                 &nbsp;·&nbsp;
                                 <span class="badge bg-primary text-white">{{ $lead->iCurrentLeadStatus }}</span>
-                                {{-- @if($lead->NetFollowupdate && !in_array($lead->iCurrentLeadStatus, ['Lead Rejected', 'Deal Done', 'Measurement Done'])) --}}
-                                @if($lead->NetFollowupdate && !in_array($lead->iCurrentLeadStatus, ['Lead Rejected', 'Deal Done', 'Measurement Done', 'Ready to Dispatched']))
+                                @if($lead->NetFollowupdate && !in_array($lead->iCurrentLeadStatus, ['Lead Rejected', 'Deal Done', 'Measurement Done', 'Ready to Dispatched', 'Dispatched', 'Received @ Narol']))
                                     &nbsp;·&nbsp;
                                     <span class="text-{{ now()->toDateString() > $lead->NetFollowupdate ? 'danger' : 'success' }}">
                                         <i class="fas fa-calendar-alt me-1"></i>Next: {{ \Carbon\Carbon::parse($lead->NetFollowupdate)->format('d-m-Y') }}
@@ -333,7 +332,7 @@
                                                         <td>{{ $index + 1 }}</td>
                                                         <td>{{ $design->strTitle ?: 'Design File' }}</td>
                                                         <td>
-                                                            <a href="{{ asset('uploads/lead-designs/' . $design->strFilename) }}"
+                                                            <a href="{{ asset('public/uploads/lead-designs/' . $design->strFilename) }}"
                                                                target="_blank"
                                                                class="btn btn-outline-info btn-sm"
                                                                title="View Design">
@@ -734,6 +733,7 @@ const NO_FOLLOWUP_STATUSES = [
     'Dispatched Done',
     'Fitting Done',
     'Ready to Dispatched',
+    'Dispatched',
     'Received @ Narol',
 ];
 

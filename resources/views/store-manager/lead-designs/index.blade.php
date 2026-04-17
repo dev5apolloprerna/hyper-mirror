@@ -59,7 +59,14 @@
                                     <label class="form-label">
                                         Design File {!! $editDesign ? '' : '<span class="text-danger">*</span>' !!}
                                     </label>
-                                    <input type="file" name="strFilename" class="form-control">
+                                    <!-- <input type="file" name="strFilename" class="form-control"> -->
+                                     <input type="file"
+                                           name="strFilename"
+                                           class="form-control"
+                                           accept=".jpg,.jpeg,.png,.pdf,.webp,.svg,.dwg,.dxf,.cdr,.ai,.psd,.doc,.docx,.xls,.xlsx,.txt,.zip,.rar">
+                                    <small class="text-muted">
+                                        Allowed: image/PDF/CAD/office/zip files (max 10 MB)
+                                    </small>
                                     @if($errors->has('strFilename'))
                                         <span class="text-danger small">{{ $errors->first('strFilename') }}</span>
                                     @endif
@@ -70,9 +77,7 @@
                                                 {{ $editDesign->strFilename }}
                                             </a>
 
-                                            </a>
-
-                                              </div>
+                                            
                                     @endif
                                 </div>
 
@@ -124,12 +129,12 @@
                                                 </td>
                                                 <td>{{ $design->strTitle ?: '—' }}</td>
                                                 <td>
-                                                    <a href="{{ asset('uploads/lead-designs/' . $design->strFilename) }}" target="_blank">
+                                                    <a href="{{ asset('public/uploads/lead-designs/' . $design->strFilename) }}" target="_blank">
                                                         {{ $design->strFilename }}
                                                     </a>
                                                 </td>
                                                 <td>
-                                                    <a href="{{ asset('uploads/lead-designs/' . $design->strFilename) }}" target="_blank" class="text-info me-2" title="View">
+                                                    <a href="{{ asset('public/uploads/lead-designs/' . $design->strFilename) }}" target="_blank" class="text-info me-2" title="View">
                                                         <i class="fas fa-eye"></i>
                                                     </a>
 

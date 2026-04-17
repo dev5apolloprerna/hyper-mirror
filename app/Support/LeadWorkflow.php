@@ -60,7 +60,7 @@ class LeadWorkflow
             //self::STATUS_ADVANCE_RECEIVED,
            // self::STATUS_PRODUCTION_ACCEPTED,
            // self::STATUS_READY_TO_DISPATCHED,
-            self::STATUS_DISPATCHED,
+            //self::STATUS_DISPATCHED,
             self::STATUS_FITTING_PENDING,
         ];
     }
@@ -87,11 +87,6 @@ class LeadWorkflow
             return true;
         }
 
-        // Dispatch cannot change once "Dispatched"
-        if ($roleSlug === 'dispatch' && $currentStatus === self::STATUS_DISPATCHED) {
-            return true;
-        }
-
         return false;
     }
 
@@ -115,6 +110,7 @@ class LeadWorkflow
                 self::STATUS_DISPATCHED_DONE,
             ],
             'fitting' => [
+                self::STATUS_DISPATCHED,
                 self::STATUS_DISPATCHED_DONE,
                 self::STATUS_FITTING_PENDING,
                 self::STATUS_FITTING_DONE,
@@ -140,7 +136,8 @@ class LeadWorkflow
             self::STATUS_MEASUREMENT_DONE    => [self::STATUS_IN_DESIGN, self::STATUS_QUOTATION_SENT, self::STATUS_LEAD_REJECTED],
             self::STATUS_IN_DESIGN           => [self::STATUS_QUOTATION_SENT, self::STATUS_LEAD_REJECTED],
             self::STATUS_QUOTATION_SENT      => [self::STATUS_QUOTATION_APPROVED, self::STATUS_LEAD_REJECTED],
-            self::STATUS_QUOTATION_APPROVED  => [self::STATUS_ADVANCE_RECEIVED, self::STATUS_LEAD_REJECTED],
+            //self::STATUS_QUOTATION_APPROVED  => [self::STATUS_ADVANCE_RECEIVED, self::STATUS_LEAD_REJECTED],
+            self::STATUS_QUOTATION_APPROVED  => [self::STATUS_ADVANCE_RECEIVED],
             self::STATUS_ADVANCE_RECEIVED    => [self::STATUS_PRODUCTION_ACCEPTED],
             self::STATUS_PRODUCTION_ACCEPTED => [self::STATUS_READY_TO_DISPATCHED],
             self::STATUS_READY_TO_DISPATCHED => [self::STATUS_DISPATCHED],
@@ -180,6 +177,7 @@ class LeadWorkflow
             ],
 
             'fitting' => [
+                self::STATUS_DISPATCHED => [self::STATUS_FITTING_PENDING, self::STATUS_FITTING_DONE],
                 self::STATUS_DISPATCHED_DONE => [self::STATUS_FITTING_PENDING, self::STATUS_FITTING_DONE],
                 self::STATUS_FITTING_PENDING => [self::STATUS_FITTING_DONE],
             ],
@@ -226,6 +224,17 @@ class LeadWorkflow
         return in_array($lead->iCurrentLeadStatus, self::roleQueueStatuses($roleSlug), true);
     }
 
+ public static function canEditLeadDetails(string $currentStatus): bool
+    {
+        return in_array($currentStatus, [
+            self::STATUS_IN_MEASUREMENT,
+            self::STATUS_MEASUREMENT_DONE,
+            self::STATUS_IN_DESIGN,
+            self::STATUS_QUOTATION_SENT,
+        ], true);
+    }
+
+
     // ── Dashboard status cards per role ─────────────────────────────────────
     public static function dashboardStatuses(?string $roleSlug): array
     {
@@ -246,6 +255,7 @@ class LeadWorkflow
                 self::STATUS_DISPATCHED_DONE,
             ],
             'fitting' => [
+                self::STATUS_DISPATCHED,
                 self::STATUS_DISPATCHED_DONE,
                 self::STATUS_FITTING_PENDING,
                 self::STATUS_FITTING_DONE,

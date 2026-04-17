@@ -7,6 +7,7 @@ use App\Models\Lead;
 use App\Models\LeadDesign;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 
 class LeadDesignController extends Controller
 {
@@ -41,11 +42,16 @@ class LeadDesignController extends Controller
     {
         $request->validate([
             'strTitle' => 'nullable|string|max:100',
-            'strFilename' => 'required|file|mimes:jpg,jpeg,png,pdf,webp|max:5120',
+            'strFilename' => 'required|file|mimes:jpg,jpeg,png,pdf,webp,svg,dwg,dxf,cdr,ai,psd,doc,docx,xls,xlsx,txt,zip,rar|max:10240',
         ]);
 
         $file = $request->file('strFilename');
-        $fileName = time() . '_' . preg_replace('/\s+/', '_', $file->getClientOriginalName());
+        //$fileName = time() . '_' . preg_replace('/\s+/', '_', $file->getClientOriginalName());
+        $baseName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+        $safeBaseName = Str::slug($baseName) ?: 'design-file';
+        $extension = strtolower((string) $file->getClientOriginalExtension());
+        $fileName = now()->format('YmdHis') . '_' . $safeBaseName . '_' . Str::random(6) . ($extension ? ('.' . $extension) : '');
+
         $destinationPath = public_path('uploads/lead-designs');
 
         if (!File::exists($destinationPath)) {
@@ -86,11 +92,11 @@ class LeadDesignController extends Controller
 
         $request->validate([
             'strTitle' => 'nullable|string|max:100',
-            'strFilename' => 'nullable|file|mimes:jpg,jpeg,png,pdf,webp|max:5120',
+            'strFilename' => 'nullable|file|mimes:jpg,jpeg,png,pdf,webp,svg,dwg,dxf,cdr,ai,psd,doc,docx,xls,xlsx,txt,zip,rar|max:10240',
         ]);
 
         $fileName = $design->strFilename;
-        $destinationPath = public_path('uploads/lead-designs');
+        $destinationPath = base_path('uploads/lead-designs');
 
         if ($request->hasFile('strFilename')) {
             $oldFile = $destinationPath . '/' . $design->strFilename;
@@ -99,7 +105,11 @@ class LeadDesignController extends Controller
             }
 
             $file = $request->file('strFilename');
-            $fileName = time() . '_' . preg_replace('/\s+/', '_', $file->getClientOriginalName());
+            //$fileName = time() . '_' . preg_replace('/\s+/', '_', $file->getClientOriginalName());
+            $baseName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+            $safeBaseName = Str::slug($baseName) ?: 'design-file';
+            $extension = strtolower((string) $file->getClientOriginalExtension());
+            $fileName = now()->format('YmdHis') . '_' . $safeBaseName . '_' . Str::random(6) . ($extension ? ('.' . $extension) : '');
             $file->move($destinationPath, $fileName);
         }
 

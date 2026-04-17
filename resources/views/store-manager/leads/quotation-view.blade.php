@@ -90,18 +90,24 @@
                                         <th>Measurement Required</th>
                                         <td>{{ $lead->IsMeasureMentRequired == 1 ? 'Yes' : 'No' }}</td>
                                     </tr>
-                                <tr><th>Only Fitting Quotation</th><td>{{ (int) ($lead->isFittingLeadOnly ?? 0) === 1 ? 'Yes' : 'No' }}</td></tr>
-                                <tr><th>Fitting Required</th><td>{{ (int) ($lead->isFittingRequired ?? 0) === 1 ? 'Yes' : 'No' }}</td></tr>
-                                <tr>
-                                    <th>Fitting Charge Type</th>
-                                    <td>
-                                        @if((int) ($lead->isFittingRequired ?? 0) !== 1)
-                                            N/A
-                                        @else
-                                            {{ (int) ($lead->isFittingChargeIncluded ?? 0) === 1 ? 'Included' : 'Extra' }}
-                                        @endif
-                                    </td>
-                                </tr>
+                                    <tr>
+                                        <th>Only Fitting Quotation</th>
+                                        <td>{{ (int) ($lead->isFittingLeadOnly ?? 0) === 1 ? 'Yes' : 'No' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Fitting Required</th>
+                                        <td>{{ (int) ($lead->isFittingRequired ?? 0) === 1 ? 'Yes' : 'No' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Fitting Charge Type</th>
+                                        <td>
+                                            @if ((int) ($lead->isFittingRequired ?? 0) !== 1)
+                                                N/A
+                                            @else
+                                                {{ (int) ($lead->isFittingChargeIncluded ?? 0) === 1 ? 'Included' : 'Extra' }}
+                                            @endif
+                                        </td>
+                                    </tr>
                                     @if ($lead->MeasurementVisitDate)
                                         <tr>
                                             <th>Measurement Visit Date</th>
@@ -115,11 +121,17 @@
                                             <td>{{ \Carbon\Carbon::parse($lead->NetFollowupdate)->format('d-m-Y') }}</td>
                                         </tr>
                                     @endif
-                                    @if($canViewFinancial && (int) ($lead->isDiscountApplicable ?? 0) === 1)
-                                        <tr><th>Discount</th><td>₹{{ number_format($discountAmount, 2) }}</td></tr>
+                                    @if ($canViewFinancial && (int) ($lead->isDiscountApplicable ?? 0) === 1)
+                                        <tr>
+                                            <th>Discount</th>
+                                            <td>₹{{ number_format($discountAmount, 2) }}</td>
+                                        </tr>
                                     @endif
-                                    @if($canViewFinancial && (int) ($lead->isGstApplicable ?? 0) === 1)
-                                        <tr><th>GST (18%)</th><td>₹{{ number_format($gstAmount, 2) }}</td></tr>
+                                    @if ($canViewFinancial && (int) ($lead->isGstApplicable ?? 0) === 1)
+                                        <tr>
+                                            <th>GST (18%)</th>
+                                            <td>₹{{ number_format($gstAmount, 2) }}</td>
+                                        </tr>
                                     @endif
                                 </table>
                             </div>
@@ -139,8 +151,8 @@
                                                 <th>Feature</th>
                                                 <th>Unit</th>
                                                 <th>Qty</th>
-                                                <th>Height</th>
                                                 <th>Width</th>
+                                                <th>Height</th>
                                                 @if ($canViewFinancial)
                                                     <th>Rate/Sqft</th>
                                                     <th>Total Sqft</th>
@@ -158,8 +170,8 @@
                                                     <td>{{ optional($quotationItem->feature)->feature_name ?? '—' }}</td>
                                                     <td>{{ $quotationItem->unit_of_measurement ?? '—' }}</td>
                                                     <td>{{ $quotationItem->quantity ?? 1 }}</td>
-                                                    <td>{{ $quotationItem->decHeight }}</td>
                                                     <td>{{ $quotationItem->decWidth }}</td>
+                                                    <td>{{ $quotationItem->decHeight }}</td>
                                                     @if ($canViewFinancial)
                                                         <td>{{ number_format((float) ($quotationItem->decRatePerSqft ?? 0), 2) }}
                                                         </td>

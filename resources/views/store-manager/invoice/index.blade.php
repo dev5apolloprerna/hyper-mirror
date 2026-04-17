@@ -285,6 +285,10 @@
                                                     class="btn btn-sm btn-outline-primary" title="View">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
+                                                <a href="{{ route('store.invoice.pdf', ['invoice' => $inv->iInvoiceId, 'download' => 1]) }}"
+                                                    class="btn btn-sm btn-outline-danger" title="Download PDF">
+                                                    <i class="fas fa-file-pdf"></i>
+                                                </a>
                                                 <!-- <form action="{{ route('store.invoice.destroy', $inv->iInvoiceId) }}"
                                               method="POST" class="d-inline"
                                               onsubmit="return confirm('Delete this invoice?')">

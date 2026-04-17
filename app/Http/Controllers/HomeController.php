@@ -12,10 +12,11 @@
 
  use App\Support\LeadWorkflow;
  use Illuminate\Http\Request;
- use Illuminate\Support\Facades\Auth;
- use Illuminate\Support\Facades\DB;
- use Illuminate\Support\Facades\Hash;
- use App\Models\Role;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
+use App\Models\Role;
  
  class HomeController extends Controller
  {
@@ -37,12 +38,42 @@
             $leadBaseQuery = Lead::query();
             if ($roleSlug !== 'storemanager' && $roleSlug) {
                 $leadBaseQuery->whereIn('iCurrentLeadStatus', LeadWorkflow::roleQueueStatuses($roleSlug));
+                if ($roleSlug === 'fitting') {
+                    $leadBaseQuery->where('isFittingRequired', 1)
+                        ->where('iCurrentLeadStatus', '!=', LeadWorkflow::STATUS_RECEIVED_AT_NAROL);
+                }
             }
  
             $today = now()->toDateString();
-            $todayFollowupCount = (clone $leadBaseQuery)->whereDate('NetFollowupdate', $today)->count();
-            $overdueFollowupCount = (clone $leadBaseQuery)->whereDate('NetFollowupdate', '<', $today)->count();
+           /* $todayFollowupCount = (clone $leadBaseQuery)->whereDate('NetFollowupdate', $today)->count();
+            $overdueFollowupCount = (clone $leadBaseQuery)->whereDate('NetFollowupdate', '<', $today)->count();*/
 
+            $hasDispatchedDateColumn = Schema::hasColumn('leads', 'DispatchedDate');
+
+            if ($roleSlug === 'fitting' && $hasDispatchedDateColumn) {
+                $todayFollowupCount = (clone $leadBaseQuery)
+                    ->where(function ($q) use ($today) {
+                        $q->whereDate('NetFollowupdate', $today)
+                          ->orWhere(function ($sub) use ($today) {
+                              $sub->whereNull('NetFollowupdate')
+                                  ->whereDate('DispatchedDate', $today);
+                          });
+                    })
+                    ->count();
+                $overdueFollowupCount = (clone $leadBaseQuery)
+                    ->where(function ($q) use ($today) {
+                        $q->whereDate('NetFollowupdate', '<', $today)
+                          ->orWhere(function ($sub) use ($today) {
+                              $sub->whereNull('NetFollowupdate')
+                                  ->whereDate('DispatchedDate', '<', $today);
+                          });
+                    })
+                    ->count();
+            } else {
+                $todayFollowupCount = (clone $leadBaseQuery)->whereDate('NetFollowupdate', $today)->count();
+                $overdueFollowupCount = (clone $leadBaseQuery)->whereDate('NetFollowupdate', '<', $today)->count();
+            }
+            
             $statusCards = collect(LeadWorkflow::dashboardStatuses($roleSlug))->map(function ($status) use ($leadBaseQuery) {
                 return [
                     'status' => $status,

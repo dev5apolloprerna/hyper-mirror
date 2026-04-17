@@ -11,11 +11,13 @@ use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\ProductShape;
 use App\Models\ProductFeature;
+use App\Models\InvoicePdfSetting;
 use App\Support\LeadWorkflow;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Schema;
 
 class LeadController extends Controller
 {
@@ -38,6 +40,7 @@ class LeadController extends Controller
             }
             if ($roleSlug === 'fitting') {
                 $query->where('isFittingRequired', 1);
+                $query->where('iCurrentLeadStatus', '!=', LeadWorkflow::STATUS_RECEIVED_AT_NAROL);
             }
         }
 
@@ -48,11 +51,46 @@ class LeadController extends Controller
 
         if ($request->filled('followup') && in_array($request->followup, ['today', 'overdue'], true)) {
             $today = now()->toDateString();
-            if ($request->followup === 'today') {
+            /* if ($request->followup === 'today') {
                 $query->whereDate('NetFollowupdate', $today);
             } elseif ($request->followup === 'overdue') {
                 $query->whereDate('NetFollowupdate', '<', $today);
+            }*/
+
+            $operator = $request->followup === 'today' ? '=' : '<';
+
+            $hasDispatchedDateColumn = Schema::hasColumn('leads', 'DispatchedDate');
+
+            if ($roleSlug === 'fitting' && $hasDispatchedDateColumn) 
+            {
+                $query->where(function ($q) use ($today, $operator) {
+                    $q->whereDate('NetFollowupdate', $operator, $today)
+                      ->orWhere(function ($sub) use ($today, $operator) {
+                          $sub->whereNull('NetFollowupdate')
+                              ->whereDate('DispatchedDate', $operator, $today);
+                      });
+                });
+            } else {
+                $query->whereDate('NetFollowupdate', $operator, $today);
             }
+        
+
+            /*$isTodayFilter = $request->followup === 'today';
+
+            $query->where(function ($q) use ($today, $isTodayFilter, $roleSlug) {
+                if ($isTodayFilter) {
+                    $q->whereDate('NetFollowupdate', $today);
+                } else {
+                    $q->whereDate('NetFollowupdate', '<', $today);
+                }
+
+                if ($roleSlug === 'fitting') {
+                    $q->orWhere(function ($fittingQuery) {
+                        $fittingQuery->where('iCurrentLeadStatus', LeadWorkflow::STATUS_DISPATCHED)
+                            ->whereNull('NetFollowupdate');
+                    });
+                }
+            });*/
         }
 
         if ($request->filled('search')) {
@@ -92,7 +130,8 @@ class LeadController extends Controller
 
     public function edit(Lead $lead)
     {
-        abort_unless(optional(auth()->user()->crmRole)->slug === 'storemanager', 403);
+        abort_unless(LeadWorkflow::canEditLeadDetails($lead->iCurrentLeadStatus), 403, 'Lead cannot be edited after quotation approval.');
+        //abort_unless(optional(auth()->user()->crmRole)->slug === 'storemanager', 403);
         $lead->load('customer');
 
         return view('store-manager.leads.edit', compact('lead'));
@@ -111,7 +150,8 @@ class LeadController extends Controller
     public function store(Request $request)
     {
 
-        abort_unless(optional(auth()->user()->crmRole)->slug === 'storemanager', 403);
+        abort_unless(LeadWorkflow::canEditLeadDetails($lead->iCurrentLeadStatus), 403, 'Lead cannot be edited after quotation approval.');
+        //abort_unless(optional(auth()->user()->crmRole)->slug === 'storemanager', 403);
 
         $data = $request->validate([
             'strMobile'             => 'required|digits:10',
@@ -542,7 +582,10 @@ class LeadController extends Controller
 
         $canViewFinancial = (bool) auth()->user()->can_view_financial;
 
-        $pdf = Pdf::loadView('store-manager.leads.quotation-pdf-document', compact('lead', 'canViewFinancial'));
+        //$pdf = Pdf::loadView('store-manager.leads.quotation-pdf-document', compact('lead', 'canViewFinancial'));
+        $invoicePdfSetting = InvoicePdfSetting::query()->first();
+
+        $pdf = Pdf::loadView('store-manager.leads.quotation-pdf-document', compact('lead', 'canViewFinancial', 'invoicePdfSetting'));
         $pdf->setPaper('a4', 'portrait');
 
         return $pdf->stream('quotation-' . $lead->strLeadNo . '.pdf');
@@ -629,7 +672,8 @@ class LeadController extends Controller
         $activeBatchId   = $lead->quotation->quotation_batch_id;
         $quotationItems  = $lead->quotations()
             ->where('quotation_batch_id', $activeBatchId)
-            ->with(['product', 'shape'])
+            ->with(['category', 'product', 'shape', 'feature']) 
+            //->with(['product', 'shape'])
             ->get();
  
         return view('store-manager.leads.delivery-challan', compact('lead', 'quotationItems'));

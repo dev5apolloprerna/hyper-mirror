@@ -12,6 +12,12 @@
             color: #1e293b;
             padding: 30px;
         }
+        .dc-header .brand-logo {
+            display: block;
+            margin: 0 auto 8px;
+            max-height: 64px;
+            width: auto;
+        }
 
         .dc-header {
             text-align: center;
@@ -115,10 +121,14 @@
             body { padding: 10px; }
             .no-print { display: none !important; }
         }
+
     </style>
 </head>
 <body>
-
+ @php
+        $logoPath = base_path('assets/images/logo.png');
+        $logoSrc = file_exists($logoPath) ? $logoPath : null;
+    @endphp
     <div class="no-print">
         <button onclick="window.print()"
                 style="padding:8px 20px; background:#1e293b; color:#fff; border:none; border-radius:6px; cursor:pointer; font-size:13px; margin-right:8px;">
@@ -132,6 +142,7 @@
 
     {{-- Header --}}
     <div class="dc-header">
+        <img src="{{ asset('assets/images/logo.png') }}" alt="{{ config('app.name', 'Mirror CRM') }} Logo" class="brand-logo">
         <h1>{{ config('app.name', 'Mirror CRM') }}</h1>
         <div class="challan-title">Delivery Challan</div>
         <p class="meta">Challan No: <strong>DC-{{ $lead->strLeadNo }}</strong> &nbsp;|&nbsp; Date: <strong>{{ now()->format('d-m-Y') }}</strong></p>
@@ -163,32 +174,48 @@
     <table class="items">
         <thead>
             <tr>
-                <th style="width:8%;">#</th>
-                <th>Product Name</th>
-                <th style="width:18%;" class="center">Quantity</th>
-                <th style="width:20%;">Remarks</th>
+                <th style="width:4%;">#</th>
+                <th>Category</th>
+                <th>Product</th>
+                <th>Shape</th>
+                <th>Feature</th>
+                <th>UOM</th>
+                <th class="center">Qty</th>
+                <th class="center">Height</th>
+                <th class="center">Width</th>
+                <th class="center">Sqft</th>
+                <!-- <th>Remarks</th> -->
             </tr>
         </thead>
         <tbody>
             @forelse($quotationItems as $i => $item)
                 <tr>
                     <td class="center">{{ $i + 1 }}</td>
+                    <td>{{ optional($item->category)->strCategoryName ?? '—' }}</td>
                     <td><strong>{{ optional($item->product)->strProductName ?? '—' }}</strong></td>
+                    <td>{{ optional($item->shape)->shape_title ?? '—' }}</td>
+                    <td>{{ optional($item->feature)->feature_name ?? '—' }}</td>
+                    <td>{{ $item->unit_of_measurement ?? '—' }}</td>
                     <td class="center">{{ $item->quantity ?? 1 }}</td>
-                    <td>{{ $item->remarks ?? '' }}</td>
+                    <td class="center">{{ $item->decHeight ?? '—' }}</td>
+                    <td class="center">{{ $item->decWidth ?? '—' }}</td>
+                    <td class="center">{{ number_format((float) ($item->decTotalSqft ?? 0), 2) }}</td>
+                    <!-- <td>{{ $item->remarks ?? '' }}</td> -->
                 </tr>
             @empty
                 <tr>
-                    <td colspan="4" style="text-align:center; padding:20px; color:#94a3b8;">
-                        No items found.
+                    <td colspan="11" style="text-align:center; padding:20px; color:#94a3b8;">                     No items found.
                     </td>
                 </tr>
             @endforelse
         </tbody>
         <tfoot>
             <tr class="item-count-row">
-                <td colspan="2" style="text-align:right;">Total Items:</td>
+                <td colspan="6" style="text-align:right;">Total Items:</td>
                 <td class="center">{{ $quotationItems->sum('quantity') }}</td>
+                <td></td>
+                <td></td>
+                <td class="center">{{ number_format((float) $quotationItems->sum('decTotalSqft'), 2) }}</td>
                 <td></td>
             </tr>
         </tfoot>
