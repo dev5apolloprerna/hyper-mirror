@@ -468,8 +468,8 @@ class LeadController extends Controller
                 $heightFeet = $this->convertToFeet($height, $unit, $multiple);
                 $widthFeet  = $this->convertToFeet($width, $unit, $multiple);
 
-                $sqft   = $widthFeet * $heightFeet;
-                $amount = $qty * $sqft * $rate;
+                $sqft   = $qty * $widthFeet * $heightFeet;
+                $amount = $sqft * $rate;
 
                 $quotation = LeadQuotation::create([
                     'iLeadId'             => $lead->iLeadId,
@@ -754,7 +754,7 @@ class LeadController extends Controller
             403
         );
 
-        $lead->load(['customer', 'quotation']);
+        $lead->load(['customer', 'quotation', 'createdBy']);
 
 
         if (!$lead->quotation) {
@@ -869,6 +869,9 @@ class LeadController extends Controller
             //->with(['product', 'shape'])
             ->get();
 
-        return view('store-manager.leads.delivery-challan', compact('lead', 'quotationItems'));
+        //        return view('store-manager.leads.delivery-challan', compact('lead', 'quotationItems'));
+        $pdf = Pdf::loadView('store-manager.leads.delivery-challan', compact('lead', 'quotationItems'));
+
+        return $pdf->stream('delivery-challan-' . $lead->strLeadNo . '.pdf');
     }
 }

@@ -39,6 +39,8 @@
                         @php
                             $DeliveryCharges = (float) ($lead->delivery_charges ?? 0);
                             $subtotalAmount = (float) $lead->quotations->sum('iAmount');
+                            $totalSqft = (float) $lead->quotations->sum('decTotalSqft');
+                            $totalQty = (float) $lead->quotations->sum('quantity');
                             $fittingCharges = (float) ($lead->iFittingCharges ?? 0);
                             $discountAmount =
                                 (int) ($lead->isDiscountApplicable ?? 0) === 1
@@ -155,8 +157,8 @@
                                                 <th>Width</th>
                                                 <th>Height</th>
                                                 @if ($canViewFinancial)
-                                                    <th>Rate/Sqft</th>
                                                     <th>Total Sqft</th>
+                                                    <th>Rate/Sqft</th>
                                                     <th>Amount</th>
                                                 @endif
                                             </tr>
@@ -174,9 +176,9 @@
                                                     <td>{{ $quotationItem->decWidth }}</td>
                                                     <td>{{ $quotationItem->decHeight }}</td>
                                                     @if ($canViewFinancial)
-                                                        <td>{{ number_format((float) ($quotationItem->decRatePerSqft ?? 0), 2) }}
-                                                        </td>
                                                         <td>{{ number_format((float) ($quotationItem->decTotalSqft ?? 0), 2) }}
+                                                        </td>
+                                                        <td>{{ number_format((float) ($quotationItem->decRatePerSqft ?? 0), 2) }}
                                                         </td>
                                                         <td>{{ number_format((float) ($quotationItem->iAmount ?? 0), 2) }}
                                                         </td>
@@ -208,6 +210,15 @@
                                         @endif
                                         @if ($canViewFinancial)
                                             <tfoot>
+                                                <tr>
+                                                    <th colspan="9" class="text-end">Total Qty</th>
+                                                    <th colspan="3">{{ number_format($totalQty, 0) }}</th>
+                                                </tr>
+                                                <tr>
+                                                    <th colspan="9" class="text-end">Total Sqft</th>
+                                                    <th colspan="3">{{ number_format($totalSqft, 2) }}</th>
+                                                </tr>
+
                                                 <tr>
                                                     <th colspan="{{ 9 }}" class="text-end">Subtotal</th>
                                                     <th colspan="3">

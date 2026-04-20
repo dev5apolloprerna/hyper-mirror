@@ -16,6 +16,11 @@ use App\Http\Controllers\Admin\UserShowroomController;
 use App\Http\Controllers\Admin\CrmUserController;
 use App\Http\Controllers\Admin\BusinessReportController;
 use App\Http\Controllers\Admin\ProductShapeController;
+use App\Http\Controllers\Admin\ProductFeatureController;
+use App\Http\Controllers\Admin\AdminPaymentController;
+use App\Http\Controllers\Admin\InvoicePdfSettingController;
+use App\Http\Controllers\Admin\QuotationCancelReasonController;
+use App\Http\Controllers\Admin\PartyReportController;
 
 use App\Http\Controllers\StoreManager\LeadController;
 use App\Http\Controllers\StoreManager\LeadDesignController;
@@ -24,8 +29,7 @@ use App\Http\Controllers\StoreManager\LeadPaymentController;
 use App\Http\Controllers\StoreManager\InvoiceController;
 use App\Http\Controllers\ComplainMasterController;
 use App\Http\Controllers\AccountUser\AccountPaymentController;
-use App\Http\Controllers\Admin\AdminPaymentController;
-use App\Http\Controllers\Admin\InvoicePdfSettingController;
+
 
 use App\Http\Controllers\StoreManager\LedgerController;
 
@@ -96,6 +100,25 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::post('product-shape/update/{id}', [ProductShapeController::class, 'update'])->name('product-shape.update');
     Route::delete('product-shape/delete/{id}', [ProductShapeController::class, 'destroy'])->name('product-shape.delete');
     Route::post('product-shape/bulk-delete', [ProductShapeController::class, 'bulkDelete'])->name('product-shape.bulkDelete');
+});
+
+// Admin: Product Features
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::get('product-feature', [ProductFeatureController::class, 'index'])->name('product-feature.index');
+    Route::post('product-feature/store', [ProductFeatureController::class, 'store'])->name('product-feature.store');
+    Route::post('product-feature/update/{id}', [ProductFeatureController::class, 'update'])->name('product-feature.update');
+    Route::delete('product-feature/delete/{id}', [ProductFeatureController::class, 'destroy'])->name('product-feature.delete');
+    Route::post('product-feature/bulk-delete', [ProductFeatureController::class, 'bulkDelete'])->name('product-feature.bulkDelete');
+});
+
+
+// Admin: Quotation Cancel Reasons
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::get('quotation-cancel-reason', [QuotationCancelReasonController::class, 'index'])->name('quotation-cancel-reason.index');
+    Route::post('quotation-cancel-reason/store', [QuotationCancelReasonController::class, 'store'])->name('quotation-cancel-reason.store');
+    Route::post('quotation-cancel-reason/update/{id}', [QuotationCancelReasonController::class, 'update'])->name('quotation-cancel-reason.update');
+    Route::delete('quotation-cancel-reason/delete/{id}', [QuotationCancelReasonController::class, 'destroy'])->name('quotation-cancel-reason.delete');
+    Route::post('quotation-cancel-reason/bulk-delete', [QuotationCancelReasonController::class, 'bulkDelete'])->name('quotation-cancel-reason.bulkDelete');
 });
 
 
@@ -195,7 +218,8 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::post('users/password-update/{user}', [CrmUserController::class, 'updatePassword'])->name('users.password.update');
     Route::delete('users/delete/{user}', [CrmUserController::class, 'destroy'])->name('users.destroy');
     Route::get('reports/business', [BusinessReportController::class, 'index'])->name('reports.business');
-
+    Route::get('reports/party', [PartyReportController::class, 'index'])->name('reports.party');
+    
     Route::get('invoice-settings', [InvoicePdfSettingController::class, 'edit'])->name('invoice-settings.edit');
     Route::post('invoice-settings', [InvoicePdfSettingController::class, 'update'])->name('invoice-settings.update');
 });

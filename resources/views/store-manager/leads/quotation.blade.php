@@ -1,7 +1,5 @@
 @extends('layouts.app')
-
 @section('title', 'Lead Quotation')
-
 @section('styles')
     <style>
         .lineAmount,
@@ -44,7 +42,8 @@
             margin-top: 12px;
             padding-top: 4px;
         }
-         .quotation-history-card {
+
+        .quotation-history-card {
             border: 1px solid #e2e8f0;
             border-radius: 12px;
         }
@@ -114,7 +113,7 @@
                     $existingItems = old('items', []);
 
                     if (empty($existingItems)) {
-                         $existingItems = $activeQuotations
+                        $existingItems = $activeQuotations
                             ->map(function ($quotation) {
                                 return [
                                     'iProductCategoryId' => $quotation->iProductCategoryId,
@@ -136,20 +135,22 @@
                     }
 
                     if (empty($existingItems)) {
-                        $existingItems = [[
-                            'iProductCategoryId' => '',
-                            'iProductId' => '',
-                            'unit_of_measurement' => '',
-                            'shape_id' => '',
-                            'feature_id' => '',
-                            'remarks' => '',
-                            'quantity' => 1,
-                            'calculation_multiple' => 3,
-                            'decHeight' => '',
-                            'decWidth' => '',
-                            'decRatePerSqft' => '',
-                            'iAmount' => '',
-                        ]];
+                        $existingItems = [
+                            [
+                                'iProductCategoryId' => '',
+                                'iProductId' => '',
+                                'unit_of_measurement' => '',
+                                'shape_id' => '',
+                                'feature_id' => '',
+                                'remarks' => '',
+                                'quantity' => 1,
+                                'calculation_multiple' => 3,
+                                'decHeight' => '',
+                                'decWidth' => '',
+                                'decRatePerSqft' => '',
+                                'iAmount' => '',
+                            ],
+                        ];
                     }
 
                     $productOptions = $products
@@ -379,7 +380,12 @@
                                                     class="form-control decHeight" value="{{ $item['decHeight'] ?? '' }}"
                                                     required>
                                             </div>
-
+                                            {{-- 20-04-2026 --}}
+                                            <div class="col-md-1">
+                                                <label class="form-label">Sqft</label>
+                                                <input type="text" class="form-control lineSqft" readonly>
+                                            </div>
+                                            {{-- 20-04-2026 --}}
 
                                             <div class="col-md-1">
                                                 <label class="form-label">Rate <span style="color:red;">*</span></label>
@@ -410,10 +416,19 @@
                             </div>
 
                             <div class="row mt-2 card-body">
-                                 {{-- new code 17-04-2026 --}}
+                                {{-- new code 17-04-2026 --}}
                                 <div class="row mt-2 card-body">
 
                                     <!--
+                                                                                                                                                                    <div class="col-md-4 mb-4 fitting-charge-box">
+                                                                                                                                                                        <label class="form-label">Fitting Charges</label>
+                                                                                                                                                                        <input type="number" step="0.01" min="0" name="iFittingCharges"
+                                                                                                                                                                            id="iFittingCharges" class="form-control"
+                                                                                                                                                                            value="{{ old('iFittingCharges', $lead->iFittingCharges) }}">
+                                                                                                                                                                        @error('iFittingCharges')
+        <span class="text-danger d-block">{{ $message }}</span>
+    @enderror
+                                                                                                                                                                    </div> -->
                                     <div class="col-md-4 mb-4 fitting-charge-box">
                                         <label class="form-label">Fitting Charges</label>
                                         <input type="number" step="0.01" min="0" name="iFittingCharges"
@@ -422,31 +437,34 @@
                                         @error('iFittingCharges')
                                             <span class="text-danger d-block">{{ $message }}</span>
                                         @enderror
-                                    </div> -->
-                                    <div class="col-md-4 mb-4 fitting-charge-box">
-                                    <label class="form-label">Fitting Charges</label>
-                                    <input type="number" step="0.01" min="0" name="iFittingCharges"
-                                        id="iFittingCharges" class="form-control"
-                                        value="{{ old('iFittingCharges', $lead->iFittingCharges) }}">
-                                    @error('iFittingCharges')
-                                        <span class="text-danger d-block">{{ $message }}</span>
-                                    @enderror
-                                </div>
+                                    </div>
 
                                     <!-- <div class="col-md-4 mb-4">
+                                                                                                                                                                        <label class="form-label">Delivery Charges</label>
+                                                                                                                                                                        <input type="number" step="0.01" min="0" name="delivery_charges"
+                                                                                                                                                                            id="deliveryCharges" class="form-control"
+                                                                                                                                                                            value="{{ old('delivery_charges', 0) }}">
+                                                                                                                                                                    </div> -->
+                                    <div class="col-md-4 mb-4">
                                         <label class="form-label">Delivery Charges</label>
                                         <input type="number" step="0.01" min="0" name="delivery_charges"
                                             id="deliveryCharges" class="form-control"
-                                            value="{{ old('delivery_charges', 0) }}">
-                                    </div> -->
-                                    <div class="col-md-4 mb-4">
-                                    <label class="form-label">Delivery Charges</label>
-                                    <input type="number" step="0.01" min="0" name="delivery_charges"
-                                        id="deliveryCharges" class="form-control"
-                                        value="{{ old('delivery_charges', (float) ($lead->delivery_charges ?? 0)) }}">
-                                        </div>
+                                            value="{{ old('delivery_charges', (float) ($lead->delivery_charges ?? 0)) }}">
+                                    </div>
+                                    {{-- 20-04-26 --}}
+                                    <div class="col-md-2 mb-4">
+                                        <label class="form-label">Total Sqft</label>
+                                        <input type="text" id="totalSqftAmount" class="form-control" readonly>
+                                    </div>
+
+                                    <div class="col-md-2 mb-4">
+                                        <label class="form-label">Total Product Qty</label>
+                                        <input type="text" id="totalQtyAmount" class="form-control" readonly>
+                                    </div>
+
+                                    {{-- 20-04-26 --}}
                                 </div>
-                                {{-- new code 17-04-2026 --}}
+
                                 <div class="col-md-4 mb-4">
                                     <label class="form-label">Subtotal</label>
                                     <input type="text" id="subtotalAmount" class="form-control" readonly>
@@ -550,7 +568,8 @@
                 @php
                     $currentFittingCharges = (float) ($lead->iFittingCharges ?? 0);
                     $currentDeliveryCharges = (float) ($lead->delivery_charges ?? 0);
-                    $currentDiscount = (int) ($lead->isDiscountApplicable ?? 0) === 1 ? (float) ($lead->decDiscountAmount ?? 0) : 0;
+                    $currentDiscount =
+                        (int) ($lead->isDiscountApplicable ?? 0) === 1 ? (float) ($lead->decDiscountAmount ?? 0) : 0;
                 @endphp
 
                 @if (($quotationHistoryBatches ?? collect())->isNotEmpty())
@@ -561,7 +580,8 @@
                                 <small class="text-muted">Click the eye icon to view product + amount details</small>
                             </div>
                             <p class="small text-muted mb-3">
-                                Note: Fitting/Delivery/Discount/GST are shown using current lead charges for quick comparison.
+                                Note: Fitting/Delivery/Discount/GST are shown using current lead charges for quick
+                                comparison.
                             </p>
                             <div class="table-responsive">
                                 <table class="table table-bordered table-hover quotation-history-table align-middle mb-0">
@@ -581,11 +601,17 @@
                                     </thead>
                                     <tbody>
                                         @foreach ($quotationHistoryBatches as $batch)
-                                         @php
-                                                $batchBeforeDiscount = (float) $batch->subtotal + $currentFittingCharges + $currentDeliveryCharges;
+                                            @php
+                                                $batchBeforeDiscount =
+                                                    (float) $batch->subtotal +
+                                                    $currentFittingCharges +
+                                                    $currentDeliveryCharges;
                                                 $batchDiscount = min($currentDiscount, $batchBeforeDiscount);
                                                 $batchTaxable = max($batchBeforeDiscount - $batchDiscount, 0);
-                                                $batchGst = (int) ($lead->isGstApplicable ?? 0) === 1 ? $batchTaxable * 0.18 : 0;
+                                                $batchGst =
+                                                    (int) ($lead->isGstApplicable ?? 0) === 1
+                                                        ? $batchTaxable * 0.18
+                                                        : 0;
                                                 $batchGrandTotal = $batchTaxable + $batchGst;
                                             @endphp
                                             <tr>
@@ -625,7 +651,7 @@
             </div>
         </div>
     </div>
-  @if (($quotationHistoryBatches ?? collect())->isNotEmpty())
+    @if (($quotationHistoryBatches ?? collect())->isNotEmpty())
         @foreach ($quotationHistoryBatches as $batch)
             <div class="modal fade" id="quotationBatchModal{{ $batch->quotation_batch_id }}" tabindex="-1"
                 aria-labelledby="quotationBatchModalLabel{{ $batch->quotation_batch_id }}" aria-hidden="true">
@@ -636,7 +662,8 @@
                                 id="quotationBatchModalLabel{{ $batch->quotation_batch_id }}">
                                 Quotation Version #{{ $batch->quotation_batch_id }} — Product Details
                             </h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
                             <div class="table-responsive">
@@ -652,6 +679,7 @@
                                             <th>Unit</th>
                                             <th>Width</th>
                                             <th>Height</th>
+                                            <th>Sqft</th>
                                             <th>Rate</th>
                                             <th>Amount</th>
                                             <th>Remarks</th>
@@ -669,7 +697,9 @@
                                                 <td>{{ $historyItem->unit_of_measurement ?? '-' }}</td>
                                                 <td>{{ number_format((float) ($historyItem->decWidth ?? 0), 2) }}</td>
                                                 <td>{{ number_format((float) ($historyItem->decHeight ?? 0), 2) }}</td>
-                                                <td>₹{{ number_format((float) ($historyItem->decRatePerSqft ?? 0), 2) }}</td>
+                                                <td>{{ number_format((float) ($historyItem->decTotalSqft ?? 0), 2) }}</td>
+                                                <td>₹{{ number_format((float) ($historyItem->decRatePerSqft ?? 0), 2) }}
+                                                </td>
                                                 <td>₹{{ number_format((float) ($historyItem->iAmount ?? 0), 2) }}</td>
                                                 <td>{{ $historyItem->remarks ?? '-' }}</td>
                                             </tr>
@@ -677,14 +707,25 @@
                                     </tbody>
                                     <tfoot>
                                         <tr>
-                                            <th colspan="10" class="text-end">Subtotal</th>
+                                            <th colspan="11" class="text-end">Total Sqft</th>
+                                            <th colspan="2">
+                                                {{ number_format((float) $batch->items->sum('decTotalSqft'), 2) }}</th>
+                                            {{-- <th colspan="10" class="text-end">Subtotal</th>
+                                            <th colspan="2">₹{{ number_format((float) $batch->subtotal, 2) }}</th> --}}
+                                        </tr>
+                                        <tr>
+                                            <th colspan="11" class="text-end">Subtotal</th>
                                             <th colspan="2">₹{{ number_format((float) $batch->subtotal, 2) }}</th>
                                         </tr>
                                         @php
-                                            $batchBeforeDiscount = (float) $batch->subtotal + $currentFittingCharges + $currentDeliveryCharges;
+                                            $batchBeforeDiscount =
+                                                (float) $batch->subtotal +
+                                                $currentFittingCharges +
+                                                $currentDeliveryCharges;
                                             $batchDiscount = min($currentDiscount, $batchBeforeDiscount);
                                             $batchTaxable = max($batchBeforeDiscount - $batchDiscount, 0);
-                                            $batchGst = (int) ($lead->isGstApplicable ?? 0) === 1 ? $batchTaxable * 0.18 : 0;
+                                            $batchGst =
+                                                (int) ($lead->isGstApplicable ?? 0) === 1 ? $batchTaxable * 0.18 : 0;
                                             $batchGrandTotal = $batchTaxable + $batchGst;
                                         @endphp
                                         <tr>
@@ -823,6 +864,9 @@
 
             function recalculateTotals() {
                 let subtotal = 0;
+                let totalSqft = 0;
+                let totalQty = 0;
+
 
                 $('#quotationRows .quotation-row').each(function() {
                     const qty = parseFloat($(this).find('.quantity').val()) || 0;
@@ -845,6 +889,7 @@
                         finalHeight = hData.feet;
                         finalWidth = wData.feet;
                     }
+                    const lineSqft = qty * finalHeight * finalWidth;
                     const lineAmount = qty * finalHeight * finalWidth * rate;
 
                     // const calculationHeight = normalizeDimensionForAmount(height, multiple);
@@ -852,8 +897,11 @@
                     // const lineAmount = qty * calculationHeight * calculationWidth * rate;
 
                     subtotal += lineAmount;
+                    totalSqft += lineSqft;
+                    totalQty += qty;
+                    $(this).find('.lineSqft').val(lineSqft.toFixed(2));
                     $(this).find('.lineAmount').val(lineAmount.toFixed(2));
-                    
+
                 });
 
                 // 17-04-2026
@@ -872,6 +920,8 @@
 
 
                 $('#subtotalAmount').val(baseAmount.toFixed(2));
+                $('#totalSqftAmount').val(totalSqft.toFixed(2));
+                $('#totalQtyAmount').val(totalQty.toFixed(0));
                 $('#amountBeforeGst').val(afterDiscount.toFixed(2));
                 $('#gstAmount').val(gst.toFixed(2));
                 $('#grandTotalAmount').val((afterDiscount + gst).toFixed(2));
@@ -1008,12 +1058,19 @@
                 <label class="form-label">Height <span style="color:red;">*</span></label>
                 <input type="number" step="0.01" min="0" name="items[${nextIndex}][decHeight]" class="form-control decHeight" required>
             </div>
+            <div class="col-md-1">
+                <label class="form-label">Sqft</label>
+                <input type="text" class="form-control lineSqft" readonly>
+            </div>
             
             <div class="col-md-1">
                 <label class="form-label">Rate <span style="color:red;">*</span></label>
                 <input type="number" step="0.01" min="0" name="items[${nextIndex}][decRatePerSqft]" class="form-control decRatePerSqft" required>
             </div>
 
+           
+           
+           
             <div class="col-md-1">
                 <label class="form-label">Amount</label>
                 <input type="text" name="items[${nextIndex}][iAmount]" class="form-control lineAmount" readonly>
@@ -1054,7 +1111,7 @@
             });
 
             $(document).on('input change',
-                '.quantity, .decHeight, .decWidth, .calc-multiple, .decRatePerSqft, #iFittingCharges, #deliveryCharges, .row-product-select, #isDiscountApplicable, #discountAmount, #isGstApplicable',
+                '.quantity, .decHeight, .decWidth, .calc-multiple, .decRatePerSqft, .unit-of-measurement, #iFittingCharges, #deliveryCharges, .row-product-select, #isDiscountApplicable, #discountAmount, #isGstApplicable',
                 function() {
                     toggleDiscountBox();
                     recalculateTotals();

@@ -18,7 +18,7 @@
                                 </p>
                             </div>
                             <a href="{{ route('Paymentcollection.Create') }}" class="btn btn-primary">
-                                <i class="fas fa-plus me-1"></i> Create Payment
+                                <i class="fas fa-plus me-1"></i> Collect Payment
                             </a>
                         </div>
                     </div>

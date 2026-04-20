@@ -7,6 +7,7 @@ use App\Models\Lead;
 use App\Models\LeadHistory;
 use App\Models\LeadPayment;
 use App\Support\LeadWorkflow;
+use App\Models\QuotationCancelReason;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -57,6 +58,12 @@ class LeadHistoryController extends Controller
         $isReadOnly = LeadWorkflow::readOnlyForRole($roleSlug, $lead->iCurrentLeadStatus)
             || in_array($lead->iCurrentLeadStatus, LeadWorkflow::terminalStatuses());
 
+        $cancelReasons = QuotationCancelReason::query()
+            ->where('isDelete', 0)
+            ->where('iStatus', 1)
+            ->orderBy('reason')
+            ->get(['id', 'reason']);
+
         return view('store-manager.lead-histories.index', compact(
             'lead',
             'histories',
@@ -64,7 +71,8 @@ class LeadHistoryController extends Controller
             'roleSlug',
             'isReadOnly',
             'canCloseDeal',
-            'canViewFinancial'
+            'canViewFinancial',
+            'cancelReasons'
         ));
     }
 
@@ -109,6 +117,8 @@ class LeadHistoryController extends Controller
         // Rejection reason required
         if ($isRejection) {
             $rules['rejection_reason'] = 'required|string|max:500';
+            $rules['rejection_reason_id'] = 'required|integer|exists:quotation_cancel_reasons,id';
+            $rules['rejection_reason_note'] = 'nullable|string|max:500';
         }
 
          if ($isQuotationApproved) {
@@ -146,8 +156,20 @@ class LeadHistoryController extends Controller
             $comments = $request->strComments;
 
             // Append rejection reason to comments if rejection
-            if ($isRejection && $request->filled('rejection_reason')) {
-                $comments = 'Rejection Reason: ' . $request->rejection_reason . "\n" . $comments;
+            if ($isRejection) {
+                $reasonName = QuotationCancelReason::query()
+                    ->where('isDelete', 0)
+                    ->where('iStatus', 1)
+                    ->whereKey($request->rejection_reason_id)
+                    ->value('reason');
+
+                if (!empty($reasonName)) {
+                    $comments = 'Rejection Reason: ' . $reasonName . "\n" . $comments;
+                }
+
+                if ($request->filled('rejection_reason_note')) {
+                    $comments = 'Rejection Note: ' . $request->rejection_reason_note . "\n" . $comments;
+                }
             }
 
             LeadHistory::create([

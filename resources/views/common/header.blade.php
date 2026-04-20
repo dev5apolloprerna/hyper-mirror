@@ -66,6 +66,12 @@
                         <a class="dropdown-item" href="{{ route('profile.detail') }}"><i
                                 class="mdi mdi-account-circle text-muted fs-16 align-middle me-1"></i> <span
                                 class="align-middle">Profile</span></a>
+                         <a class="dropdown-item" href="{{ route('admin.invoice-settings.edit') }}"><i
+                                class="mdi mdi-cog text-muted fs-16 align-middle me-1"></i> <span
+                                class="align-middle">Settings</span></a>
+
+
+
                         <a class="dropdown-item" href="{{ route('logout') }}"><i
                                 class="mdi mdi-logout text-muted fs-16 align-middle me-1"></i> <span
                                 class="align-middle" data-key="t-logout">Logout</span></a>

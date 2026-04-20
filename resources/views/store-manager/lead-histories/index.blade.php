@@ -235,11 +235,12 @@
                                             <thead class="table-light">
                                                 <tr>
                                                     <th>#</th>
+                                                    <th>Category</th>
                                                     <th>Product</th>
                                                     <th>Shape</th>
                                                     <th>Unit</th>
                                                     <th>Qty</th>
-                                                    <th>H × W</th>
+                                                    <th>W × H</th>
                                                     @if(in_array($roleSlug, ['storemanager', 'account']) && $canViewFinancial)
                                                         <th>Rate</th>
                                                         <th>Amount</th>
@@ -256,12 +257,13 @@
 
                                                 @foreach($activeQuotations as $i => $q)
                                                     <tr>
-                                                        <td>{{ $i + 1 }}</td>
+                                                        <td>{{ $i + 1 }}</td>  
+                                                        <td>{{ optional($q->category)->strCategoryName ?? '—' }}</td>                               
                                                         <td>{{ optional($q->product)->strProductName ?? '—' }}</td>
                                                         <td>{{ optional($q->shape)->shape_title ?? '—' }}</td>
                                                         <td>{{ $q->unit_of_measurement ?? '—' }}</td>
                                                         <td>{{ $q->quantity ?? 1 }}</td>
-                                                        <td>{{ $q->decHeight }} × {{ $q->decWidth }}</td>
+                                                         <td>{{ $q->decWidth }} × {{ $q->decHeight }}</td>
                                                         @if(in_array($roleSlug, ['storemanager', 'account']) && $canViewFinancial)
                                                             <td>₹{{ number_format((float)$q->decRatePerSqft, 2) }}</td>
                                                             <td>₹{{ number_format((float)$q->iAmount, 2) }}</td>
@@ -281,30 +283,30 @@
 
                                                 <tfoot>
                                                     <tr>
-                                                        <th colspan="7" class="text-end">Subtotal</th>
+                                                        <th colspan="8" class="text-end">Subtotal</th>
                                                         <th>₹{{ number_format($subtotalAmount, 2) }}</th>
                                                     </tr>
                                                     @if($fittingCharges > 0)
                                                         <tr>
-                                                            <th colspan="7" class="text-end">Fitting Charges</th>
+                                                            <th colspan="8" class="text-end">Fitting Charges</th>
                                                             <th>₹{{ number_format($fittingCharges, 2) }}</th>
                                                         </tr>
                                                     @endif
                                                     @if((int) ($lead->isDiscountApplicable ?? 0) === 1 && $discountAmount > 0)
                                                         <tr>
-                                                            <th colspan="7" class="text-end">Discount</th>
+                                                            <th colspan="8" class="text-end">Discount</th>
                                                             <th>- ₹{{ number_format($discountAmount, 2) }}</th>
                                                         </tr>
                                                     @endif
                                                     @if((int) ($lead->isGstApplicable ?? 0) === 1 && $gstAmount > 0)
                                                         <tr>
-                                                            <th colspan="7" class="text-end">GST (18%)</th>
+                                                            <th colspan="8" class="text-end">GST (18%)</th>
                                                             <th>₹{{ number_format($gstAmount, 2) }}</th>
                                                         </tr>
                                                     @endif
 
                                                     <tr>
-                                                        <th colspan="7" class="text-end">Total</th>
+                                                        <th colspan="8" class="text-end">Total</th>
                                                         <th>₹{{ number_format((float)($lead->iLeadAmount ?? ($amountAfterDiscount + $gstAmount)), 2) }}</th>
                                                     </tr>
                                                 </tfoot>
@@ -432,13 +434,28 @@
                                     {{-- Rejection Reason --}}
                                     <div class="mb-3" id="rejectionReasonWrapper" style="display:none;">
                                         <label class="form-label fw-semibold text-danger">
-                                            Rejection Reason <span class="text-danger">*</span>
+                                            Quotation Cancel Reason <span class="text-danger">*</span>
                                         </label>
-                                        <textarea name="rejection_reason" id="rejection_reason"
-                                                  class="form-control @error('rejection_reason') is-invalid @enderror"
-                                                  rows="3"
-                                                  placeholder="Enter the reason for rejecting this lead...">{{ old('rejection_reason') }}</textarea>
-                                        @error('rejection_reason')
+                                        <select name="rejection_reason_id" id="rejection_reason_id"
+                                                class="form-select @error('rejection_reason_id') is-invalid @enderror">
+                                            <option value="">— Select cancel reason —</option>
+                                            @foreach($cancelReasons as $cancelReason)
+                                                <option value="{{ $cancelReason->id }}" {{ (string) old('rejection_reason_id') === (string) $cancelReason->id ? 'selected' : '' }}>
+                                                    {{ $cancelReason->reason }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        @error('rejection_reason_id')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                    <div class="mt-2">
+                                        <label class="form-label fw-semibold mb-1">Additional Note (Optional)</label>
+                                        <textarea name="rejection_reason_note" id="rejection_reason_note"
+                                                  class="form-control @error('rejection_reason_note') is-invalid @enderror"
+                                                  rows="2"
+                                                  placeholder="Add extra details (optional)">{{ old('rejection_reason_note') }}</textarea>
+                                        @error('rejection_reason_note')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
                                     </div>
@@ -672,7 +689,7 @@
                             <th style="border:1px solid #cbd5e1; padding:6px;">Shape</th>
                             <th style="border:1px solid #cbd5e1; padding:6px;">Unit</th>
                             <th style="border:1px solid #cbd5e1; padding:6px;">Qty</th>
-                            <th style="border:1px solid #cbd5e1; padding:6px;">H × W</th>
+                            <th style="border:1px solid #cbd5e1; padding:6px;">W × H</th>
                             @if($canViewFinancial)
                                 <th style="border:1px solid #cbd5e1; padding:6px;">Rate/Sqft</th>
                                 <th style="border:1px solid #cbd5e1; padding:6px;">Amount</th>
@@ -688,7 +705,7 @@
                                 <td style="border:1px solid #cbd5e1; padding:6px;">{{ optional($q->shape)->shape_title ?? '—' }}</td>
                                 <td style="border:1px solid #cbd5e1; padding:6px; text-align:center;">{{ $q->unit_of_measurement ?? '—' }}</td>
                                 <td style="border:1px solid #cbd5e1; padding:6px; text-align:center;">{{ $q->quantity ?? 1 }}</td>
-                                <td style="border:1px solid #cbd5e1; padding:6px; text-align:center;">{{ $q->decHeight }} × {{ $q->decWidth }}</td>
+                                <td style="border:1px solid #cbd5e1; padding:6px; text-align:center;">{{ $q->decWidth }} × {{ $q->decHeight }}</td>
                                 @if($canViewFinancial)
                                     <td style="border:1px solid #cbd5e1; padding:6px; text-align:right;">₹{{ number_format((float)$q->decRatePerSqft, 2) }}</td>
                                     <td style="border:1px solid #cbd5e1; padding:6px; text-align:right;">₹{{ number_format((float)$q->iAmount, 2) }}</td>
@@ -755,7 +772,8 @@ const followupInput           = document.getElementById('NetFolloupwdate');
 const followupReqStar         = document.getElementById('followupRequired');
 const followupHint            = document.getElementById('followupHint');
 const rejectionWrapper        = document.getElementById('rejectionReasonWrapper');
-const rejectionInput          = document.getElementById('rejection_reason');
+//const rejectionInput          = document.getElementById('rejection_reason');
+const rejectionSelect         = document.getElementById('rejection_reason_id');
 const expectedDeliveryWrapper = document.getElementById('expectedDeliveryWrapper');
 const expectedDeliveryInput   = document.getElementById('expected_delivery_date');
 
@@ -771,7 +789,8 @@ function updateFormFields() {
 
     if (rejectionWrapper) {
         rejectionWrapper.style.display = isReject ? 'block' : 'none';
-        if (rejectionInput) rejectionInput.required = isReject;
+       // if (rejectionInput) rejectionInput.required = isReject;
+        if (rejectionSelect) rejectionSelect.required = isReject;
     }
 
     if (followupWrapper) {
