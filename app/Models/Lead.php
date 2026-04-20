@@ -35,6 +35,7 @@ class Lead extends Model
         'iQuotationId',
         'iCreatedBy',
         'iShowroomId',
+        'delivery_charges',
     ];
 
     public function customer()
@@ -72,5 +73,4 @@ class Lead extends Model
     {
         return $this->hasMany(LeadPayment::class, 'iLeadId', 'iLeadId');
     }
-
 }

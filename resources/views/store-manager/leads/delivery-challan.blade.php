@@ -7,9 +7,9 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            font-family: Arial, sans-serif;
+            font-family: DejaVu Sans, Arial, sans-serif;
             font-size: 13px;
-            color: #1e293b;
+            color: #222;
             padding: 30px;
         }
         .dc-header .brand-logo {
@@ -25,14 +25,22 @@
             padding-bottom: 14px;
             margin-bottom: 22px;
         }
-        .dc-header h1 { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
-        .dc-header .challan-title {
-            font-size: 16px;
+        .dc-header .company-title {
+            font-size: 20px;
             font-weight: 700;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            color: #334155;
+            text-align: center;
             margin-bottom: 4px;
+        }
+        .dc-header .company-title {
+            font-size: 20px;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 4px;
+        }
+        .dc-header .challan-title {
+            text-align: center;
+            font-size: 12px;
+            margin-bottom: 12px;
         }
         .dc-header .meta { font-size: 11px; color: #64748b; }
 
@@ -126,6 +134,7 @@
 </head>
 <body>
  @php
+         $companyTitle = config('app.name', 'Mirror CRM');
         $logoPath = base_path('assets/images/logo.png');
         $logoSrc = file_exists($logoPath) ? $logoPath : null;
     @endphp
@@ -142,8 +151,8 @@
 
     {{-- Header --}}
     <div class="dc-header">
-        <img src="{{ asset('assets/images/logo.png') }}" alt="{{ config('app.name', 'Mirror CRM') }} Logo" class="brand-logo">
-        <h1>{{ config('app.name', 'Mirror CRM') }}</h1>
+        <img src="{{ asset('assets/images/logo.png') }}" alt="{{ $companyTitle }} Logo" class="brand-logo">
+        <div class="company-title">{{ $companyTitle }}</div>
         <div class="challan-title">Delivery Challan</div>
         <p class="meta">Challan No: <strong>DC-{{ $lead->strLeadNo }}</strong> &nbsp;|&nbsp; Date: <strong>{{ now()->format('d-m-Y') }}</strong></p>
     </div>
@@ -181,8 +190,8 @@
                 <th>Feature</th>
                 <th>UOM</th>
                 <th class="center">Qty</th>
-                <th class="center">Height</th>
                 <th class="center">Width</th>
+                <th class="center">Height</th>
                 <th class="center">Sqft</th>
                 <!-- <th>Remarks</th> -->
             </tr>
@@ -197,8 +206,8 @@
                     <td>{{ optional($item->feature)->feature_name ?? '—' }}</td>
                     <td>{{ $item->unit_of_measurement ?? '—' }}</td>
                     <td class="center">{{ $item->quantity ?? 1 }}</td>
-                    <td class="center">{{ $item->decHeight ?? '—' }}</td>
                     <td class="center">{{ $item->decWidth ?? '—' }}</td>
+                    <td class="center">{{ $item->decHeight ?? '—' }}</td>
                     <td class="center">{{ number_format((float) ($item->decTotalSqft ?? 0), 2) }}</td>
                     <!-- <td>{{ $item->remarks ?? '' }}</td> -->
                 </tr>
@@ -231,7 +240,7 @@
         <div class="sig-box">
             <div class="sig-label">Delivered By</div>
             <div class="sig-line"></div>
-            <div class="sig-name">{{ config('app.name') }}</div>
+            <div class="sig-name">{{ $companyTitle }}</div>
         </div>
         <div class="sig-box">
             <div class="sig-label">Authorised Signatory</div>
@@ -241,8 +250,7 @@
     </div>
 
     <div class="dc-footer">
-        This is a computer-generated delivery challan. &nbsp;|&nbsp; {{ config('app.name') }} &nbsp;|&nbsp; {{ now()->format('d-m-Y H:i A') }}
-    </div>
+        This is a computer-generated delivery challan. &nbsp;|&nbsp; {{ $companyTitle }} &nbsp;|&nbsp; {{ now()->format('d-m-Y H:i A') }}    </div>
 
 </body>
 </html>

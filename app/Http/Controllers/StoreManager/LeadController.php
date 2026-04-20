@@ -148,7 +148,7 @@ class LeadController extends Controller
     public function store(Request $request)
     {
 
-        abort_unless(LeadWorkflow::canEditLeadDetails($lead->iCurrentLeadStatus), 403, 'Lead cannot be edited after quotation approval.');
+        //abort_unless(LeadWorkflow::canEditLeadDetails($lead->iCurrentLeadStatus), 403, 'Lead cannot be edited after quotation approval.');
         //abort_unless(optional(auth()->user()->crmRole)->slug === 'storemanager', 403);
 
         $data = $request->validate([
@@ -738,7 +738,11 @@ class LeadController extends Controller
 
         $canViewFinancial = (bool) auth()->user()->can_view_financial;
 
-        return view('store-manager.leads.quotation-view', compact('lead', 'canViewFinancial'));
+        $roleSlug = optional(auth()->user()->crmRole)->slug;
+        $canViewFittingCharges = $roleSlug === 'fitting';
+        $dispatch = $roleSlug === 'dispatch';
+
+        return view('store-manager.leads.quotation-view', compact('lead', 'canViewFinancial', 'canViewFittingCharges', 'dispatch'));
     }
 
     // ── Quotation PDF ────────────────────────────────────────────────────────
@@ -768,8 +772,11 @@ class LeadController extends Controller
 
         //$pdf = Pdf::loadView('store-manager.leads.quotation-pdf-document', compact('lead', 'canViewFinancial'));
         $invoicePdfSetting = InvoicePdfSetting::query()->first();
+        $roleSlug = optional(auth()->user()->crmRole)->slug;
+        $canViewFittingCharges = $roleSlug === 'fitting';
+        $dispatch = $roleSlug === 'dispatch';
 
-        $pdf = Pdf::loadView('store-manager.leads.quotation-pdf-document', compact('lead', 'canViewFinancial', 'invoicePdfSetting'));
+        $pdf = Pdf::loadView('store-manager.leads.quotation-pdf-document', compact('lead', 'canViewFinancial', 'invoicePdfSetting', 'canViewFittingCharges', 'dispatch'));
         $pdf->setPaper('a4', 'portrait');
 
         return $pdf->stream('quotation-' . $lead->strLeadNo . '.pdf');
