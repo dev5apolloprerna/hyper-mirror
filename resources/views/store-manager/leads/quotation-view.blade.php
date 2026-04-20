@@ -37,6 +37,7 @@
                     <div class="card-body">
 
                         @php
+                            $DeliveryCharges = (float) ($lead->delivery_charges ?? 0);
                             $subtotalAmount = (float) $lead->quotations->sum('iAmount');
                             $fittingCharges = (float) ($lead->iFittingCharges ?? 0);
                             $discountAmount =
@@ -183,6 +184,28 @@
                                                 </tr>
                                             @endforeach
                                         </tbody>
+                                        @if ($canViewFittingCharges && $fittingCharges > 0)
+                                            <tfoot>
+                                                <tr>
+                                                    <th colspan="6"></th>
+                                                    <th colspan="2" class="text-end">Fitting Charges</th>
+                                                    <th class="text-end">
+                                                        ₹{{ number_format($fittingCharges, 2) }}
+                                                    </th>
+                                                </tr>
+                                            </tfoot>
+                                        @endif
+                                        @if ($dispatch && $DeliveryCharges > 0)
+                                            <tfoot>
+                                                <tr>
+                                                    <th colspan="6"></th>
+                                                    <th colspan="2" class="text-end">Delivery Charges</th>
+                                                    <th class="text-end">
+                                                        ₹{{ number_format($DeliveryCharges, 2) }}
+                                                    </th>
+                                                </tr>
+                                            </tfoot>
+                                        @endif
                                         @if ($canViewFinancial)
                                             <tfoot>
                                                 <tr>
@@ -195,6 +218,12 @@
                                                     <tr>
                                                         <th colspan="9" class="text-end">Fitting Charges</th>
                                                         <th colspan="3">₹{{ number_format($fittingCharges, 2) }}</th>
+                                                    </tr>
+                                                @endif
+                                                @if ($DeliveryCharges > 0)
+                                                    <tr>
+                                                        <th colspan="9" class="text-end">Delivery Charges</th>
+                                                        <th colspan="3">₹{{ number_format($DeliveryCharges, 2) }}</th>
                                                     </tr>
                                                 @endif
                                                 @if ((int) ($lead->isDiscountApplicable ?? 0) === 1)

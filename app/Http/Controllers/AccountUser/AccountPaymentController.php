@@ -47,7 +47,35 @@ class AccountPaymentController extends Controller
                 ->groupBy('emp_id')
                 ->get();
 
-            return view('Accountuser.paymentcollection.index', compact('payments', 'totalCollection', 'userBalances'));
+            $latestStoreLedger = DB::table('cash_payment_ledger as cpl')
+                ->join(
+                    DB::raw('(SELECT emp_id, MAX(cash_payment_ledger_id) as max_id FROM cash_payment_ledger WHERE UserType = 1 GROUP BY emp_id) as latest'),
+                    function ($join) {
+                        $join->on('cpl.emp_id', '=', 'latest.emp_id')
+                            ->on('cpl.cash_payment_ledger_id', '=', 'latest.max_id');
+                    }
+                )
+                ->select('cpl.emp_id', 'cpl.close as pending_amount');
+
+            $pendingCollections = DB::query()
+                ->fromSub($latestStoreLedger, 'ledger')
+                ->join('users', 'users.id', '=', 'ledger.emp_id')
+                ->where('ledger.pending_amount', '>', 0)
+                ->select(
+                    'users.id',
+                    'users.first_name',
+                    'users.last_name',
+                    'users.mobile_number',
+                    'ledger.pending_amount'
+                )
+                ->orderByDesc('ledger.pending_amount')
+                ->get();
+            $totalPendingCollection = (float) $pendingCollections->sum('pending_amount');
+
+            return view(
+                'Accountuser.paymentcollection.index',
+                compact('payments', 'totalCollection', 'pendingCollections', 'totalPendingCollection')
+            );
         } catch (\Exception $e) {
             DB::rollback();
             return back()
