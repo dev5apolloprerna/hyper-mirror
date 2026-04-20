@@ -25,14 +25,14 @@
     }
 
     .header-logo {
-        width: 100px;
+        width: 150px;
         height: auto;
         display: block;
         margin: 0 auto 6px;
     }
 
     .company-title {
-        font-size: 22px;
+        font-size: 15px;
         font-weight: 700;
         line-height: 1.1;
         margin-bottom: 4px;
@@ -40,7 +40,7 @@
     }
 
     .doc-subtitle {
-        font-size: 16px;
+        font-size: 12px;
         margin: 0;
         text-align: center;
     }
