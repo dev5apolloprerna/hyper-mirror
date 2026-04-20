@@ -4,177 +4,205 @@
 <head>
     <meta charset="UTF-8">
     <title>Quotation {{ $lead->strLeadNo }}</title>
-    <style>
-        @page {
-            margin: 24px;
-        }
+   <style>
+    @page {
+        margin: 24px;
+    }
 
-        body {
-            font-family: DejaVu Sans, Arial, sans-serif;
-            font-size: 11px;
-            color: #222;
-        }
+    body {
+        font-family: DejaVu Sans, Arial, sans-serif;
+        font-size: 11px;
+        color: #2b2f33;
+    }
 
-        .company-title {
-            font-size: 20px;
-            font-weight: 700;
-            text-align: center;
-            margin-bottom: 4px;
-        }
+    /* centered header */
+    .header-wrap {
+        width: 100%;
+        text-align: center;
+        margin-bottom: 10px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #d1d5db;
+    }
 
-        .doc-subtitle {
-            text-align: center;
-            font-size: 12px;
-            margin-bottom: 12px;
-        }
+    .header-logo {
+        width: 100px;
+        height: auto;
+        display: block;
+        margin: 0 auto 6px;
+    }
 
-        .meta-table,
-        .party-table,
-        .items-table,
-        .summary-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
+    .company-title {
+        font-size: 22px;
+        font-weight: 700;
+        line-height: 1.1;
+        margin-bottom: 4px;
+        text-align: center;
+    }
 
-        .meta-table td {
-            border: 1px solid #cfcfcf;
-            padding: 6px 8px;
-        }
+    .doc-subtitle {
+        font-size: 16px;
+        margin: 0;
+        text-align: center;
+    }
 
-        .label {
-            width: 20%;
-            background: #f5f5f5;
-            font-weight: 700;
-        }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
 
-        .party-wrap {
-            margin-top: 12px;
-        }
+    .meta-table td {
+        border: 1px solid #cfcfcf;
+        padding: 6px 8px;
+    }
 
-        .party-table td {
-            border: 1px solid #cfcfcf;
-            vertical-align: top;
-            padding: 8px;
-        }
+    .label {
+        width: 20%;
+        background: #f5f5f5;
+        font-weight: 700;
+    }
 
-        .party-title {
-            font-size: 12px;
-            font-weight: 700;
-            margin-bottom: 6px;
-        }
+    .party-wrap {
+        margin-top: 12px;
+    }
 
-        .section-title {
-            margin-top: 14px;
-            margin-bottom: 6px;
-            font-weight: 700;
-            font-size: 12px;
-        }
+    .party-table td {
+        border: 1px solid #cfcfcf;
+        vertical-align: top;
+        padding: 8px;
+    }
 
-        .items-table th,
-        .items-table td {
-            border: 1px solid #cfcfcf;
-            padding: 6px 5px;
-            vertical-align: top;
-        }
+    .party-title {
+        font-size: 12px;
+        font-weight: 700;
+        margin-bottom: 6px;
+    }
 
-        .items-table th {
-            background: #1f2937;
-            color: #ffffff;
-            font-size: 10px;
-            text-align: left;
-        }
+    .section-title {
+        margin-top: 14px;
+        margin-bottom: 6px;
+        font-weight: 700;
+        font-size: 12px;
+    }
 
-        .text-right {
-            text-align: right;
-        }
+    .items-table th,
+    .items-table td {
+        border: 1px solid #cfcfcf;
+        padding: 6px 5px;
+        vertical-align: top;
+    }
 
-        .summary-wrap {
-            margin-top: 10px;
-            width: 42%;
-            margin-left: auto;
-        }
+    .items-table th {
+        background: #1f2937;
+        color: #ffffff;
+        font-size: 10px;
+        text-align: left;
+    }
 
-        .summary-table td {
-            border: 1px solid #cfcfcf;
-            padding: 6px 8px;
-        }
+    .text-right {
+        text-align: right;
+    }
 
-        .summary-table .total td {
-            font-weight: 700;
-            background: #f5f5f5;
-        }
+    .detail-title {
+        background: #e5e7eb;
+        border: 1px solid #cfcfcf;
+        padding: 6px 8px;
+        font-weight: 700;
+        font-size: 11px;
+    }
 
-        /* .notice {
-            margin-top: 12px;
-            padding: 8px;
-            border: 1px solid #facc15;
-            background: #fffbeb;
-            font-size: 10px;
-        } */
+    .detail-body {
+        border: 1px solid #cfcfcf;
+        border-top: 0;
+        padding: 8px;
+        font-size: 10px;
+        line-height: 1.5;
+    }
 
-        .signatures {
-            margin-top: 42px;
-        }
+    .detail-body p {
+        margin: 0 0 6px;
+    }
 
-        .signatures td {
-            width: 50%;
-            text-align: center;
-            vertical-align: bottom;
-            padding-top: 40px;
-        }
+    .detail-body ul,
+    .detail-body ol {
+        margin: 0 0 6px 18px;
+        padding: 0;
+    }
 
-        .sign-line {
-            border-top: 1px solid #444;
-            width: 180px;
-            margin: 0 auto 5px;
-        }
+    .summary-terms-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 14px;
+    }
 
-        .signatures {
-            width: 100%;
-            margin-top: 80px;
-            border-collapse: collapse;
-            table-layout: fixed;
-        }
+    .summary-terms-table td {
+        vertical-align: top;
+    }
 
-        .signatures td {
-            width: 50%;
-            vertical-align: top;
-        }
+    .summary-cell {
+        width: 42%;
+        padding-left: 14px;
+    }
 
-        .left-sign {
-            text-align: left;
-        }
+    .terms-cell {
+        width: 58%;
+    }
 
-        .right-sign {
-            text-align: right;
-        }
+    .summary-table td {
+        border: 1px solid #cfcfcf;
+        padding: 6px 8px;
+    }
 
-        .sign-line {
-            width: 180px;
-            border-top: 1px solid #888;
-            margin-bottom: 8px;
-        }
+    .summary-table .total td {
+        font-weight: 700;
+        background: #f5f5f5;
+    }
 
-        .left-sign .sign-line {
-            margin-left: 0;
-            margin-right: auto;
-        }
+    .signatures {
+        width: 100%;
+        margin-top: 80px;
+        border-collapse: collapse;
+        table-layout: fixed;
+    }
 
-        .right-sign .sign-line {
-            margin-left: auto;
-            margin-right: 0;
-        }
+    .signatures td {
+        width: 50%;
+        vertical-align: top;
+    }
 
-        .sign-text-left {
-            width: 100%;
-            text-align: left;
-        }
+    .left-sign {
+        text-align: left;
+    }
 
-        .sign-text-right {
-            width: 100%;
-            text-align: right;
-        }
-    </style>
+    .right-sign {
+        text-align: right;
+    }
+
+    .sign-line {
+        width: 180px;
+        border-top: 1px solid #888;
+        margin-bottom: 8px;
+    }
+
+    .left-sign .sign-line {
+        margin-left: 0;
+        margin-right: auto;
+    }
+
+    .right-sign .sign-line {
+        margin-left: auto;
+        margin-right: 0;
+    }
+
+    .sign-text-left {
+        width: 100%;
+        text-align: left;
+    }
+
+    .sign-text-right {
+        width: 100%;
+        text-align: right;
+    }
+</style>
 </head>
 
 <body>
@@ -190,11 +218,22 @@
                 ? (float) ($lead->decGstAmount ?? $amountAfterDiscount * 0.18)
                 : 0;
         $netAmount = $amountAfterDiscount;
+                $logoPath = base_path('assets/images/logo.png');
+        $termsAndConditions = trim((string) optional($invoicePdfSetting ?? null)->terms_and_conditions);
     @endphp
+
+    @php
+    $logoPath = base_path('assets/images/logo.png');
+@endphp
+
+<div class="header-wrap">
+    @if (file_exists($logoPath))
+        <img src="{{ $logoPath }}" alt="Company Logo" class="header-logo">
+    @endif
 
     <div class="company-title">{{ config('app.name', 'Mirror CRM') }}</div>
     <div class="doc-subtitle">Quotation Document</div>
-
+</div>
     <table class="meta-table">
         <tr>
             <td class="label">Quotation No</td>
@@ -283,43 +322,61 @@
         </tbody>
     </table>
 
-    @if ($canViewFinancial)
-        <div class="summary-wrap">
-            <table class="summary-table">
-                <tr>
-                    <td>Subtotal</td>
-                    <td class="text-right">₹{{ number_format($subtotalAmount, 2) }}</td>
-                </tr>
-                @if ($fittingCharges > 0)
-                    <tr>
-                        <td>Fitting Charges</td>
-                        <td class="text-right">₹{{ number_format($fittingCharges, 2) }}</td>
-                    </tr>
-                @endif
-                @if ((int) ($lead->isDiscountApplicable ?? 0) === 1 && $discountAmount > 0)
-                    <tr>
-                        <td>Discount Amount</td>
-                        <td class="text-right">- ₹{{ number_format($discountAmount, 2) }}</td>
-                    </tr>
-                @endif
-                <tr>
-                    <td>Net Amount</td>
-                    <td class="text-right">₹{{ number_format($netAmount, 2) }}</td>
-                </tr>
-                @if ((int) ($lead->isGstApplicable ?? 0) === 1)
-                    <tr>
-                        <td>GST (18%)</td>
-                        <td class="text-right">₹{{ number_format($gstAmount, 2) }}</td>
-                    </tr>
-                @endif
-                <tr class="total">
-                    <td>Grand Total</td>
-                    <td class="text-right">
-                        ₹{{ number_format((float) ($lead->iLeadAmount ?? $netAmount + $gstAmount), 2) }}</td>
-                </tr>
-            </table>
-        </div>
-    @endif
+   <table class="summary-terms-table">
+        <tr>
+            <td class="terms-cell">
+                <div class="detail-title">Terms and Conditions</div>
+                <div class="detail-body">
+                    @if ($termsAndConditions !== '')
+                        {!! $termsAndConditions !!}
+                    @else
+                        <ol>
+                            <li>Prices are valid for 7 days from the quotation date.</li>
+                            <li>Material dispatch and installation schedule will be confirmed after order confirmation.</li>
+                            <li>Any change in dimensions/specifications after approval may revise the final amount.</li>
+                            <li>Taxes and additional charges, if applicable, will be charged as per actuals.</li>
+                        </ol>
+                    @endif
+                </div>
+            </td>
+            @if ($canViewFinancial)
+                <td class="summary-cell">
+                    <table class="summary-table">
+                        <tr>
+                            <td>Subtotal</td>
+                            <td class="text-right">₹{{ number_format($subtotalAmount, 2) }}</td>
+                        </tr>
+                        @if ($fittingCharges > 0)
+                            <tr>
+                                <td>Fitting Charges</td>
+                                <td class="text-right">₹{{ number_format($fittingCharges, 2) }}</td>
+                            </tr>
+                        @endif
+                        @if ((int) ($lead->isDiscountApplicable ?? 0) === 1 && $discountAmount > 0)
+                            <tr>
+                                <td>Discount Amount</td>
+                                <td class="text-right">- ₹{{ number_format($discountAmount, 2) }}</td>
+                            </tr>
+                        @endif
+                        <tr>
+                            <td>Net Amount</td>
+                            <td class="text-right">₹{{ number_format($netAmount, 2) }}</td>
+                        </tr>
+                        @if ((int) ($lead->isGstApplicable ?? 0) === 1)
+                            <tr>
+                                <td>GST (18%)</td>
+                                <td class="text-right">₹{{ number_format($gstAmount, 2) }}</td>
+                            </tr>
+                        @endif
+                        <tr class="total">
+                            <td>Grand Total</td>
+                            <td class="text-right">₹{{ number_format((float) ($lead->iLeadAmount ?? $netAmount + $gstAmount), 2) }}</td>
+                        </tr>
+                    </table>
+                </td>
+            @endif
+        </tr>
+    </table>
 
     <table class="signatures">
         <tr>
