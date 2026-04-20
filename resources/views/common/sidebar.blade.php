@@ -19,10 +19,15 @@
                 <li class="nav-item">
                     <a class="nav-link" href="#sidebarMore" data-bs-toggle="collapse" role="button"
                         aria-expanded="true" aria-controls="sidebarMore">
-                        <i class="ri-briefcase-2-line text-white"></i> Product Master</a>
+                        <i class="ri-briefcase-2-line text-white"></i> Masters</a>
                     <div class="menu-dropdown collapse show" id="sidebarMore" style="">
                         <ul class="nav nav-sm flex-column">
-
+                    <li class="nav-item">
+                        <a href="{{ route('admin.showroom.index') }}"
+                            class="nav-link {{ request()->is('admin/showroom*') ? 'active' : '' }}"><i
+                                class="nav-icon fas fa-store"></i>Showroom
+                        </a>
+                    </li>
                     <li class="nav-item">
                         <a href="{{ route('admin.product-category.index') }}"
                             class="nav-link {{ request()->is('admin/product-category*') ? 'active' : '' }}"><i
@@ -41,15 +46,46 @@
                                 class="nav-icon fas fa-draw-polygon"></i>Product Shape
                         </a>
                     </li>
-                    </ul>
-            </div>
-
                     <li class="nav-item">
-                        <a href="{{ route('admin.showroom.index') }}"
-                            class="nav-link {{ request()->is('admin/showroom*') ? 'active' : '' }}"><i
-                                class="nav-icon fas fa-store"></i>Showroom
+                        <a href="{{ route('admin.product-feature.index') }}"
+                            class="nav-link {{ request()->is('admin/product-feature*') ? 'active' : '' }}"><i
+                                class="nav-icon fas fa-star"></i>Product Feature
                         </a>
                     </li>
+                   
+                    <li class="nav-item">
+                        <a href="{{ route('admin.quotation-cancel-reason.index') }}"
+                            class="nav-link {{ request()->is('admin/quotation-cancel-reason*') ? 'active' : '' }}"><i
+                                class="nav-icon fas fa-ban"></i>Quotation Cancel Reason
+                        </a>
+                    </li>
+                    </ul>
+                </div>
+                <li class="nav-item">
+                    <a class="nav-link" href="#sidebarMore" data-bs-toggle="collapse" role="button"
+                        aria-expanded="true" aria-controls="sidebarMore">
+                        <i class="ri-briefcase-2-line text-white"></i> Reports</a>
+                    <div class="menu-dropdown collapse show" id="sidebarMore" style="">
+                        <ul class="nav nav-sm flex-column">
+                            <li class="nav-item">
+                                <a href="{{ route('admin.reports.business') }}"
+                                    class="nav-link {{ request()->is('admin/reports/business*') ? 'active' : '' }}">
+                                    <i class="nav-icon fas fa-chart-line"></i>
+                                    Business Report
+                                </a>
+                            </li>
+                             <li class="nav-item">
+                                <a href="{{ route('admin.reports.party') }}"
+                                    class="nav-link {{ request()->is('admin/reports/party*') ? 'active' : '' }}">
+                                    <i class="nav-icon fas fa-users"></i>
+                                    Party Report
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+
+                   
                     <li class="nav-item">
                         <a href="{{ route('admin.users.index') }}"
                             class="nav-link {{ request()->is('admin/users*') ? 'active' : '' }}">
@@ -57,13 +93,7 @@
                             Users
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a href="{{ route('admin.reports.business') }}"
-                            class="nav-link {{ request()->is('admin/reports/business*') ? 'active' : '' }}">
-                            <i class="nav-icon fas fa-chart-line"></i>
-                            Business Report
-                        </a>
-                    </li>
+                    
                     <li class="nav-item">
                         <a href="{{ route('Paymentcollection.index') }}"
                             class="nav-link {{ request()->is('Paymentcollection/index*') ? 'active' : '' }}">
@@ -71,29 +101,20 @@
                             <p class="mb-0">Payment</p>
                         </a>
                     </li>
-                    <li class="nav-item">
-                    <a class="nav-link" href="#sidebarMore" data-bs-toggle="collapse" role="button"
-                        aria-expanded="true" aria-controls="sidebarMore">
-                        <i class="ri-briefcase-2-line text-white"></i> Invoices</a>
-                    <div class="menu-dropdown collapse show" id="sidebarMore" style="">
-                        <ul class="nav nav-sm flex-column">
-
-                     <li class="nav-item">
+                     <!-- <li class="nav-item">
                         <a href="{{ route('admin.invoice-settings.edit') }}"
                             class="nav-link {{ request()->is('admin/invoice-settings*') ? 'active' : '' }}">
                             <i class="nav-icon fas fa-file-contract"></i>
                             Invoice PDF Settings
                         </a>
-                    </li>
+                    </li> -->
                     <li class="nav-item">
                         <a href="{{ route('store.invoice.index') }}"
                             class="nav-link {{ request()->is('store-manager/invoice*') ? 'active' : '' }}">
-                            <i class="nav-icon fas fa-file-invoice-dollar"></i>
-                            <p class="mb-0">Invoices</p>
+                            <i class="fa-solid fa-briefcase"></i>
+                            <p class="mb-0">Retail Business</p>
                         </a>
                     </li>
-                </ul>
-            </div>
                 
                 @else
                     <li class="nav-item">
