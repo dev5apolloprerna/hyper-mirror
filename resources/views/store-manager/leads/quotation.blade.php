@@ -547,14 +547,22 @@
                     </div>
                 </div>
 
+                @php
+                    $currentFittingCharges = (float) ($lead->iFittingCharges ?? 0);
+                    $currentDeliveryCharges = (float) ($lead->delivery_charges ?? 0);
+                    $currentDiscount = (int) ($lead->isDiscountApplicable ?? 0) === 1 ? (float) ($lead->decDiscountAmount ?? 0) : 0;
+                @endphp
 
                 @if (($quotationHistoryBatches ?? collect())->isNotEmpty())
                     <div class="card mt-4 quotation-history-card">
                         <div class="card-body">
                             <div class="d-flex align-items-center justify-content-between mb-3">
                                 <h5 class="mb-0">Quotation History (All Versions)</h5>
-                                <small class="text-muted">Click the eye icon to view product details</small>
+                                <small class="text-muted">Click the eye icon to view product + amount details</small>
                             </div>
+                            <p class="small text-muted mb-3">
+                                Note: Fitting/Delivery/Discount/GST are shown using current lead charges for quick comparison.
+                            </p>
                             <div class="table-responsive">
                                 <table class="table table-bordered table-hover quotation-history-table align-middle mb-0">
                                     <thead>
@@ -563,11 +571,23 @@
                                             <th>Date</th>
                                             <th>Line Items</th>
                                             <th>Subtotal</th>
+                                            <th>Fitting</th>
+                                            <th>Delivery</th>
+                                            <th>Discount</th>
+                                            <th>GST</th>
+                                            <th>Grand Total</th>
                                             <th style="width: 100px;">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         @foreach ($quotationHistoryBatches as $batch)
+                                         @php
+                                                $batchBeforeDiscount = (float) $batch->subtotal + $currentFittingCharges + $currentDeliveryCharges;
+                                                $batchDiscount = min($currentDiscount, $batchBeforeDiscount);
+                                                $batchTaxable = max($batchBeforeDiscount - $batchDiscount, 0);
+                                                $batchGst = (int) ($lead->isGstApplicable ?? 0) === 1 ? $batchTaxable * 0.18 : 0;
+                                                $batchGrandTotal = $batchTaxable + $batchGst;
+                                            @endphp
                                             <tr>
                                                 <td>
                                                     <span class="history-version-badge">
@@ -579,6 +599,11 @@
                                                 </td>
                                                 <td>{{ $batch->line_items }}</td>
                                                 <td>₹{{ number_format((float) $batch->subtotal, 2) }}</td>
+                                                <td>₹{{ number_format($currentFittingCharges, 2) }}</td>
+                                                <td>₹{{ number_format($currentDeliveryCharges, 2) }}</td>
+                                                <td>- ₹{{ number_format($batchDiscount, 2) }}</td>
+                                                <td>₹{{ number_format($batchGst, 2) }}</td>
+                                                <td><strong>₹{{ number_format($batchGrandTotal, 2) }}</strong></td>
                                                 <td>
                                                     <button type="button"
                                                         class="btn btn-sm btn-outline-primary history-eye-btn"
@@ -654,6 +679,37 @@
                                         <tr>
                                             <th colspan="10" class="text-end">Subtotal</th>
                                             <th colspan="2">₹{{ number_format((float) $batch->subtotal, 2) }}</th>
+                                        </tr>
+                                        @php
+                                            $batchBeforeDiscount = (float) $batch->subtotal + $currentFittingCharges + $currentDeliveryCharges;
+                                            $batchDiscount = min($currentDiscount, $batchBeforeDiscount);
+                                            $batchTaxable = max($batchBeforeDiscount - $batchDiscount, 0);
+                                            $batchGst = (int) ($lead->isGstApplicable ?? 0) === 1 ? $batchTaxable * 0.18 : 0;
+                                            $batchGrandTotal = $batchTaxable + $batchGst;
+                                        @endphp
+                                        <tr>
+                                            <th colspan="10" class="text-end">Fitting Charges</th>
+                                            <th colspan="2">₹{{ number_format($currentFittingCharges, 2) }}</th>
+                                        </tr>
+                                        <tr>
+                                            <th colspan="10" class="text-end">Delivery Charges</th>
+                                            <th colspan="2">₹{{ number_format($currentDeliveryCharges, 2) }}</th>
+                                        </tr>
+                                        <tr>
+                                            <th colspan="10" class="text-end">Discount</th>
+                                            <th colspan="2">- ₹{{ number_format($batchDiscount, 2) }}</th>
+                                        </tr>
+                                        <tr>
+                                            <th colspan="10" class="text-end">Taxable Amount</th>
+                                            <th colspan="2">₹{{ number_format($batchTaxable, 2) }}</th>
+                                        </tr>
+                                        <tr>
+                                            <th colspan="10" class="text-end">GST (18%)</th>
+                                            <th colspan="2">₹{{ number_format($batchGst, 2) }}</th>
+                                        </tr>
+                                        <tr class="table-success">
+                                            <th colspan="10" class="text-end">Grand Total</th>
+                                            <th colspan="2">₹{{ number_format($batchGrandTotal, 2) }}</th>
                                         </tr>
                                     </tfoot>
                                 </table>
