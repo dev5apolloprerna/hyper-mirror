@@ -80,13 +80,13 @@
                                     </select>
                                 </div>
 
-                                <div class="col-md-4 mb-4 fitting-required-box">
+                                <!-- <div class="col-md-4 mb-4 fitting-required-box">
                                     <label class="form-label">Fitting Required?</label>
                                     <select name="isFittingRequired" id="isFittingRequired" class="form-control">
                                         <option value="0" {{ old('isFittingRequired', (int)($lead->isFittingRequired ?? 0)) == 0 ? 'selected' : '' }}>No</option>
                                         <option value="1" {{ old('isFittingRequired', (int)($lead->isFittingRequired ?? 0)) == 1 ? 'selected' : '' }}>Yes</option>
                                     </select>
-                                </div>
+                                </div> -->
 
                                 <div class="col-md-4 mb-4 fitting-charge-type-box">
                                     <label class="form-label">Fitting Charges Included or Extra?</label>
@@ -140,26 +140,29 @@
         $(document).ready(function() {
             function toggleLeadFields() {
                 let onlyFitting = $('#IsOnlyFittingQuotation').val();
-                let fittingRequired = $('#isFittingRequired').val();
+                //let fittingRequired = $('#isFittingRequired').val();
                 let measurementRequired = $('#IsMeasureMentRequired').val();
 
                 if (onlyFitting == '1') {
-                    $('.fitting-required-box').hide();
+                    //$('.fitting-required-box').hide();
                     $('.fitting-charge-type-box').show();
                     $('.measurement-required-box').hide();
                     $('.measurement-date-box').hide();
                     $('.quotation-date-box').show();
-                    $('#isFittingRequired').val('1');
+                    //$('#isFittingRequired').val('1');
                 } else {
-                    $('.fitting-required-box').show();
+                    //$('.fitting-required-box').show();
                     $('.measurement-required-box').show();
-                    $('.fitting-charge-type-box').toggle(fittingRequired == '1');
+                    //$('.fitting-charge-type-box').toggle(fittingRequired == '1');
+                    $('.fitting-charge-type-box').hide();
+                    $('#isFittingChargeIncluded').val('');
                     $('.measurement-date-box').toggle(measurementRequired == '1');
                     $('.quotation-date-box').toggle(measurementRequired != '1');
                 }
             }
 
-            $('#IsOnlyFittingQuotation, #isFittingRequired, #IsMeasureMentRequired').on('change', toggleLeadFields);
+            /*$('#IsOnlyFittingQuotation, #isFittingRequired, #IsMeasureMentRequired').on('change', toggleLeadFields);*/
+             $('#IsOnlyFittingQuotation, #IsMeasureMentRequired').on('change', toggleLeadFields);
             toggleLeadFields();
         });
     </script>

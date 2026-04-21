@@ -481,9 +481,21 @@
                                 </div>
 
                                 <div class="col-md-4 mb-4">
-                                    <label class="form-label">Fitting Required?</label>
+                                    <!-- <label class="form-label">Fitting Required?</label>
                                     <input type="text" class="form-control"
-                                        value="{{ !empty($lead->isFittingRequired) ? 'Yes' : 'No' }}" readonly>
+                                        value="{{ !empty($lead->isFittingRequired) ? 'Yes' : 'No' }}" readonly> -->
+                                    <label class="form-label">Fitting Required? <span style="color:red;">*</span></label>
+                                    <select name="isFittingRequired" id="isFittingRequired" class="form-control" required>
+                                        <option value="0"
+                                            {{ old('isFittingRequired', (int) ($lead->isFittingRequired ?? 0)) == 0 ? 'selected' : '' }}>
+                                            No</option>
+                                        <option value="1"
+                                            {{ old('isFittingRequired', (int) ($lead->isFittingRequired ?? 0)) == 1 ? 'selected' : '' }}>
+                                            Yes</option>
+                                    </select>
+                                    @error('isFittingRequired')
+                                        <span class="text-danger d-block">{{ $message }}</span>
+                                    @enderror
                                 </div>
 
                                 <div class="col-md-4 mb-4 fitting-type-box">
@@ -767,8 +779,8 @@
     <script>
         $(document).ready(function() {
             const productOptions = {!! json_encode($productOptions) !!};
-            const leadFittingRequired = "{{ (int) ($lead->isFittingRequired ?? 0) }}";
-            const leadFittingChargeIncluded = "{{ (int) ($lead->isFittingChargeIncluded ?? 0) }}";
+            /*const leadFittingRequired = "{{ (int) ($lead->isFittingRequired ?? 0) }}";
+            const leadFittingChargeIncluded = "{{ (int) ($lead->isFittingChargeIncluded ?? 0) }}";*/
 
             function buildProductSelectOptions(categoryId, selectedProductId) {
                 let html = '<option value="">Select Product</option>';
