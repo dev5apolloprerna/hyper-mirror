@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Apr 15, 2026 at 09:07 AM
+-- Generation Time: Apr 21, 2026 at 11:46 AM
 -- Server version: 11.8.6-MariaDB-log
 -- PHP Version: 7.2.34
 
@@ -38,7 +38,17 @@ CREATE TABLE `account_payments_collection` (
   `updated_at` timestamp NULL DEFAULT NULL,
   `user_id` int(11) NOT NULL DEFAULT 0,
   `is_Delete_recode` timestamp NULL DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `account_payments_collection`
+--
+
+INSERT INTO `account_payments_collection` (`account_payment_id`, `emp_id`, `amount`, `payment_mode`, `payment_date`, `comment`, `created_at`, `updated_at`, `user_id`, `is_Delete_recode`) VALUES
+(1, 30, 2500, 0, '2026-04-18 17:50:02', 'payment rec', '2026-04-18 17:50:02', NULL, 32, NULL),
+(2, 30, 12900, 0, '2026-04-18 17:51:19', 'rec', '2026-04-18 17:51:19', NULL, 32, NULL),
+(3, 30, 25000, 0, '2026-04-18 17:54:42', NULL, '2026-04-18 17:54:42', NULL, 32, NULL),
+(4, 30, 5000, 0, '2026-04-18 17:54:58', NULL, '2026-04-18 17:54:58', NULL, 32, NULL);
 
 -- --------------------------------------------------------
 
@@ -57,7 +67,14 @@ CREATE TABLE `admin_payments_collection` (
   `updated_at` timestamp NULL DEFAULT NULL,
   `user_id` int(11) NOT NULL DEFAULT 0,
   `is_Delete_recode` timestamp NULL DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `admin_payments_collection`
+--
+
+INSERT INTO `admin_payments_collection` (`admin_payment_id`, `emp_id`, `amount`, `payment_mode`, `payment_date`, `comment`, `created_at`, `updated_at`, `user_id`, `is_Delete_recode`) VALUES
+(1, 32, 10000, 0, '2026-04-18 16:32:02', '10k recd', '2026-04-18 16:32:02', NULL, 1, NULL);
 
 -- --------------------------------------------------------
 
@@ -78,7 +95,7 @@ CREATE TABLE `cash_payment_ledger` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   `UserType` int(11) NOT NULL DEFAULT 0
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `cash_payment_ledger`
@@ -92,7 +109,23 @@ INSERT INTO `cash_payment_ledger` (`cash_payment_ledger_id`, `emp_id`, `invoices
 (5, 32, 3, 20000024, 5001, 0, 20005025, 32, 0, '2026-04-13 18:46:25', '2026-04-13 18:46:25', 2),
 (6, 32, 3, 20005025, 0, 5001, 20000024, 0, 32, '2026-04-13 19:05:15', '2026-04-13 19:05:15', 2),
 (7, 36, 3, 0, 300, 0, 300, 36, 0, '2026-04-14 12:12:35', '2026-04-14 12:12:35', 1),
-(8, 30, 4, 5500, 2900, 0, 8400, 30, 0, '2026-04-14 12:58:32', '2026-04-14 12:58:32', 1);
+(8, 30, 4, 5500, 2900, 0, 8400, 30, 0, '2026-04-14 12:58:32', '2026-04-14 12:58:32', 1),
+(9, 32, 14, 20000024, 1700, 0, 20001724, 32, 0, '2026-04-15 23:19:16', '2026-04-15 23:19:16', 2),
+(10, 30, 5, 8400, 4500, 0, 12900, 30, 0, '2026-04-15 23:41:41', '2026-04-15 23:41:41', 1),
+(11, 32, 17, 20001724, 5000, 0, 20006724, 32, 0, '2026-04-18 16:05:40', '2026-04-18 16:05:40', 2),
+(12, 32, 17, 20006724, 7000, 0, 20013724, 32, 0, '2026-04-18 16:24:28', '2026-04-18 16:24:28', 2),
+(13, 32, 1, 20013724, 0, 10000, 20003724, 1, 32, '2026-04-18 16:32:02', '2026-04-18 16:32:02', 2),
+(14, 1, 1, 0, 10000, 0, 10000, 1, 32, '2026-04-18 16:32:02', '2026-04-18 16:32:02', 3),
+(15, 30, 6, 12900, 2500, 0, 15400, 30, 0, '2026-04-18 17:47:12', '2026-04-18 17:47:12', 1),
+(16, 30, 1, 15400, 0, 2500, 12900, 32, 30, '2026-04-18 17:50:02', '2026-04-18 17:50:02', 1),
+(17, 32, 1, 20003724, 2500, 0, 20006224, 32, 30, '2026-04-18 17:50:02', '2026-04-18 17:50:02', 2),
+(18, 30, 2, 12900, 0, 12900, 0, 32, 30, '2026-04-18 17:51:19', '2026-04-18 17:51:19', 1),
+(19, 32, 2, 20006224, 12900, 0, 20019124, 32, 30, '2026-04-18 17:51:19', '2026-04-18 17:51:19', 2),
+(20, 30, 7, 0, 50000, 0, 50000, 30, 0, '2026-04-18 17:52:53', '2026-04-18 17:52:53', 1),
+(21, 30, 3, 50000, 0, 25000, 25000, 32, 30, '2026-04-18 17:54:42', '2026-04-18 17:54:42', 1),
+(22, 32, 3, 20019124, 25000, 0, 20044124, 32, 30, '2026-04-18 17:54:42', '2026-04-18 17:54:42', 2),
+(23, 30, 4, 25000, 0, 5000, 20000, 32, 30, '2026-04-18 17:54:58', '2026-04-18 17:54:58', 1),
+(24, 32, 4, 20044124, 5000, 0, 20049124, 32, 30, '2026-04-18 17:54:58', '2026-04-18 17:54:58', 2);
 
 -- --------------------------------------------------------
 
@@ -183,7 +216,14 @@ INSERT INTO `customers` (`iCustomerId`, `strCustomer`, `strMobile`, `strAddress`
 (5, 'Manoj Brahmkshatriya', '9904004252', 'ABC Tower', 'Retail', NULL, '2026-04-12 15:37:41', '2026-04-12 15:37:41'),
 (6, 'Shailesh Bhavsar', '9375551910', 'ABC Test', 'Retail', NULL, '2026-04-12 16:01:26', '2026-04-12 16:05:21'),
 (7, 'Ram Rahim', '9852525252', 'ABC', 'Retail', NULL, '2026-04-12 16:43:30', '2026-04-12 16:43:30'),
-(8, 'Prerna Rathod', '9723391747', 'dayanivas street', 'Retail', 'apollo', '2026-04-13 15:08:19', '2026-04-13 19:06:11');
+(8, 'Prerna Rathod', '9723391747', 'dayanivas street', 'Retail', 'apollo', '2026-04-13 15:08:19', '2026-04-13 19:06:11'),
+(9, 'Ankit Gandhi', '8866277000', 'B/49, Narol society\r\nIsanpur', 'Retail', 'Glass Grip', '2026-04-15 22:07:46', '2026-04-15 22:07:46'),
+(10, 'Bansari Patel', '9987654321', 'Sola', 'Retail', NULL, '2026-04-17 17:34:52', '2026-04-17 17:34:52'),
+(11, 'ravipatel', '7984305927', 'Sola', 'Retail', 'Apollo', '2026-04-17 17:42:57', '2026-04-17 17:42:57'),
+(12, 'shivkumar mohta', '9228257933', NULL, 'Retail', NULL, '2026-04-18 14:24:39', '2026-04-18 16:38:16'),
+(13, 'dhruvil desai', '9979535421', NULL, 'Retail', NULL, '2026-04-18 17:16:16', '2026-04-18 17:16:16'),
+(14, 'JALPA BEN', '9979353421', 'D-703 BINORI AARNA AMBLI', 'Retail', NULL, '2026-04-20 12:49:30', '2026-04-20 12:49:30'),
+(15, 'VINOD JAGANI', '9426009948', 'C-7 PUNNESHWER TENAMENT  GULBAI TEKRA', 'Retail', NULL, '2026-04-20 12:54:39', '2026-04-20 12:54:39');
 
 -- --------------------------------------------------------
 
@@ -216,7 +256,10 @@ INSERT INTO `invoices` (`iInvoiceId`, `strInvoiceNo`, `iShowroomId`, `iCreatedBy
 (1, 'INV-202604-0001', 3, 30, '2026-04-11', NULL, NULL, NULL, NULL, 'confirmed', 'cash', 1, '2026-04-11 18:25:33', '2026-04-11 18:25:33'),
 (2, 'INV-202604-0002', 3, 30, '2026-04-12', NULL, NULL, NULL, 'As discussed with Ankit Gandhi its pending', 'confirmed', 'cash', 1, '2026-04-12 15:14:45', '2026-04-12 15:30:44'),
 (3, 'INV-202604-0003', 2, 36, '2026-04-14', 'Prerna Parekh', '9723391747', '3/176, Samathuva Nagar Main Road, 14, Kazhipathur, Padur Post', 'test', 'confirmed', 'cash', 1, '2026-04-14 12:12:35', '2026-04-14 12:12:35'),
-(4, 'INV-202604-0004', 3, 30, '2026-04-14', 'prerna', '09824773136', '1, anurag flat,', 'ok', 'confirmed', 'cash', 1, '2026-04-14 12:58:32', '2026-04-14 12:58:32');
+(4, 'INV-202604-0004', 3, 30, '2026-04-14', 'prerna', '09824773136', '1, anurag flat,', 'ok', 'confirmed', 'cash', 1, '2026-04-14 12:58:32', '2026-04-14 12:58:32'),
+(5, 'INV-202604-0005', 3, 30, '2026-04-15', 'Krunal Shah', '9824773136', 'Maninagar', 'ok', 'confirmed', 'cash', 1, '2026-04-15 23:41:41', '2026-04-15 23:41:41'),
+(6, 'INV-202604-0006', 3, 30, '2026-04-18', 'nikhil', '7575002108', 'ishanpur', NULL, 'confirmed', 'cash', 1, '2026-04-18 17:47:12', '2026-04-18 17:47:12'),
+(7, 'INV-202604-0007', 3, 30, '2026-04-18', 'nikhil', '7575002108', NULL, NULL, 'confirmed', 'cash', 1, '2026-04-18 17:52:53', '2026-04-18 17:52:53');
 
 -- --------------------------------------------------------
 
@@ -247,7 +290,10 @@ INSERT INTO `invoice_items` (`iItemId`, `iInvoiceId`, `iCategoryId`, `iProductId
 (3, 3, 1, 10, 1, 100.00, 100.00, 'test2', '2026-04-14 12:12:35', '2026-04-14 12:12:35'),
 (4, 3, 3, 12, 1, 200.00, 200.00, 'test 3', '2026-04-14 12:12:35', '2026-04-14 12:12:35'),
 (5, 4, 4, 3, 1, 2500.00, 2500.00, 'ok', '2026-04-14 12:58:32', '2026-04-14 12:58:32'),
-(6, 4, 2, 9, 2, 200.00, 400.00, 'ok', '2026-04-14 12:58:32', '2026-04-14 12:58:32');
+(6, 4, 2, 9, 2, 200.00, 400.00, 'ok', '2026-04-14 12:58:32', '2026-04-14 12:58:32'),
+(7, 5, 4, 3, 3, 1500.00, 4500.00, 'all ok', '2026-04-15 23:41:41', '2026-04-15 23:41:41'),
+(8, 6, 4, 3, 1, 2500.00, 2500.00, NULL, '2026-04-18 17:47:12', '2026-04-18 17:47:12'),
+(9, 7, 1, 10, 10, 5000.00, 50000.00, NULL, '2026-04-18 17:52:53', '2026-04-18 17:52:53');
 
 -- --------------------------------------------------------
 
@@ -268,7 +314,7 @@ CREATE TABLE `invoice_pdf_settings` (
 --
 
 INSERT INTO `invoice_pdf_settings` (`id`, `terms_and_conditions`, `bank_details`, `created_at`, `updated_at`) VALUES
-(1, 'Fixed Rate - No Bargaining I Quotation is valid for only 07 days. 1) Warranty Period is ONE Year from the date of Installation. 2) Excluding due to Physical damage, Power Supply surge or burn or natural calamity of water. 3) Payment 100% advance along with PO. 4) Work will start within a week on receipt of PO and advance payment. 5) The entire dispute will be subject to the courts of Ahmedabad. 6) Goods once sold will not be taken back or exchanged', 'Name: AXIS BANK, ISANPUR Account No.: 920020057214879 IFSC code: UTIB0001338 Account Holder\'s Name: HYPER MIRROR', '2026-04-14 21:49:44', '2026-04-14 21:49:44');
+(1, '<p>1. Fixed Rate - No Bargaining. 2. Quotation is valid for only 07 days. 3. Warranty Period is ONE Year from the date of Installation. 4. Excluding due to physical damage, power supply surge or burn, or natural calamity of water. 5. Payment 100% advance along with PO. 6. Work will start within a week on receipt of PO and advance payment. 7. The entire dispute will be subject to the courts of Ahmedabad. 8. Goods once sold will not be taken back or exchanged.</p>', '<p>Name: AXIS BANK, ISANPUR&nbsp;</p><p>Account No.: 920020057214879&nbsp;</p><p>IFSC code: UTIB0001338&nbsp;</p><p>Account Holder\'s Name: HYPER MIRROR</p>', '2026-04-14 21:49:44', '2026-04-16 18:24:22');
 
 -- --------------------------------------------------------
 
@@ -301,24 +347,33 @@ CREATE TABLE `leads` (
   `iCreatedBy` bigint(20) UNSIGNED DEFAULT NULL,
   `iShowroomId` bigint(20) UNSIGNED DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `delivery_charges` int(11) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `leads`
 --
 
-INSERT INTO `leads` (`iLeadId`, `iCustomerId`, `iCurrentYearLeadId`, `strLeadNo`, `IsMeasureMentRequired`, `MeasurementVisitDate`, `SiteAddress`, `CreatedDate`, `iCurrentLeadStatus`, `NetFollowupdate`, `expected_delivery_date`, `isFittingLeadOnly`, `isFittingRequired`, `isFittingChargeIncluded`, `iFittingCharges`, `isDiscountApplicable`, `decDiscountAmount`, `isGstApplicable`, `decGstAmount`, `iLeadAmount`, `iQuotationId`, `iCreatedBy`, `iShowroomId`, `created_at`, `updated_at`) VALUES
-(1, 3, '2627', '2627-0001', 0, NULL, 'B/49, Prerna Society, Part -2, B/H Namrta Tenemens, Near Parasnager\r\nIsanpur, Ahmedabad', '2026-04-11 18:03:53', 'Quotation Approved', '2026-04-11', '2026-04-11', 0, 0, 0, 0, 0, 0.00, 0, 0.00, 0.00, NULL, 30, NULL, '2026-04-11 18:03:53', '2026-04-11 18:54:36'),
-(2, 4, '2627', '2627-0002', 1, '2026-04-11', 'SMB', '2026-04-11 18:15:13', 'Dispatched', '2026-04-11', '2026-04-11', 0, 0, 0, 0, 0, 0.00, 1, 3.60, 23.60, 1, 30, NULL, '2026-04-11 18:15:13', '2026-04-11 18:49:30'),
-(3, 5, '2627', '2627-0003', 1, '2026-04-12', 'Abc Tower', '2026-04-12 15:37:41', 'Quotation Sent', '2026-04-12', NULL, 0, 0, 0, 0, 1, 2000.00, 0, 0.00, 10000.00, 3, 30, NULL, '2026-04-12 15:37:41', '2026-04-12 15:53:41'),
-(4, 2, '2627', '2627-0004', 0, NULL, '1 anurag flat,bhairawnath, maninagar', '2026-04-12 15:55:24', 'Lead Rejected', NULL, NULL, 0, 0, 0, 0, 0, 0.00, 0, 0.00, 200000.00, 4, 30, NULL, '2026-04-12 15:55:24', '2026-04-12 16:00:05'),
-(5, 6, '2627', '2627-0005', 1, '2026-04-12', 'ABC Test', '2026-04-12 16:01:26', 'In Measurement', '2026-04-12', NULL, 0, 0, 0, 0, 0, 0.00, 0, 0.00, 0.00, NULL, 30, NULL, '2026-04-12 16:01:26', '2026-04-12 16:01:26'),
-(6, 6, '2627', '2627-0006', 0, NULL, NULL, '2026-04-12 16:05:21', 'In Design', '2026-04-12', NULL, 0, 0, 0, 0, 0, 0.00, 0, 0.00, 0.00, NULL, 30, NULL, '2026-04-12 16:05:21', '2026-04-12 16:05:21'),
-(7, 6, '2627', '2627-0007', 0, NULL, NULL, '2026-04-12 16:09:18', 'Quotation Approved', '2026-04-12', '2026-04-13', 0, 0, 0, 0, 0, 0.00, 0, 0.00, 40000.00, 5, 30, NULL, '2026-04-12 16:09:18', '2026-04-12 16:17:32'),
-(8, 7, '2627', '2627-0008', 1, '2026-04-12', NULL, '2026-04-12 16:43:30', 'Dispatched', '2026-04-12', '2026-04-12', 0, 0, 0, 0, 0, 0.00, 0, 0.00, 500.00, 6, 30, NULL, '2026-04-12 16:43:30', '2026-04-12 16:50:12'),
-(12, 8, '2627', '2627-0009', 0, NULL, 'test address', '2026-04-13 15:36:11', 'Fitting Pending', '2026-04-17', '2026-04-21', 0, 1, 0, 1000, 0, 0.00, 1, 6930.00, 45430.00, 7, 30, NULL, '2026-04-13 15:36:11', '2026-04-13 17:04:42'),
-(13, 8, '2627', '2627-0010', 0, NULL, 'mission road', '2026-04-13 19:06:11', 'Advance Received', NULL, '2026-04-22', 0, 0, 0, 0, 0, 0.00, 0, 0.00, 3000.00, 8, 30, NULL, '2026-04-13 19:06:11', '2026-04-13 19:08:31');
+INSERT INTO `leads` (`iLeadId`, `iCustomerId`, `iCurrentYearLeadId`, `strLeadNo`, `IsMeasureMentRequired`, `MeasurementVisitDate`, `SiteAddress`, `CreatedDate`, `iCurrentLeadStatus`, `NetFollowupdate`, `expected_delivery_date`, `isFittingLeadOnly`, `isFittingRequired`, `isFittingChargeIncluded`, `iFittingCharges`, `isDiscountApplicable`, `decDiscountAmount`, `isGstApplicable`, `decGstAmount`, `iLeadAmount`, `iQuotationId`, `iCreatedBy`, `iShowroomId`, `created_at`, `updated_at`, `delivery_charges`) VALUES
+(1, 3, '2627', '2627-0001', 0, NULL, 'B/49, Prerna Society, Part -2, B/H Namrta Tenemens, Near Parasnager\r\nIsanpur, Ahmedabad', '2026-04-11 18:03:53', 'Quotation Approved', '2026-04-11', '2026-04-11', 0, 0, 0, 0, 0, 0.00, 0, 0.00, 0.00, NULL, 30, NULL, '2026-04-11 18:03:53', '2026-04-11 18:54:36', 0),
+(2, 4, '2627', '2627-0002', 1, '2026-04-11', 'SMB', '2026-04-11 18:15:13', 'Dispatched', '2026-04-11', '2026-04-11', 0, 0, 0, 0, 0, 0.00, 1, 3.60, 23.60, 1, 30, NULL, '2026-04-11 18:15:13', '2026-04-11 18:49:30', 0),
+(3, 5, '2627', '2627-0003', 1, '2026-04-12', 'Abc Tower', '2026-04-12 15:37:41', 'Quotation Sent', '2026-04-12', NULL, 0, 0, 0, 0, 1, 2000.00, 0, 0.00, 10000.00, 3, 30, NULL, '2026-04-12 15:37:41', '2026-04-12 15:53:41', 0),
+(4, 2, '2627', '2627-0004', 0, NULL, '1 anurag flat,bhairawnath, maninagar', '2026-04-12 15:55:24', 'Lead Rejected', NULL, NULL, 0, 0, 0, 0, 0, 0.00, 0, 0.00, 200000.00, 4, 30, NULL, '2026-04-12 15:55:24', '2026-04-12 16:00:05', 0),
+(5, 6, '2627', '2627-0005', 1, '2026-04-12', 'ABC Test', '2026-04-12 16:01:26', 'In Measurement', '2026-04-12', NULL, 0, 0, 0, 0, 0, 0.00, 0, 0.00, 0.00, NULL, 30, NULL, '2026-04-12 16:01:26', '2026-04-12 16:01:26', 0),
+(6, 6, '2627', '2627-0006', 0, NULL, NULL, '2026-04-12 16:05:21', 'In Design', '2026-04-12', NULL, 0, 0, 0, 0, 0, 0.00, 0, 0.00, 0.00, NULL, 30, NULL, '2026-04-12 16:05:21', '2026-04-12 16:05:21', 0),
+(7, 6, '2627', '2627-0007', 0, NULL, NULL, '2026-04-12 16:09:18', 'Quotation Approved', '2026-04-12', '2026-04-13', 0, 0, 0, 0, 0, 0.00, 0, 0.00, 40000.00, 5, 30, NULL, '2026-04-12 16:09:18', '2026-04-12 16:17:32', 0),
+(8, 7, '2627', '2627-0008', 1, '2026-04-12', NULL, '2026-04-12 16:43:30', 'Dispatched', '2026-04-12', '2026-04-12', 0, 0, 0, 0, 0, 0.00, 0, 0.00, 500.00, 6, 30, NULL, '2026-04-12 16:43:30', '2026-04-12 16:50:12', 0),
+(12, 8, '2627', '2627-0009', 0, NULL, 'test address', '2026-04-13 15:36:11', 'Fitting Pending', '2026-04-17', '2026-04-21', 0, 1, 0, 1000, 0, 0.00, 1, 6930.00, 45430.00, 7, 30, NULL, '2026-04-13 15:36:11', '2026-04-13 17:04:42', 0),
+(13, 8, '2627', '2627-0010', 0, NULL, 'mission road', '2026-04-13 19:06:11', 'Dispatched', '2026-04-17', '2026-04-22', 0, 0, 0, 1000, 0, 0.00, 0, 0.00, 2537.50, 13, 30, NULL, '2026-04-13 19:06:11', '2026-04-17 17:13:38', 1500),
+(14, 9, '2627', '2627-0011', 1, '2026-04-15', 'B/49, Narol society\r\nIsanpur', '2026-04-15 22:07:46', 'Received @ Narol', NULL, '2026-04-15', 0, 1, 1, 0, 1, 100.00, 0, 0.00, 3500.00, 9, 30, NULL, '2026-04-15 22:07:46', '2026-04-16 18:42:31', 0),
+(16, 11, '2627', '2627-0012', 1, '2026-04-17', 'Sola', '2026-04-17 17:42:57', 'In Measurement', '2026-04-17', NULL, 0, 1, 0, 100, 0, 0.00, 1, 399.38, 2618.13, 28, 30, NULL, '2026-04-17 17:42:57', '2026-04-20 14:21:02', 100),
+(17, 12, '2627', '2627-0013', 1, '2026-04-20', '7 alfa cycle store ,narol ,ahmedabad', '2026-04-18 14:24:39', 'Deal Done', NULL, '2026-04-22', 0, 1, 1, 0, 1, 12.50, 0, 0.00, 12000.00, 20, 30, NULL, '2026-04-18 14:24:39', '2026-04-18 16:26:18', 200),
+(18, 12, '2627', '2627-0014', 1, '2026-04-19', NULL, '2026-04-18 16:38:16', 'In Measurement', '2026-04-19', NULL, 0, 1, 0, 0, 0, 0.00, 0, 0.00, 0.00, NULL, 30, NULL, '2026-04-18 16:38:16', '2026-04-18 16:38:16', 0),
+(19, 13, '2627', '2627-0015', 1, '2026-04-19', 'ambali', '2026-04-18 17:16:16', 'Measurement Done', '2026-04-20', NULL, 0, 1, 1, 500, 0, 0.00, 0, 0.00, 40500.00, 27, 30, NULL, '2026-04-18 17:16:16', '2026-04-20 11:15:41', 1000),
+(20, 3, '2627', '2627-0016', 0, NULL, 'B/49, Prerna Society, Part -2, B/H Namrta Tenemens, Near Parasnager\r\nIsanpur, Ahmedabad', '2026-04-19 12:36:17', 'Advance Received', '2026-04-19', '2026-04-19', 0, 1, 0, 0, 0, 0.00, 0, 0.00, 3375.00, 29, 30, NULL, '2026-04-19 12:36:17', '2026-04-20 15:28:55', 0),
+(21, 14, '2627', '2627-0017', 0, NULL, 'D-703 BINORI AARNA AMBLI', '2026-04-20 12:49:30', 'In Design', '2026-04-30', NULL, 0, 1, 1, 0, 0, 0.00, 0, 0.00, 0.00, NULL, 30, NULL, '2026-04-20 12:49:30', '2026-04-20 12:49:30', 0),
+(22, 15, '2627', '2627-0018', 0, NULL, 'C-7 PUNNESHWER TENAMENT  GULBAI TEKRA', '2026-04-20 12:54:39', 'In Design', '2026-04-21', NULL, 0, 1, 0, 0, 0, 0.00, 0, 0.00, 0.00, NULL, 30, NULL, '2026-04-20 12:54:39', '2026-04-20 12:54:39', 0);
 
 -- --------------------------------------------------------
 
@@ -345,7 +400,10 @@ INSERT INTO `lead_designs` (`iLeadDesignId`, `iLeadId`, `strFilename`, `strTitle
 (3, 3, '1775988943_aloe.jpg', '1111', '2026-04-12 15:45:43', '2026-04-12 15:45:43'),
 (4, 4, '1775989547_aloe.jpg', '1111', '2026-04-12 15:55:47', '2026-04-12 15:55:47'),
 (5, 5, '1775989924_error.png', NULL, '2026-04-12 16:02:04', '2026-04-12 16:02:04'),
-(6, 8, '1775992499_aloe.jpg', NULL, '2026-04-12 16:44:59', '2026-04-12 16:44:59');
+(6, 8, '1775992499_aloe.jpg', NULL, '2026-04-12 16:44:59', '2026-04-12 16:44:59'),
+(15, 14, '20260416190848_1760002506_AIaPSA.jpg', 'test', '2026-04-16 19:08:48', '2026-04-16 19:08:48'),
+(17, 14, '20260416191415_1600w-kgrclsa6l6m_fok0uo.webp', 'test', '2026-04-16 19:14:15', '2026-04-16 19:14:15'),
+(18, 17, '20260418151000_1039666081_XBFgmC.pdf', 'shivkuma mohta', '2026-04-18 15:10:00', '2026-04-18 15:10:00');
 
 -- --------------------------------------------------------
 
@@ -414,7 +472,61 @@ INSERT INTO `lead_histories` (`id`, `iLeadId`, `strComments`, `NetFolloupwdate`,
 (45, 13, 'Lead created.', '2026-04-15', 'In Design', 30, '2026-04-13 19:06:11', '2026-04-13 19:06:11', '2026-04-13 19:06:11'),
 (46, 13, 'Quotation generated. Version #1', '2026-04-15', 'Quotation Sent', 30, '2026-04-13 19:07:28', '2026-04-13 19:07:28', '2026-04-13 19:07:28'),
 (47, 13, 'ok\nExpected Delivery Date: 2026-04-22', '2026-04-16', 'Quotation Approved', 30, '2026-04-13 19:08:02', '2026-04-13 19:08:02', '2026-04-13 19:08:02'),
-(48, 13, 'advance 1000 received', NULL, 'Advance Received', 30, '2026-04-13 19:08:31', '2026-04-13 19:08:31', '2026-04-13 19:08:31');
+(48, 13, 'advance 1000 received', NULL, 'Advance Received', 30, '2026-04-13 19:08:31', '2026-04-13 19:08:31', '2026-04-13 19:08:31'),
+(49, 14, 'Require to do Visit', '2026-04-15', 'In Measurement', 30, '2026-04-15 22:07:46', '2026-04-15 22:07:46', '2026-04-15 22:07:46'),
+(50, 14, 'Measurement Completed', NULL, 'Measurement Done', 31, '2026-04-15 22:15:14', '2026-04-15 22:15:14', '2026-04-15 22:15:14'),
+(51, 14, 'Design require, Design document given to Fazu', '2026-04-15', 'In Design', 30, '2026-04-15 22:19:27', '2026-04-15 22:19:27', '2026-04-15 22:19:27'),
+(52, 14, 'OK', '2026-04-15', 'In Design', 30, '2026-04-15 22:45:06', '2026-04-15 22:45:06', '2026-04-15 22:45:06'),
+(53, 14, 'Need to call AG for Payment', '2026-04-15', 'Quotation Sent', 30, '2026-04-15 23:05:10', '2026-04-15 23:05:10', '2026-04-15 23:05:10'),
+(54, 14, 'Payment\nExpected Delivery Date: 2026-04-15', '2026-04-15', 'Quotation Approved', 30, '2026-04-15 23:08:18', '2026-04-15 23:08:18', '2026-04-15 23:08:18'),
+(55, 14, '1700 RS Received', '2026-04-16', 'Advance Received', 30, '2026-04-15 23:13:03', '2026-04-15 23:13:03', '2026-04-15 23:13:03'),
+(56, 14, 'Production Accepted', NULL, 'Production Accepted', 33, '2026-04-15 23:22:24', '2026-04-15 23:22:24', '2026-04-15 23:22:24'),
+(57, 14, 'Ready to dispatch', NULL, 'Ready to Dispatched', 33, '2026-04-15 23:22:51', '2026-04-15 23:22:51', '2026-04-15 23:22:51'),
+(58, 14, 'Dipatch to Narol', '2026-04-16', 'Dispatched', 34, '2026-04-15 23:28:07', '2026-04-15 23:28:07', '2026-04-15 23:28:07'),
+(59, 13, 'ok', '2026-04-21', 'Production Accepted', 30, '2026-04-16 14:36:44', '2026-04-16 14:36:44', '2026-04-16 14:36:44'),
+(60, 13, 'ready', NULL, 'Ready to Dispatched', 30, '2026-04-16 14:37:00', '2026-04-16 14:37:00', '2026-04-16 14:37:00'),
+(61, 13, 'dispatched', NULL, 'Dispatched', 34, '2026-04-16 14:39:24', '2026-04-16 14:39:24', '2026-04-16 14:39:24'),
+(62, 13, 'ok', '2026-04-17', 'Dispatched', 30, '2026-04-16 17:05:13', '2026-04-16 17:05:13', '2026-04-16 17:05:13'),
+(63, 13, 'Lead details updated.', '2026-04-17', 'Dispatched', 30, '2026-04-16 17:43:19', '2026-04-16 17:43:19', '2026-04-16 17:43:19'),
+(64, 14, 'ok', NULL, 'Received @ Narol', 34, '2026-04-16 18:42:31', '2026-04-16 18:42:31', '2026-04-16 18:42:31'),
+(65, 13, 'ok', '2026-04-17', 'Dispatched', 30, '2026-04-17 15:46:04', '2026-04-17 15:46:04', '2026-04-17 15:46:04'),
+(66, 13, 'Quotation generated. Version #3', '2026-04-17', 'Dispatched', 30, '2026-04-17 15:51:26', '2026-04-17 15:51:26', '2026-04-17 15:51:26'),
+(67, 13, 'ok', '2026-04-17', 'Dispatched', 30, '2026-04-17 17:13:38', '2026-04-17 17:13:38', '2026-04-17 17:13:38'),
+(69, 16, 'test', '2026-04-17', 'In Measurement', 30, '2026-04-17 17:42:57', '2026-04-17 17:42:57', '2026-04-17 17:42:57'),
+(70, 16, 'ok', '2026-04-17', 'In Measurement', 30, '2026-04-17 18:07:43', '2026-04-17 18:07:43', '2026-04-17 18:07:43'),
+(71, 17, 'visit and inform monty if require', '2026-04-20', 'In Measurement', 30, '2026-04-18 14:24:39', '2026-04-18 14:24:39', '2026-04-18 14:24:39'),
+(72, 17, '18*24 mirror measurement done', NULL, 'Measurement Done', 37, '2026-04-18 14:47:37', '2026-04-18 14:47:37', '2026-04-18 14:47:37'),
+(73, 17, 'pls check and make pdf', '2026-04-20', 'In Design', 30, '2026-04-18 15:06:19', '2026-04-18 15:06:19', '2026-04-18 15:06:19'),
+(74, 17, 'Quotation generated. Version #1', '2026-04-20', 'In Design', 30, '2026-04-18 15:19:23', '2026-04-18 15:19:23', '2026-04-18 15:19:23'),
+(75, 17, 'Quotation generated. Version #2', '2026-04-20', 'In Design', 30, '2026-04-18 15:19:52', '2026-04-18 15:19:52', '2026-04-18 15:19:52'),
+(76, 17, 'Quotation generated. Version #3', '2026-04-20', 'In Design', 30, '2026-04-18 15:19:52', '2026-04-18 15:19:52', '2026-04-18 15:19:52'),
+(77, 17, 'Quotation generated. Version #4', '2026-04-20', 'In Design', 30, '2026-04-18 15:20:17', '2026-04-18 15:20:17', '2026-04-18 15:20:17'),
+(78, 17, 'Quotation generated. Version #5', '2026-04-20', 'In Design', 30, '2026-04-18 15:20:18', '2026-04-18 15:20:18', '2026-04-18 15:20:18'),
+(79, 17, 'ok', '2026-04-20', 'In Design', 30, '2026-04-18 15:40:06', '2026-04-18 15:40:06', '2026-04-18 15:40:06'),
+(80, 17, 'need to call and confirm quotation', '2026-04-20', 'Quotation Sent', 30, '2026-04-18 15:58:21', '2026-04-18 15:58:21', '2026-04-18 15:58:21'),
+(81, 17, 'ok\nExpected Delivery Date: 2026-04-22', '2026-04-18', 'Quotation Approved', 30, '2026-04-18 15:59:45', '2026-04-18 15:59:45', '2026-04-18 15:59:45'),
+(82, 17, 'amt recd', '2026-04-22', 'Advance Received', 30, '2026-04-18 16:02:09', '2026-04-18 16:02:09', '2026-04-18 16:02:09'),
+(83, 17, 'ok understand', '2026-04-18', 'Production Accepted', 33, '2026-04-18 16:16:46', '2026-04-18 16:16:46', '2026-04-18 16:16:46'),
+(84, 17, 'ok', NULL, 'Ready to Dispatched', 33, '2026-04-18 16:17:48', '2026-04-18 16:17:48', '2026-04-18 16:17:48'),
+(85, 17, 'ok', NULL, 'Dispatched', 34, '2026-04-18 16:20:00', '2026-04-18 16:20:00', '2026-04-18 16:20:00'),
+(86, 17, 'fitting done', NULL, 'Fitting Done', 35, '2026-04-18 16:21:41', '2026-04-18 16:21:41', '2026-04-18 16:21:41'),
+(87, 17, 'payment rec', NULL, 'Deal Done', 32, '2026-04-18 16:26:18', '2026-04-18 16:26:18', '2026-04-18 16:26:18'),
+(88, 18, 'ok', '2026-04-19', 'In Measurement', 30, '2026-04-18 16:38:16', '2026-04-18 16:38:16', '2026-04-18 16:38:16'),
+(89, 19, 'visit ambali site and meet dhruvilbhai', '2026-04-19', 'In Measurement', 30, '2026-04-18 17:16:16', '2026-04-18 17:16:16', '2026-04-18 17:16:16'),
+(90, 19, 'ok', NULL, 'Measurement Done', 31, '2026-04-18 17:20:49', '2026-04-18 17:20:49', '2026-04-18 17:20:49'),
+(91, 19, 'ok', '2026-04-20', 'Measurement Done', 30, '2026-04-18 17:37:52', '2026-04-18 17:37:52', '2026-04-18 17:37:52'),
+(92, 20, 'NN', '2026-04-19', 'In Design', 30, '2026-04-19 12:36:17', '2026-04-19 12:36:17', '2026-04-19 12:36:17'),
+(93, 20, 'Quotation generated. Version #1', '2026-04-19', 'In Design', 30, '2026-04-19 12:50:05', '2026-04-19 12:50:05', '2026-04-19 12:50:05'),
+(94, 20, 'Follow up', '2026-04-19', 'Quotation Sent', 30, '2026-04-19 12:52:28', '2026-04-19 12:52:28', '2026-04-19 12:52:28'),
+(95, 20, 'quotation approved\nExpected Delivery Date: 2026-04-19', '2026-04-19', 'Quotation Approved', 30, '2026-04-19 12:53:02', '2026-04-19 12:53:02', '2026-04-19 12:53:02'),
+(96, 20, '500', '2026-04-19', 'Advance Received', 30, '2026-04-19 12:54:06', '2026-04-19 12:54:06', '2026-04-19 12:54:06'),
+(97, 20, 'Quotation generated. Version #2', '2026-04-19', 'Advance Received', 30, '2026-04-19 13:06:05', '2026-04-19 13:06:05', '2026-04-19 13:06:05'),
+(98, 20, 'Quotation generated. Version #3', '2026-04-19', 'Advance Received', 30, '2026-04-19 13:08:10', '2026-04-19 13:08:10', '2026-04-19 13:08:10'),
+(99, 19, 'Quotation generated. Version #2', '2026-04-20', 'Measurement Done', 30, '2026-04-20 11:15:41', '2026-04-20 11:15:41', '2026-04-20 11:15:41'),
+(100, 21, 'MEASUREMENT DONE SEND QUOTATION', '2026-04-30', 'In Design', 30, '2026-04-20 12:49:30', '2026-04-20 12:49:30', '2026-04-20 12:49:30'),
+(101, 22, 'REQUIRED QUOTATION', '2026-04-21', 'In Design', 30, '2026-04-20 12:54:39', '2026-04-20 12:54:39', '2026-04-20 12:54:39'),
+(102, 16, 'Quotation generated. Version #2', '2026-04-17', 'In Measurement', 30, '2026-04-20 14:21:02', '2026-04-20 14:21:02', '2026-04-20 14:21:02'),
+(103, 20, 'Quotation generated. Version #4', '2026-04-19', 'Advance Received', 30, '2026-04-20 15:28:55', '2026-04-20 15:28:55', '2026-04-20 15:28:55');
 
 -- --------------------------------------------------------
 
@@ -439,7 +551,10 @@ CREATE TABLE `lead_payments` (
 
 INSERT INTO `lead_payments` (`iLeadPaymentId`, `iLeadId`, `iPaidAmount`, `PaymentDate`, `PaymentMode`, `iUserID`, `created_at`, `updated_at`) VALUES
 (1, 2, 23.60, '2026-04-11', 'cash', 32, '2026-04-11 18:37:38', '2026-04-11 18:37:38'),
-(2, 7, 40000.00, '2026-04-12', 'cash', 32, '2026-04-12 16:20:33', '2026-04-12 16:25:04');
+(2, 7, 40000.00, '2026-04-12', 'cash', 32, '2026-04-12 16:20:33', '2026-04-12 16:25:04'),
+(4, 14, 1700.00, '2026-04-15', 'cash', 32, '2026-04-15 23:19:16', '2026-04-15 23:19:16'),
+(5, 17, 5000.00, '2026-04-18', 'cash', 32, '2026-04-18 16:05:40', '2026-04-18 16:05:40'),
+(6, 17, 7000.00, '2026-04-18', 'cash', 32, '2026-04-18 16:24:28', '2026-04-18 16:24:28');
 
 -- --------------------------------------------------------
 
@@ -479,7 +594,29 @@ INSERT INTO `lead_quotations` (`iQuotationId`, `iLeadId`, `quotation_batch_id`, 
 (5, 7, 1, 6, 4, 'inch', 9, 2, 'WPVC', 1, 200.00, 200.00, 40000.00, 1.00, 40000.00, '2026-04-12 16:17:11', '2026-04-12 16:17:11'),
 (6, 8, 1, 6, 4, 'inch', 1, 2, NULL, 1, 1.00, 1.00, 1.00, 500.00, 500.00, '2026-04-12 16:45:48', '2026-04-12 16:45:48'),
 (7, 12, 1, 6, 5, 'inch', 10, 5, NULL, 1, 15.00, 25.00, 375.00, 100.00, 37500.00, '2026-04-13 15:38:56', '2026-04-13 15:38:56'),
-(8, 13, 1, 7, 8, 'inch', 9, 5, NULL, 1, 4.00, 5.00, 20.00, 150.00, 3000.00, '2026-04-13 19:07:28', '2026-04-13 19:07:28');
+(8, 13, 1, 7, 8, 'inch', 9, 5, NULL, 1, 4.00, 5.00, 20.00, 150.00, 3000.00, '2026-04-13 19:07:28', '2026-04-13 19:07:28'),
+(9, 14, 1, 6, 4, 'Feet', 4, 2, NULL, 1, 5.00, 5.00, 25.00, 100.00, 3600.00, '2026-04-15 22:45:06', '2026-04-15 22:45:06'),
+(10, 13, 2, 7, 8, 'inch', 9, 5, NULL, 1, 4.00, 5.00, 20.00, 150.00, 5400.00, '2026-04-17 15:46:04', '2026-04-17 15:46:04'),
+(11, 13, 2, 8, 11, 'MM', 9, 2, 'ok', 1, 12.00, 10.00, 120.00, 1000.00, 144000.00, '2026-04-17 15:46:04', '2026-04-17 15:46:04'),
+(12, 13, 3, 7, 8, 'inch', 9, 5, NULL, 1, 4.00, 5.00, 20.00, 150.00, 5400.00, '2026-04-17 15:51:26', '2026-04-17 15:51:26'),
+(13, 13, 4, 7, 8, 'inch', 9, 5, NULL, 1, 4.00, 5.00, 0.25, 150.00, 37.50, '2026-04-17 17:13:38', '2026-04-17 17:13:38'),
+(14, 16, 1, 6, 4, 'MM', 4, 5, 'ok', 1, 1440.00, 1230.00, 20.19, 100.00, 2018.75, '2026-04-17 18:07:43', '2026-04-17 18:07:43'),
+(15, 17, 1, 4, 3, 'Feet', 1, 2, NULL, 1, 2000.00, 1000.00, 2000000.00, 500.00, 1000000000.00, '2026-04-18 15:19:23', '2026-04-18 15:19:23'),
+(16, 17, 2, 4, 3, 'Feet', 1, 2, NULL, 1, 2000.00, 1000.00, 2000000.00, 500.00, 1000000000.00, '2026-04-18 15:19:52', '2026-04-18 15:19:52'),
+(17, 17, 3, 4, 3, 'Feet', 1, 2, NULL, 1, 2000.00, 1000.00, 2000000.00, 500.00, 1000000000.00, '2026-04-18 15:19:52', '2026-04-18 15:19:52'),
+(18, 17, 4, 4, 3, 'MM', 1, 2, NULL, 1, 2000.00, 1000.00, 23.63, 500.00, 11812.50, '2026-04-18 15:20:17', '2026-04-18 15:20:17'),
+(19, 17, 5, 4, 3, 'MM', 1, 2, NULL, 1, 2000.00, 1000.00, 23.63, 500.00, 11812.50, '2026-04-18 15:20:18', '2026-04-18 15:20:18'),
+(20, 17, 6, 4, 3, 'MM', 1, 2, NULL, 1, 2000.00, 1000.00, 23.63, 500.00, 11812.50, '2026-04-18 15:40:06', '2026-04-18 15:40:06'),
+(21, 19, 1, 6, 4, 'inch', 1, 6, '3 light with d fogger', 1, 24.00, 20.00, 4.00, 1200.00, 4800.00, '2026-04-18 17:37:52', '2026-04-18 17:37:52'),
+(22, 20, 1, 6, 4, 'inch', 9, 2, NULL, 1, 36.00, 25.00, 6.75, 100.00, 675.00, '2026-04-19 12:50:05', '2026-04-19 12:50:05'),
+(23, 20, 2, 6, 4, 'inch', 9, 2, NULL, 1, 36.00, 25.00, 6.75, 100.00, 675.00, '2026-04-19 13:06:05', '2026-04-19 13:06:05'),
+(24, 20, 2, 4, 3, 'inch', 9, 2, NULL, 1, 36.00, 25.00, 6.75, 100.00, 675.00, '2026-04-19 13:06:05', '2026-04-19 13:06:05'),
+(25, 20, 3, 6, 4, 'inch', 9, 2, NULL, 2, 36.00, 25.00, 6.75, 100.00, 1350.00, '2026-04-19 13:08:10', '2026-04-19 13:08:10'),
+(26, 20, 3, 4, 3, 'inch', 9, 2, NULL, 3, 36.00, 25.00, 6.75, 100.00, 2025.00, '2026-04-19 13:08:10', '2026-04-19 13:08:10'),
+(27, 19, 2, 4, 3, 'inch', 1, 6, 'corner round', 3, 78.00, 30.00, 16.25, 800.00, 39000.00, '2026-04-20 11:15:41', '2026-04-20 11:15:41'),
+(28, 16, 2, 6, 4, 'MM', 4, 5, 'ok', 1, 1440.00, 1230.00, 20.19, 100.00, 2018.75, '2026-04-20 14:21:02', '2026-04-20 14:21:02'),
+(29, 20, 4, 6, 4, 'inch', 9, 2, NULL, 2, 36.00, 25.00, 13.50, 100.00, 1350.00, '2026-04-20 15:28:55', '2026-04-20 15:28:55'),
+(30, 20, 4, 4, 3, 'inch', 9, 5, NULL, 3, 36.00, 25.00, 20.25, 100.00, 2025.00, '2026-04-20 15:28:55', '2026-04-20 15:28:55');
 
 -- --------------------------------------------------------
 
@@ -638,6 +775,33 @@ INSERT INTO `product_shape` (`shape_id`, `shape_title`, `iStatus`, `isDelete`) V
 (11, 'Diamond', 1, 0),
 (12, 'Trapezium', 1, 0),
 (13, 'Custom Shape', 1, 0);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `quotation_cancel_reasons`
+--
+
+CREATE TABLE `quotation_cancel_reasons` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `reason` varchar(150) NOT NULL,
+  `iStatus` tinyint(4) NOT NULL DEFAULT 1,
+  `isDelete` tinyint(4) NOT NULL DEFAULT 0,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `quotation_cancel_reasons`
+--
+
+INSERT INTO `quotation_cancel_reasons` (`id`, `reason`, `iStatus`, `isDelete`, `created_at`, `updated_at`) VALUES
+(1, 'Price too high', 1, 0, '2026-04-20 06:52:11', '2026-04-20 06:52:11'),
+(2, 'Customer chose a competitor', 1, 0, '2026-04-20 06:52:24', '2026-04-20 06:52:24'),
+(3, 'Project was delayed, cancelled, or put on hold by the client', 1, 0, '2026-04-20 06:52:34', '2026-04-20 06:52:34'),
+(4, 'Scope of work changed', 1, 0, '2026-04-20 06:52:41', '2026-04-20 06:52:41'),
+(5, 'Product not available', 1, 0, '2026-04-20 06:52:54', '2026-04-20 06:52:54'),
+(6, 'Duplicate quotation', 1, 0, '2026-04-20 06:53:11', '2026-04-20 06:53:11');
 
 -- --------------------------------------------------------
 
@@ -804,7 +968,8 @@ INSERT INTO `users` (`id`, `strUserName`, `first_name`, `last_name`, `email`, `m
 (33, 'Faizu', 'Faizu', NULL, 'Faizu@hypermirror.in', '8200686465', '8200686465', '-', NULL, '$2y$10$Mp.Ivt3v386VNzq.7T6J1eIvuvC49mXFtzldJqny1IFDXVVlHwbDW', 2, 3, 0, NULL, NULL, 1, NULL, NULL, '2026-04-07 22:31:59', '2026-04-07 22:31:59'),
 (34, 'Monu', 'Monu', NULL, 'Monu@hypermirror.in', '7567772637', '7567772637', '-', NULL, '$2y$10$9lwVo/leClXpASL6oA/WX.wuiN3BRDhdQvcKKDjuroVJRv20OjHdm', 2, 4, 0, NULL, NULL, 1, NULL, NULL, '2026-04-07 22:33:02', '2026-04-07 22:33:02'),
 (35, 'Akbar', 'Akbar', NULL, 'akbar@hypermirror.in', '8000505538', '8000505538', '-', NULL, '$2y$10$kEs2AtKngmU0L2Mwjb9Y9e4eo2y5NPl2038P4Zprpf.r9hus3e2fO', 2, 5, 0, NULL, NULL, 1, NULL, NULL, '2026-04-07 22:33:41', '2026-04-07 22:33:41'),
-(36, 'prerna', 'prerna', NULL, 'dev5.apolloinfotech@gmail.com', '9723391747', '9723391747', 'Sola\r\nScience City', NULL, '$2y$10$94sUaOCRgudb7zgZYVw4puIclVHU.BkNzD9NM5iFTCkOI92VSi2NG', 2, 1, 1, NULL, NULL, 1, NULL, NULL, '2026-04-08 13:23:53', '2026-04-08 13:23:53');
+(36, 'prerna', 'prerna', NULL, 'dev5.apolloinfotech@gmail.com', '9723391747', '9723391747', 'Sola\r\nScience City', NULL, '$2y$10$94sUaOCRgudb7zgZYVw4puIclVHU.BkNzD9NM5iFTCkOI92VSi2NG', 2, 1, 1, NULL, NULL, 1, NULL, NULL, '2026-04-08 13:23:53', '2026-04-08 13:23:53'),
+(37, 'akbar_measurement', 'akbar_measurement', NULL, 'akbar1@hypermirror.in', '9712009800', '9712009800', NULL, NULL, '$2y$10$7pAGvr8LQ.KpO4uJVWL3NeRemjl0yjjBlP1cuhlEP8UuX4W1g8FUG', 2, 2, 0, NULL, NULL, 1, NULL, NULL, '2026-04-18 14:38:36', '2026-04-18 14:38:36');
 
 -- --------------------------------------------------------
 
@@ -837,7 +1002,10 @@ INSERT INTO `user_showrooms` (`UserShowRoomId`, `UserId`, `ShowRoomId`, `created
 (10, 35, 2, NULL, NULL),
 (11, 35, 1, NULL, NULL),
 (12, 35, 3, NULL, NULL),
-(13, 36, 2, NULL, NULL);
+(13, 36, 2, NULL, NULL),
+(14, 37, 2, NULL, NULL),
+(15, 37, 1, NULL, NULL),
+(16, 37, 3, NULL, NULL);
 
 --
 -- Indexes for dumped tables
@@ -995,6 +1163,12 @@ ALTER TABLE `product_shape`
   ADD PRIMARY KEY (`shape_id`);
 
 --
+-- Indexes for table `quotation_cancel_reasons`
+--
+ALTER TABLE `quotation_cancel_reasons`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `roles`
 --
 ALTER TABLE `roles`
@@ -1052,19 +1226,19 @@ ALTER TABLE `user_showrooms`
 -- AUTO_INCREMENT for table `account_payments_collection`
 --
 ALTER TABLE `account_payments_collection`
-  MODIFY `account_payment_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `account_payment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `admin_payments_collection`
 --
 ALTER TABLE `admin_payments_collection`
-  MODIFY `admin_payment_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `admin_payment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `cash_payment_ledger`
 --
 ALTER TABLE `cash_payment_ledger`
-  MODIFY `cash_payment_ledger_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `cash_payment_ledger_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
 
 --
 -- AUTO_INCREMENT for table `complain_master`
@@ -1082,19 +1256,19 @@ ALTER TABLE `crm_roles`
 -- AUTO_INCREMENT for table `customers`
 --
 ALTER TABLE `customers`
-  MODIFY `iCustomerId` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `iCustomerId` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `invoices`
 --
 ALTER TABLE `invoices`
-  MODIFY `iInvoiceId` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `iInvoiceId` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `invoice_items`
 --
 ALTER TABLE `invoice_items`
-  MODIFY `iItemId` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `iItemId` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `invoice_pdf_settings`
@@ -1106,31 +1280,31 @@ ALTER TABLE `invoice_pdf_settings`
 -- AUTO_INCREMENT for table `leads`
 --
 ALTER TABLE `leads`
-  MODIFY `iLeadId` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `iLeadId` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
 -- AUTO_INCREMENT for table `lead_designs`
 --
 ALTER TABLE `lead_designs`
-  MODIFY `iLeadDesignId` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `iLeadDesignId` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT for table `lead_histories`
 --
 ALTER TABLE `lead_histories`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=49;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=104;
 
 --
 -- AUTO_INCREMENT for table `lead_payments`
 --
 ALTER TABLE `lead_payments`
-  MODIFY `iLeadPaymentId` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `iLeadPaymentId` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `lead_quotations`
 --
 ALTER TABLE `lead_quotations`
-  MODIFY `iQuotationId` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `iQuotationId` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
 
 --
 -- AUTO_INCREMENT for table `migrations`
@@ -1169,6 +1343,12 @@ ALTER TABLE `product_shape`
   MODIFY `shape_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
+-- AUTO_INCREMENT for table `quotation_cancel_reasons`
+--
+ALTER TABLE `quotation_cancel_reasons`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
 -- AUTO_INCREMENT for table `roles`
 --
 ALTER TABLE `roles`
@@ -1196,13 +1376,13 @@ ALTER TABLE `showrooms`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
 
 --
 -- AUTO_INCREMENT for table `user_showrooms`
 --
 ALTER TABLE `user_showrooms`
-  MODIFY `UserShowRoomId` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `UserShowRoomId` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- Constraints for dumped tables

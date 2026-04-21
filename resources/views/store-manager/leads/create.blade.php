@@ -113,7 +113,7 @@
                                     @endif
                                 </div>
 
-                                <div class="col-md-4 mb-4 fitting-required-box">
+                                <!-- <div class="col-md-4 mb-4 fitting-required-box">
                                     <label class="form-label">Fitting Required? <span style="color:red;">*</span></label>
                                     <select name="isFittingRequired" id="isFittingRequired" class="form-control">
                                         <option value="0" {{ old('isFittingRequired') == '0' ? 'selected' : '' }}>No
@@ -124,7 +124,7 @@
                                     @if ($errors->has('isFittingRequired'))
                                         <span class="text-danger">{{ $errors->first('isFittingRequired') }}</span>
                                     @endif
-                                </div>
+                                </div> -->
 
                                 <div class="col-md-4 mb-4 fitting-charge-type-box">
                                     <label class="form-label">Fitting Charges Included or Extra? <span
@@ -202,26 +202,28 @@
         $(document).ready(function() {
             function toggleLeadFields() {
                 let onlyFitting = $('#IsOnlyFittingQuotation').val();
-                let fittingRequired = $('#isFittingRequired').val();
+               // let fittingRequired = $('#isFittingRequired').val();
                 let measurementRequired = $('#IsMeasureMentRequired').val();
 
                 if (onlyFitting == '1') {
-                    $('.fitting-required-box').hide();
+                    //$('.fitting-required-box').hide();
                     $('.fitting-charge-type-box').show();
                     $('.measurement-required-box').hide();
                     $('.measurement-date-box').hide();
                     $('.quotation-date-box').show();
 
-                    $('#isFittingRequired').val('1');
+                  //  $('#isFittingRequired').val('1');
                 } else {
-                    $('.fitting-required-box').show();
+                   /* $('.fitting-required-box').show();
 
                     if (fittingRequired == '1') {
                         $('.fitting-charge-type-box').show();
                     } else {
                         $('.fitting-charge-type-box').hide();
                         $('#isFittingChargeIncluded').val('');
-                    }
+                    }*/
+                    $('.fitting-charge-type-box').hide();
+                    $('#isFittingChargeIncluded').val('');
 
                     $('.measurement-required-box').show();
 
@@ -245,7 +247,7 @@
                 toggleLeadFields();
             });*/
 
-            $('#IsOnlyFittingQuotation, #isFittingRequired, #IsMeasureMentRequired').on('change', function() {
+             $('#IsOnlyFittingQuotation, #IsMeasureMentRequired').on('change', function() {
                 toggleLeadFields();
             });
 

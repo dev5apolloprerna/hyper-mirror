@@ -159,15 +159,10 @@ class LeadController extends Controller
             'customer_type'         => 'required|in:B2B,Retail',
             'company_name'          => 'nullable|string|max:150',
             'IsOnlyFittingQuotation' => 'required|in:0,1',
-            'isFittingRequired'     => [
-                'nullable',
-                'in:0,1',
-                Rule::requiredIf(fn() => (int) $request->input('IsOnlyFittingQuotation') !== 1),
-            ],
             'isFittingChargeIncluded' => [
                 'nullable',
                 'in:0,1',
-                Rule::requiredIf(fn() => (int) $request->input('IsOnlyFittingQuotation') === 1 || (int) $request->input('isFittingRequired') === 1),
+                Rule::requiredIf(fn() => (int) $request->input('IsOnlyFittingQuotation') === 1),
             ],
 
             'IsMeasureMentRequired' => 'required|in:0,1',
@@ -211,7 +206,7 @@ class LeadController extends Controller
 
             $isMeasurementRequired = (int) $data['IsMeasureMentRequired'] === 1;
             $isOnlyFittingQuotation = (int) $data['IsOnlyFittingQuotation'] === 1;
-            $isFittingRequired = $isOnlyFittingQuotation ? 1 : (int) ($data['isFittingRequired'] ?? 0);
+            $isFittingRequired = $isOnlyFittingQuotation ? 1 : 0;
             $isFittingChargeIncluded = $isFittingRequired ? (int) ($data['isFittingChargeIncluded'] ?? 0) : 0;
             $status = $isMeasurementRequired
                 ? LeadWorkflow::STATUS_IN_MEASUREMENT
@@ -266,15 +261,10 @@ class LeadController extends Controller
             'customer_type'       => 'required|in:B2B,Retail',
             'company_name'        => 'nullable|string|max:150',
             'IsOnlyFittingQuotation' => 'required|in:0,1',
-            'isFittingRequired'   => [
-                'nullable',
-                'in:0,1',
-                Rule::requiredIf(fn() => (int) $request->input('IsOnlyFittingQuotation') !== 1),
-            ],
             'isFittingChargeIncluded' => [
                 'nullable',
                 'in:0,1',
-                Rule::requiredIf(fn() => (int) $request->input('IsOnlyFittingQuotation') === 1 || (int) $request->input('isFittingRequired') === 1),
+            Rule::requiredIf(fn() => (int) $request->input('IsOnlyFittingQuotation') === 1),
             ],
             'IsMeasureMentRequired' => 'required|in:0,1',
             'MeasurementVisitDate'  => 'nullable|date|required_if:IsMeasureMentRequired,1',
@@ -296,7 +286,7 @@ class LeadController extends Controller
 
             $isMeasurementRequired = (int) $data['IsMeasureMentRequired'] === 1;
             $isOnlyFittingQuotation = (int) $data['IsOnlyFittingQuotation'] === 1;
-            $isFittingRequired = $isOnlyFittingQuotation ? 1 : (int) ($data['isFittingRequired'] ?? 0);
+            $isFittingRequired = $isOnlyFittingQuotation ? 1 : 0;
             $isFittingChargeIncluded = $isFittingRequired ? (int) ($data['isFittingChargeIncluded'] ?? 0) : 0;
             $nextFollowDate = $isMeasurementRequired
                 ? ($data['MeasurementVisitDate'] ?? null)
@@ -417,6 +407,7 @@ class LeadController extends Controller
             'items.*.decRatePerSqft'                   => 'required|numeric|min:0',
             'items.*.calculation_multiple'             => 'required|integer|in:3,6',
             'followup_date'                            => 'required|date',
+            'isFittingRequired'                        => 'required|in:0,1',
             'iFittingCharges'                          => $requiresManualFittingCharge
                 ? 'required|numeric|min:0'
                 : 'nullable|numeric|min:0',
@@ -515,6 +506,7 @@ class LeadController extends Controller
                 'iQuotationId'          => $firstQuotation?->iQuotationId,
                 'iLeadAmount'           => $grandTotal,
                 'NetFollowupdate'       => $data['followup_date'],
+                'isFittingRequired'     => (int) $data['isFittingRequired'],
                 'iFittingCharges'       => $fittingCharges,
                 'isDiscountApplicable'  => $discountApplicable ? 1 : 0,
                 'decDiscountAmount'     => $discount,
