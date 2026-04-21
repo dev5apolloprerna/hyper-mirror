@@ -25,14 +25,14 @@
         }
 
         .header-logo {
-            width: 100px;
+            width: 150px;
             height: auto;
             display: block;
             margin: 0 auto 6px;
         }
 
         .company-title {
-            font-size: 22px;
+            font-size: 15px;
             font-weight: 700;
             line-height: 1.1;
             margin-bottom: 4px;
@@ -40,7 +40,7 @@
         }
 
         .doc-subtitle {
-            font-size: 16px;
+            font-size: 12px;
             margin: 0;
             text-align: center;
         }
@@ -262,10 +262,9 @@
                     <div><strong>Site Address:</strong> {{ $lead->SiteAddress ?? '—' }}</div>
                 </td>
                 <td>
-                    <div class="party-title">Prepared By :-
+                    <div class="party-title">Prepared By:-
                         {{ optional($lead->createdBy)->name ?? (optional($lead->createdBy)->first_name ?? 'N/A') }}
                     </div>
-
                     <div>{{ config('app.name', 'Mirror CRM') }}</div>
                     <div>Generated from CRM</div>
                 </td>
@@ -348,7 +347,6 @@
             @if ($canViewFinancial)
                 <td class="summary-cell">
                     <table class="summary-table">
-
                         <tr>
                             <td>Total Qty</td>
                             <td class="text-right">{{ number_format($totalQty, 0) }}</td>
@@ -357,7 +355,6 @@
                             <td>Total Sqft</td>
                             <td class="text-right">{{ number_format($totalSqft, 2) }}</td>
                         </tr>
-
                         <tr>
                             <td>Subtotal</td>
                             <td class="text-right">₹{{ number_format($subtotalAmount, 2) }}</td>

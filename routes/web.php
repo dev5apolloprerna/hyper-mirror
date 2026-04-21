@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\InvoicePdfSettingController;
 use App\Http\Controllers\Admin\QuotationCancelReasonController;
 use App\Http\Controllers\Admin\PartyReportController;
 
+
 use App\Http\Controllers\StoreManager\LeadController;
 use App\Http\Controllers\StoreManager\LeadDesignController;
 use App\Http\Controllers\StoreManager\LeadHistoryController;
@@ -29,7 +30,6 @@ use App\Http\Controllers\StoreManager\LeadPaymentController;
 use App\Http\Controllers\StoreManager\InvoiceController;
 use App\Http\Controllers\ComplainMasterController;
 use App\Http\Controllers\AccountUser\AccountPaymentController;
-
 
 use App\Http\Controllers\StoreManager\LedgerController;
 
@@ -111,7 +111,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::post('product-feature/bulk-delete', [ProductFeatureController::class, 'bulkDelete'])->name('product-feature.bulkDelete');
 });
 
-
 // Admin: Quotation Cancel Reasons
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('quotation-cancel-reason', [QuotationCancelReasonController::class, 'index'])->name('quotation-cancel-reason.index');
@@ -120,7 +119,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::delete('quotation-cancel-reason/delete/{id}', [QuotationCancelReasonController::class, 'destroy'])->name('quotation-cancel-reason.delete');
     Route::post('quotation-cancel-reason/bulk-delete', [QuotationCancelReasonController::class, 'bulkDelete'])->name('quotation-cancel-reason.bulkDelete');
 });
-
 
 // Admin: Products
 Route::prefix('admin')->name('admin.')->group(function () {
@@ -219,7 +217,8 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::delete('users/delete/{user}', [CrmUserController::class, 'destroy'])->name('users.destroy');
     Route::get('reports/business', [BusinessReportController::class, 'index'])->name('reports.business');
     Route::get('reports/party', [PartyReportController::class, 'index'])->name('reports.party');
-    
+
+
     Route::get('invoice-settings', [InvoicePdfSettingController::class, 'edit'])->name('invoice-settings.edit');
     Route::post('invoice-settings', [InvoicePdfSettingController::class, 'update'])->name('invoice-settings.update');
 });
