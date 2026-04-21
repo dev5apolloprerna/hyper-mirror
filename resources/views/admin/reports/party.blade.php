@@ -26,16 +26,29 @@
             <div class="card mb-3 border-0 shadow-sm">
                 <div class="card-body">
                     <form method="GET" class="row g-2 align-items-end">
+
                         <div class="col-md-3">
-                            <label class="form-label">From Date</label>
+                             <label class="form-label">Party Name</label>
+                            <input type="text" name="party_name" value="{{ $partyName ?? '' }}" class="form-control" placeholder="Enter party name">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Mobile No</label>
+                            <input type="text" name="mobile_no" value="{{ $mobileNo ?? '' }}" class="form-control" placeholder="Enter mobile no">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Quotation</label>
+                            <input type="text" name="quotation_search" value="{{ $quotationSearch ?? '' }}" class="form-control" placeholder="Lead no / amount">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Inquiry From Date</label>
                             <input type="date" name="from_date" value="{{ $fromDate }}" class="form-control">
                         </div>
-                        <div class="col-md-3">
-                            <label class="form-label">To Date</label>
+                        <div class="col-md-2">
+                            <label class="form-label">Inquiry To Date</label>
                             <input type="date" name="to_date" value="{{ $toDate }}" class="form-control">
                         </div>
-                        <div class="col-md-6 d-flex gap-2 align-items-end">
-                            <button class="btn btn-primary" type="submit"><i class="fas fa-search me-1"></i> Search</button>
+                        <div class="col-md-1 d-flex gap-2 align-items-end">
+                            <button class="btn btn-primary" type="submit"><i class="fas fa-search"></i></button>
                             <a href="{{ route('admin.reports.party') }}" class="btn btn-light border">Reset</a>
                         </div>
                     </form>

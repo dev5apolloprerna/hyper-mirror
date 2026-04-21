@@ -13,6 +13,9 @@ class PartyReportController extends Controller
     {
         $fromDate = $request->input('from_date');
         $toDate = $request->input('to_date');
+        $partyName = trim((string) $request->input('party_name', ''));
+        $mobileNo = trim((string) $request->input('mobile_no', ''));
+        $quotationSearch = trim((string) $request->input('quotation_search', ''));
 
         $leadQuery = Lead::query()->with(['customer', 'createdBy', 'showroom', 'payments']);
 
@@ -22,6 +25,25 @@ class PartyReportController extends Controller
 
         if ($toDate) {
             $leadQuery->whereDate('CreatedDate', '<=', $toDate);
+        }
+        if ($partyName !== '') {
+            $leadQuery->whereHas('customer', function ($query) use ($partyName) {
+                $query->where('strCustomer', 'like', "%{$partyName}%");
+            });
+        }
+
+        if ($mobileNo !== '') {
+            $leadQuery->whereHas('customer', function ($query) use ($mobileNo) {
+                $query->where('strMobile', 'like', "%{$mobileNo}%");
+            });
+        }
+
+        if ($quotationSearch !== '') {
+            $leadQuery->where(function ($query) use ($quotationSearch) {
+                $query->where('strLeadNo', 'like', "%{$quotationSearch}%")
+                    ->orWhere('iQuotationId', 'like', "%{$quotationSearch}%")
+                    ->orWhere('iLeadAmount', 'like', "%{$quotationSearch}%");
+            });
         }
 
         $leads = $leadQuery->get();
@@ -81,6 +103,6 @@ class PartyReportController extends Controller
             ->sortByDesc('total_amount')
             ->values();
 
-        return view('admin.reports.party', compact('fromDate', 'toDate', 'partySummary'));
+        return view('admin.reports.party', compact('fromDate', 'toDate', 'partyName', 'mobileNo', 'quotationSearch', 'partySummary'));
     }
 }
