@@ -16,34 +16,41 @@
         }
 
         /* centered header */
-        .header-wrap {
-            width: 100%;
-            text-align: center;
-            margin-bottom: 10px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid #d1d5db;
-        }
+         .header-wrap {
+        width: 100%;
+        text-align: center;
+        margin-bottom: 10px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #d1d5db;
+    }
 
-        .header-logo {
-            width: 150px;
-            height: auto;
-            display: block;
-            margin: 0 auto 6px;
-        }
+    .header-logo {
+        width: 150px;
+        height: auto;
+        display: block;
+        margin: 0 auto 6px;
+    }
 
-        .company-title {
-            font-size: 15px;
-            font-weight: 700;
-            line-height: 1.1;
-            margin-bottom: 4px;
-            text-align: center;
-        }
+    .company-meta {
+        width: 75%;
+        margin: 2px auto 0;
+        font-size: 10px;
+        color: #374151;
+        line-height: 1.5;
+        text-align: center;
+        word-break: break-word;
+    }
 
-        .doc-subtitle {
-            font-size: 12px;
-            margin: 0;
-            text-align: center;
-        }
+    .company-meta strong {
+        font-weight: 700;
+    }
+
+    .doc-subtitle {
+        font-size: 12px;
+        margin-top: 6px;
+        text-align: center;
+        font-weight: 700;
+    }
 
         table {
             width: 100%;
@@ -202,6 +209,13 @@
             width: 100%;
             text-align: right;
         }
+         .company-meta {
+            font-size: 10px;
+            margin-top: 2px;
+            text-align: center;
+            color: #374151;
+            line-height: 1.35;
+        }
     </style>
 </head>
 
@@ -222,6 +236,11 @@
         $netAmount = $amountAfterDiscount;
         $logoPath = base_path('assets/images/logo.png');
         $termsAndConditions = trim((string) optional($invoicePdfSetting ?? null)->terms_and_conditions);
+        $bankDetails = trim((string) optional($invoicePdfSetting ?? null)->bank_details);
+       
+        $companyGstNo = "GSTIN: 24BIQPG6204F1ZH, State: 24-Gujarat";
+        $companyAddress ="10, Sahyog Estate, Behind Anand Restaurant, Isanpur, A’bad 382443
+Phone no.: +91 88662 77000 Email: hypermirror01@gmail.com";
     @endphp
 
     @php
@@ -229,13 +248,24 @@
     @endphp
 
     <div class="header-wrap">
-        @if (file_exists($logoPath))
-            <img src="{{ $logoPath }}" alt="Company Logo" class="header-logo">
-        @endif
+    @if (file_exists($logoPath))
+        <img src="{{ $logoPath }}" alt="Company Logo" class="header-logo">
+    @endif
 
-        <div class="company-title">{{ config('app.name', 'Mirror CRM') }}</div>
-        <div class="doc-subtitle">Quotation Document</div>
-    </div>
+    @if (!empty($companyGstNo))
+        <div class="company-meta">
+            <strong>GST No:</strong> {{ $companyGstNo }}
+        </div>
+    @endif
+
+    @if (!empty($companyAddress))
+        <div class="company-meta">
+            <strong>Address:</strong> {!! nl2br(e($companyAddress)) !!}
+        </div>
+    @endif
+
+    <div class="doc-subtitle">Quotation Document</div>
+</div>
     <table class="meta-table">
         <tr>
             <td class="label">Quotation No</td>
@@ -342,7 +372,12 @@
                             <li>Taxes and additional charges, if applicable, will be charged as per actuals.</li>
                         </ol>
                     @endif
+
                 </div>
+                @if ($bankDetails !== '')
+                    <div class="detail-title">Bank Details</div>
+                    <div class="detail-body">{!! $bankDetails !!}</div>
+                @endif
             </td>
             @if ($canViewFinancial)
                 <td class="summary-cell">

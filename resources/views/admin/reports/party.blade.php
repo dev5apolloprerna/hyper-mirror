@@ -154,6 +154,7 @@
                                 <th>Lead No</th>
                                 <th>Date</th>
                                 <th>Executive</th>
+                                <th>Showrooms</th>
                                 <th>Showroom</th>
                                 <th>Status</th>
                                 <th class="text-end">Lead Amount</th>
@@ -168,11 +169,14 @@
                                 @php
                                     $leadPaid = (float) $lead->payments->sum('iPaidAmount');
                                     $leadUnpaid = max(0, (float) ($lead->iLeadAmount ?? 0) - $leadPaid);
-                                    $latestPayment = $lead->payments
+                                    $leadPayments = $lead->payments
                                         ->sortByDesc('PaymentDate')
-                                        ->first();
-                                    $latestPaymentDate = optional($latestPayment)->PaymentDate;
+                                            ->values();
                                     $executiveName = trim((string) (optional($lead->createdBy)->full_name ?? '')) ?: (optional($lead->createdBy)->strUserName ?? optional($lead->createdBy)->name ?? 'N/A');
+                                    $assignedShowrooms = optional($lead->createdBy)->showrooms
+                                        ?->pluck('strShowRoomName')
+                                        ->filter()
+                                        ->implode(', ') ?: 'N/A';
                                     $showroomName = optional($lead->showroom)->strShowRoomName ?? 'N/A';
                                 @endphp
                                 <tr>
@@ -186,6 +190,7 @@
                                         @endif
                                     </td>
                                     <td>{{ $executiveName }}</td>
+                                    <td>{{ $assignedShowrooms }}</td>
                                     <td>{{ $showroomName }}</td>
                                     <td>{{ $lead->iCurrentLeadStatus ?? '-' }}</td>
                                     <td class="text-end">₹{{ number_format((float)($lead->iLeadAmount ?? 0), 2) }}</td>
@@ -195,13 +200,13 @@
                                     <td>-</td>
                                 </tr>
 
-                                @if($latestPayment)
+                                @foreach($leadPayments as $payment)
                                     <tr class="table-light">
                                         <td><span class="badge bg-success">Payment</span></td>
                                         <td>{{ $lead->strLeadNo ?? '-' }}</td>
                                         <td>
-                                            @if($latestPayment->PaymentDate)
-                                                {{ \Carbon\Carbon::parse($latestPayment->PaymentDate)->format('d-m-Y') }}
+                                            @if($payment->PaymentDate)
+                                                {{ \Carbon\Carbon::parse($payment->PaymentDate)->format('d-m-Y') }}
                                             @else
                                                 -
                                             @endif
@@ -210,12 +215,12 @@
                                         <td>{{ $showroomName }}</td>
                                         <td>{{ $lead->iCurrentLeadStatus ?? '-' }}</td>
                                         <td class="text-end">₹{{ number_format((float)($lead->iLeadAmount ?? 0), 2) }}</td>
-                                        <td class="text-end text-success">₹{{ number_format((float)($latestPayment->iPaidAmount ?? 0), 2) }}</td>
+                                        <td class="text-end text-success">₹{{ number_format((float)($payment->iPaidAmount ?? 0), 2) }}</td>
                                         <td class="text-end">₹{{ number_format($leadPaid, 2) }}</td>
                                         <td class="text-end">₹{{ number_format($leadUnpaid, 2) }}</td>
-                                        <td>{{ $latestPayment->PaymentMode ?: '-' }}</td>
+                                        <td>{{ $payment->PaymentMode ?: '-' }}</td>
                                     </tr>
-                                @endif
+                                @endforeach
                             @empty
                                 <tr>
                                     <td colspan="11" class="text-center text-muted py-3">No lead data found</td>

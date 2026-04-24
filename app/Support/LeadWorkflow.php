@@ -80,7 +80,7 @@ class LeadWorkflow
      * Statuses that are "read-only" for the assigned role —
      * the role can VIEW the lead but not change status further.
      */
-    public static function readOnlyForRole(string $roleSlug, string $currentStatus): bool
+        public static function readOnlyForRole(?string $roleSlug, string $currentStatus): bool
     {
         // Production cannot change once "Ready to Dispatched"
         if ($roleSlug === 'production' && $currentStatus === self::STATUS_READY_TO_DISPATCHED) {

@@ -31,6 +31,7 @@ class InvoiceController extends Controller
 
         $this->authorise();
         $isAdmin = $this->isAdminLike();
+        $canManageInvoices = $this->isStoreManager();
 
         /*$query = Invoice::with(['showroom', 'createdBy', 'items.category', 'items.product'])
             ->orderByDesc('iInvoiceId');
@@ -130,14 +131,16 @@ class InvoiceController extends Controller
             'overallUnpaid',
             'todayCashAmount',
             'todayBankAmount',
-            'todayUnpaidAmount'
+            'todayUnpaidAmount',
+            'canManageInvoices'
         ));
     }
 
     // ── Create form ──────────────────────────────────────────────────────────
     public function create()
     {
-        $this->authorise();
+        //$this->authorise();
+        abort_unless($this->isStoreManager(), 403);
 
         $isAdmin = $this->isAdminLike();
         $assignedShowroomIds = $isAdmin
@@ -166,7 +169,7 @@ class InvoiceController extends Controller
     public function store(Request $request)
     {
 
-        $this->authorise();
+        abort_unless($this->isStoreManager(), 403);
         $isAdmin = $this->isAdminLike();
 
         $assignedShowroomIds = $isAdmin
@@ -321,7 +324,7 @@ class InvoiceController extends Controller
     }
     public function updatePayment(Request $request, Invoice $invoice)
     {
-        $this->authorise();
+        abort_unless($this->isStoreManager(), 403);
 
         if ($invoice->payment_received) {
             return redirect()
@@ -358,8 +361,7 @@ class InvoiceController extends Controller
     // ── Delete ───────────────────────────────────────────────────────────────
     public function destroy(Invoice $invoice)
     {
-        // $this->authorise();
-        abort_unless($this->isAdminLike(), 403);
+        abort_unless($this->isStoreManager(), 403);
         $invoice->delete();
         return redirect()->route('store.invoice.index')
             ->with('success', 'Invoice deleted successfully.');

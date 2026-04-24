@@ -254,6 +254,7 @@
                                         <tr>
                                             <th>Customer</th>
                                             <th>Executive</th>
+                                            <th>Showroom</th>
                                             <th>Quotation Given</th>
                                             <th>Done</th>
                                             <th>Pending</th>
@@ -267,6 +268,7 @@
                                             <tr>
                                                 <td>{{ $row['customer_name'] }}</td>
                                                 <td>{{ $row['sales_executive_name'] }}</td>
+                                                <td>{{ $row['showroom_names'] }}</td>
                                                 <td>₹{{ number_format((float) $row['total_quotation_given'], 2) }}</td>
                                                 <td class="text-success fw-semibold">₹{{ number_format((float) $row['total_quotation_done'], 2) }}</td>
                                                 <td class="text-warning">₹{{ number_format((float) $row['total_payment_pending'], 2) }}</td>
@@ -282,7 +284,7 @@
                                                 </td>
                                             </tr>
                                         @empty
-                                            <tr><td colspan="8" class="text-center text-muted py-3">No data found</td></tr>
+                                            <tr><td colspan="9" class="text-center text-muted py-3">No data found</td></tr>
                                         @endforelse
                                     </tbody>
                                 </table>
@@ -311,6 +313,7 @@
                         <thead class="table-light">
                             <tr>
                                 <th>Lead</th>
+                                <th>Showroom</th>
                                 <th>Status</th>
                                 <th>Amount</th>
                                 <th>Received</th>
@@ -322,9 +325,11 @@
                                 @php
                                     $received = (float) $historyLead->payments->sum('iPaidAmount');
                                     $pending = max(0, (float) $historyLead->iLeadAmount - $received);
+                                    $leadShowroomName = $showroomNameMap->get($historyLead->iShowroomId) ?? 'N/A';
                                 @endphp
                                 <tr>
                                     <td>{{ $historyLead->strLeadNo }}</td>
+                                    <td>{{ $leadShowroomName }}</td>
                                     <td>{{ $historyLead->iCurrentLeadStatus }}</td>
                                     <td>₹{{ number_format((float)$historyLead->iLeadAmount, 2) }}</td>
                                     <td>₹{{ number_format($received, 2) }}</td>

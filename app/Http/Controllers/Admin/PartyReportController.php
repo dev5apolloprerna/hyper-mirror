@@ -17,7 +17,12 @@ class PartyReportController extends Controller
         $mobileNo = trim((string) $request->input('mobile_no', ''));
         $quotationSearch = trim((string) $request->input('quotation_search', ''));
 
-        $leadQuery = Lead::query()->with(['customer', 'createdBy', 'showroom', 'payments']);
+        $leadQuery = Lead::query()->with([
+            'customer',
+            'createdBy.showrooms',
+            'showroom',
+            'payments',
+        ]);
 
         if ($fromDate) {
             $leadQuery->whereDate('CreatedDate', '>=', $fromDate);
