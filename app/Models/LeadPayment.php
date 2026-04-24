@@ -15,6 +15,7 @@ class LeadPayment extends Model
     protected $fillable = [
         'iLeadId',
         'iPaidAmount',
+        'iDiscountAmount',
         'PaymentDate',
         'PaymentMode',
         'iUserID',

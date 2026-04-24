@@ -8,7 +8,7 @@ use App\Models\LeadPayment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
-
+use Barryvdh\DomPDF\Facade\Pdf;
 use App\Helpers\LedgerHelper;
 
 
@@ -62,6 +62,7 @@ class LeadPaymentController extends Controller
 
         $request->validate([
             'iPaidAmount' => 'required|numeric|min:0.01',
+            'iDiscountAmount' => 'nullable|numeric|min:0',
             'PaymentDate' => 'required|date',
             'PaymentMode' => 'required|string|max:30',
         ]);
@@ -72,6 +73,7 @@ class LeadPaymentController extends Controller
             LeadPayment::create([
                 'iLeadId' => $lead->iLeadId,
                 'iPaidAmount' => $request->iPaidAmount,
+                'iDiscountAmount' => $request->iDiscountAmount ?? 0,
                 'PaymentDate' => $request->PaymentDate,
                 'PaymentMode' => $request->PaymentMode,
                 'iUserID' => auth()->id(),
@@ -133,6 +135,7 @@ class LeadPaymentController extends Controller
 
         $request->validate([
             'iPaidAmount' => 'required|numeric|min:0.01',
+            'iDiscountAmount' => 'nullable|numeric|min:0',
             'PaymentDate' => 'required|date',
             'PaymentMode' => 'required|string|max:30',
         ]);
@@ -142,6 +145,7 @@ class LeadPaymentController extends Controller
         try {
             $payment->update([
                 'iPaidAmount' => $request->iPaidAmount,
+                'iDiscountAmount' => $request->iDiscountAmount ?? 0,
                 'PaymentDate' => $request->PaymentDate,
                 'PaymentMode' => $request->PaymentMode,
             ]);
@@ -217,5 +221,30 @@ class LeadPaymentController extends Controller
             'status' => true,
             'message' => 'Selected lead payments deleted successfully.'
         ]);
+    }
+    public function pdf(Lead $lead)
+    {
+        $payments = LeadPayment::with('user')
+            ->where('iLeadId', $lead->iLeadId)
+            ->orderBy('PaymentDate')
+            ->orderBy('iLeadPaymentId')
+            ->get();
+
+        $totalPaid = (float) $payments->sum('iPaidAmount');
+        $totalDiscount = (float) $payments->sum('iDiscountAmount');
+        $leadAmount = (float) ($lead->iLeadAmount ?? 0);
+        $pendingAmount = max(0, $leadAmount - ($totalPaid + $totalDiscount));
+
+        $pdf = Pdf::loadView('store-manager.lead-payments.payment-pdf', compact(
+            'lead',
+            'payments',
+            'totalPaid',
+            'totalDiscount',
+            'leadAmount',
+            'pendingAmount'
+        ));
+        $pdf->setPaper('a4', 'portrait');
+
+        return $pdf->stream('payment-summary-' . $lead->strLeadNo . '.pdf');
     }
 }

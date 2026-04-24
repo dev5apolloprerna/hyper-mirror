@@ -111,6 +111,9 @@
                                     <th>Status</th>
                                     @if(in_array($roleSlug, ['storemanager', 'account']))
                                         <th>Lead Amount</th>
+                                        <th>Paid Amount</th>
+                                        <th>Discount Amount</th>
+                                        <th>Unpaid Amount</th>
                                     @endif
                                     <th>Next Follow Up</th>
                                     @if(in_array($roleSlug, ['storemanager', 'measurement']))
@@ -125,6 +128,12 @@
                                         $today = now()->toDateString();
                                         $isOverdue = $lead->NetFollowupdate && $lead->NetFollowupdate < $today;
                                         $isToday   = $lead->NetFollowupdate && $lead->NetFollowupdate === $today;
+                                         $leadAmount = (float) ($lead->iLeadAmount ?? 0);
+                                        $paidAmount = (float) ($lead->payments_sum_i_paid_amount ?? 0);
+                                        $discountAmount = (int) ($lead->isDiscountApplicable ?? 0) === 1
+                                            ? (float) ($lead->decDiscountAmount ?? 0)
+                                            : 0;
+                                        $unpaidAmount = max($leadAmount - $paidAmount - $discountAmount, 0);
 
                                         $statusBadgeMap = [
                                             'In Measurement'      => 'bg-warning text-dark',
@@ -154,7 +163,16 @@
                                             </span>
                                         </td>
                                         @if(in_array($roleSlug, ['storemanager', 'account']))
-                                            <td>₹{{ number_format((float)$lead->iLeadAmount, 2) }}</td>
+                                         @php
+                                                $paidAmount = (float) ($lead->total_paid_amount ?? 0);
+                                                $discountAmount = (float) ($lead->total_discount_amount ?? 0);
+                                                $unpaidAmount = max(0, (float) $lead->iLeadAmount - ($paidAmount + $discountAmount));
+                                            @endphp
+
+                                            <td>₹{{ number_format($leadAmount, 2) }}</td>
+                                                 <td>₹{{ number_format($paidAmount, 2) }}</td>
+                                                <td>₹{{ number_format($discountAmount, 2) }}</td>
+                                                <td>₹{{ number_format($unpaidAmount, 2) }}</td>
                                         @endif
                                         <td>
                                             @if($lead->NetFollowupdate)
@@ -201,12 +219,12 @@
                                                 @if($lead->quotation)
                                                     <a href="{{ route('store.leads.quotation-view', $lead->iLeadId) }}"
                                                        class="btn btn-sm btn-outline-secondary"
-                                                       title="View Quotation">
+                                                       title="{{ $roleSlug === 'account' ? 'View Invoice' : 'View Quotation' }}">
                                                         <i class="fas fa-file-invoice"></i>
                                                     </a>
                                                     <a href="{{ route('store.leads.quotation-pdf', $lead->iLeadId) }}"
                                                        class="btn btn-sm btn-outline-danger"
-                                                       title="Quotation PDF"
+                                                       title="{{ $roleSlug === 'account' ? 'Invoice PDF' : 'Quotation PDF' }}"
                                                        target="_blank">
                                                         <i class="fas fa-file-pdf"></i>
                                                     </a>
@@ -240,14 +258,14 @@
                                                        class="btn btn-sm btn-outline-dark"
                                                        title="Lead Payments">
                                                         <i class="fas fa-money-bill-wave"></i>
-                                                    </a>
+                                                    </a>    
                                                 @endif
                                             </div>
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="9" class="text-center py-5 text-muted">
+                                        <td colspan="{{ in_array($roleSlug, ['storemanager', 'account']) ? 10 : 7 }}" class="text-center py-5 text-muted">
                                             <i class="fas fa-inbox fa-2x mb-3 d-block opacity-25"></i>
                                             No leads found in your queue.
                                         </td>

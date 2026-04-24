@@ -44,6 +44,7 @@
 
                                         $roleName = $role->name ?? null;
                                     }
+                                     $isAdminUser = strtolower((string) $roleName) === 'admin';
                                 @endphp
                                 <span class="d-none d-xl-inline-block ms-1 fw-medium user-name-text">
                                     {{ $displayName }}
@@ -66,9 +67,11 @@
                         <a class="dropdown-item" href="{{ route('profile.detail') }}"><i
                                 class="mdi mdi-account-circle text-muted fs-16 align-middle me-1"></i> <span
                                 class="align-middle">Profile</span></a>
-                         <a class="dropdown-item" href="{{ route('admin.invoice-settings.edit') }}"><i
-                                class="mdi mdi-cog text-muted fs-16 align-middle me-1"></i> <span
-                                class="align-middle">Settings</span></a>
+                          @if($isAdminUser)
+                            <a class="dropdown-item" href="{{ route('admin.invoice-settings.edit') }}"><i
+                                    class="mdi mdi-cog text-muted fs-16 align-middle me-1"></i> <span
+                                    class="align-middle">Settings</span></a>
+                             @endif
 
 
 

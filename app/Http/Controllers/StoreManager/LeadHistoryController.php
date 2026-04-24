@@ -46,9 +46,14 @@ class LeadHistoryController extends Controller
         // For "Deal Done": check if payments match quotation amount
         $canCloseDeal = false;
         if (in_array(LeadWorkflow::STATUS_DEAL_DONE, $allowedStatuses)) {
-            $totalPaid    = $lead->payments()->sum('iPaidAmount');
+            /*$totalPaid    = $lead->payments()->sum('iPaidAmount');
             $leadAmount   = (float) $lead->iLeadAmount;
-            $canCloseDeal = $leadAmount > 0 && abs($totalPaid - $leadAmount) < 0.01;
+            $canCloseDeal = $leadAmount > 0 && abs($totalPaid - $leadAmount) < 0.01;*/
+            $totalPaid      = (float) $lead->payments()->sum('iPaidAmount');
+            $discountAmount = (int) ($lead->isDiscountApplicable ?? 0) === 1 ? (float) ($lead->decDiscountAmount ?? 0) : 0;
+            $totalSettled   = $totalPaid + $discountAmount;
+            $leadAmount     = (float) $lead->iLeadAmount;
+            $canCloseDeal   = $leadAmount > 0 && abs($totalSettled - $leadAmount) < 0.01;
             // Remove Deal Done from allowed if payment mismatch
             if (!$canCloseDeal) {
                 $allowedStatuses = array_values(array_filter(
@@ -144,11 +149,17 @@ class LeadHistoryController extends Controller
 
         // "Deal Done" payment check
         if ($isDealDone) {
-            $totalPaid  = $lead->payments()->sum('iPaidAmount');
+            /*$totalPaid  = $lead->payments()->sum('iPaidAmount');
             $leadAmount = (float) $lead->iLeadAmount;
-            if ($leadAmount <= 0 || abs($totalPaid - $leadAmount) >= 0.01) {
+            if ($leadAmount <= 0 || abs($totalPaid - $leadAmount) >= 0.01) {*/
+            $totalPaid      = (float) $lead->payments()->sum('iPaidAmount');
+            $discountAmount = (int) ($lead->isDiscountApplicable ?? 0) === 1 ? (float) ($lead->decDiscountAmount ?? 0) : 0;
+            $totalSettled   = $totalPaid + $discountAmount;
+            $leadAmount     = (float) $lead->iLeadAmount;
+            if ($leadAmount <= 0 || abs($totalSettled - $leadAmount) >= 0.01) {
                 return back()->withInput()->with('error',
-                    'Cannot mark as Deal Done. Total payments (₹' . number_format($totalPaid, 2) .
+                    //'Cannot mark as Deal Done. Total payments (₹' . number_format($totalPaid, 2) .
+                    'Cannot mark as Deal Done. Payments + discount (₹' . number_format($totalSettled, 2) .
                     ') must equal the lead amount (₹' . number_format($leadAmount, 2) . ').'
                 );
             }

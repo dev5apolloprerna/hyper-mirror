@@ -11,8 +11,10 @@
 
             @php
             $totalReceived = (float) $payments->sum('iPaidAmount');
+            $totalDiscount = (float) $payments->sum('iDiscountAmount');
             $leadAmount = (float) ($lead->iLeadAmount ?? 0);
-            $pendingAmount = max(0, $leadAmount - $totalReceived);
+            $settledAmount = $totalReceived + $totalDiscount;
+            $pendingAmount = max(0, $leadAmount - $settledAmount);
             @endphp
 
             <div class="row g-3 mb-3">
@@ -35,7 +37,15 @@
                 <div class="col-md-4">
                     <div class="card h-100">
                         <div class="card-body">
-                            <small class="text-muted">Pending Amount</small>
+                            <small class="text-muted">Total Discount</small>
+                            <h5 class="mb-0 text-info">₹{{ number_format($totalDiscount, 2) }}</h5>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <small class="text-muted">Unpaid Amount</small>
                             <h5 class="mb-0 {{ $pendingAmount > 0 ? 'text-warning' : 'text-success' }}">₹{{ number_format($pendingAmount, 2) }}</h5>
                         </div>
                     </div>
@@ -60,7 +70,11 @@
                                     <small id="amountError" class="text-danger"></small>
                                     @error('iPaidAmount') <span class="text-danger">{{ $message }}</span> @enderror
                                 </div>
-
+                                <div class="mb-3">
+                                    <label class="form-label">Discount Amount</label>
+                                    <input type="number" id="iDiscountAmount" step="0.01" min="0" max="{{ $pendingAmount }}" name="iDiscountAmount" class="form-control" value="{{ old('iDiscountAmount', 0) }}" placeholder="Enter discount amount">
+                                    @error('iDiscountAmount') <span class="text-danger">{{ $message }}</span> @enderror
+                                </div>
                                 <div class="mb-3">
                                     <label class="form-label">Payment Date <span class="text-danger">*</span></label>
                                     <input type="date" name="PaymentDate" class="form-control" value="{{ old('PaymentDate') }}" required>
@@ -125,6 +139,7 @@
                                             <th width="5%"><input type="checkbox" id="selectAll"></th>
                                             @endif
                                             <th>Paid Amount</th>
+                                            <th>Discount Amount</th>
                                             <th>Payment Date</th>
                                             <th>Payment Mode</th>
                                             <th>Entered By</th>
@@ -140,6 +155,7 @@
                                             <td><input type="checkbox" class="record-checkbox" value="{{ $payment->iLeadPaymentId }}"></td>
                                             @endif
                                             <td>₹{{ number_format((float)$payment->iPaidAmount, 2) }}</td>
+                                            <td>₹{{ number_format((float)($payment->iDiscountAmount ?? 0), 2) }}</td>
                                             <td>{{ $payment->PaymentDate }}</td>
                                             <td>{{ $payment->PaymentMode }}</td>
                                             <td>
@@ -172,7 +188,7 @@
                                         </tr>
                                         @empty
                                         <tr>
-                                            <td colspan="{{ $canManagePayments ? 6 : 4 }}" class="text-center">No payments found.</td>
+                                            <td colspan="{{ $canManagePayments ? 7 : 5 }}" class="text-center">No payments found.</td>
                                         </tr>
                                         @endforelse
                                     </tbody>
@@ -207,7 +223,10 @@
                         <label class="form-label">Paid Amount <span class="text-danger">*</span></label>
                         <input type="number" step="0.01" min="0.01" name="iPaidAmount" id="edit_iPaidAmount" class="form-control" required>
                     </div>
-
+                    <div class="mb-3">
+                        <label class="form-label">Discount Amount</label>
+                        <input type="number" step="0.01" min="0" name="iDiscountAmount" id="edit_iDiscountAmount" class="form-control">
+                    </div>
                     <div class="mb-3">
                         <label class="form-label">Payment Date <span class="text-danger">*</span></label>
                         <input type="date" name="PaymentDate" id="edit_PaymentDate" class="form-control" required>
@@ -300,14 +319,24 @@
         let maxAmount = parseFloat($('#maxAmount').val()) || 0;
 
         $('#iPaidAmounts').on('input', function() {
-            let entered = parseFloat($(this).val()) || 0;
+            //let entered = parseFloat($(this).val()) || 0;
+            let enteredPaid = parseFloat($(this).val()) || 0;
+            let enteredDiscount = parseFloat($('#iDiscountAmount').val()) || 0;
+            let entered = enteredPaid + enteredDiscount;
 
             if (entered > maxAmount) {
-                $('#amountError').text('❌ Amount cannot be more than pending (₹' + maxAmount + ')');
-                $(this).val(maxAmount);
+                /*$('#amountError').text('❌ Amount cannot be more than pending (₹' + maxAmount + ')');
+                $(this).val(maxAmount);*/
+
+                $('#amountError').text('❌ Paid + discount cannot be more than unpaid amount (₹' + maxAmount + ')');
+                $(this).val('');
             } else {
                 $('#amountError').text('');
             }
+        });
+
+        $('#iDiscountAmount').on('input', function() {
+            $('#iPaidAmounts').trigger('input');
         });
 
     });
