@@ -182,6 +182,12 @@
                                                 </td>
                                             </tr>
                                         @endif
+                                         @php
+                                            $totalPaid = (float) $lead->payments()->sum('iPaidAmount');
+                                            $discountAmount = ((int) ($lead->isDiscountApplicable ?? 0) === 1) ? (float) ($lead->decDiscountAmount ?? 0) : 0;
+                                            $totalSettled = $totalPaid + $discountAmount;
+                                            $unpaidAmount = max((float) ($lead->iLeadAmount ?? 0) - $totalSettled, 0);
+                                        @endphp
 
                                         @if($canViewFinancial)
                                             <tr>
@@ -200,13 +206,25 @@
                                             <tr>
                                                 <td class="text-muted">Total Paid</td>
                                                 <td>
-                                                    @php $totalPaid = $lead->payments()->sum('iPaidAmount'); @endphp
-                                                    <strong class="{{ $totalPaid >= $lead->iLeadAmount && $lead->iLeadAmount > 0 ? 'text-success' : 'text-warning' }}">
+                                                <strong class="{{ $totalSettled >= $lead->iLeadAmount && $lead->iLeadAmount > 0 ? 'text-success' : 'text-warning' }}">
                                                         ₹{{ number_format((float)$totalPaid, 2) }}
                                                     </strong>
                                                 </td>
                                             </tr>
+                                            <tr>
+                                                <td class="text-muted">Discount Amount</td>
+                                                <td>₹{{ number_format((float)$discountAmount, 2) }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="text-muted">Unpaid Amount</td>
+                                                <td>
+                                                    <strong class="{{ $unpaidAmount > 0 ? 'text-warning' : 'text-success' }}">
+                                                        ₹{{ number_format((float)$unpaidAmount, 2) }}
+                                                    </strong>
+                                                </td>
+                                            </tr>
                                         @endif
+
 
                                         <tr>
                                             <td class="text-muted">Lead No</td>
@@ -370,12 +388,18 @@
                         </div>
 
                         @if($lead->iCurrentLeadStatus === \App\Support\LeadWorkflow::STATUS_DEAL_DONE && in_array($roleSlug, ['storemanager', 'account']) && $canViewFinancial)
-                            @php $totalPaid = $lead->payments()->sum('iPaidAmount'); @endphp
+                             @php
+                                $totalPaid = (float) $lead->payments()->sum('iPaidAmount');
+                                $discountAmount = ((int) ($lead->isDiscountApplicable ?? 0) === 1) ? (float) ($lead->decDiscountAmount ?? 0) : 0;
+                                $unpaidAmount = max((float) ($lead->iLeadAmount ?? 0) - ($totalPaid + $discountAmount), 0);
+                            @endphp
                             <div class="card border-0 shadow-sm mt-3">
                                 <div class="card-body">
                                     <h6 class="fw-bold text-success"><i class="fas fa-check-circle me-2"></i>Deal Summary</h6>
                                     <p class="mb-1">Quotation Amount: <strong>₹{{ number_format((float)$lead->iLeadAmount, 2) }}</strong></p>
-                                    <p class="mb-0">Total Received: <strong>₹{{ number_format((float)$totalPaid, 2) }}</strong></p>
+                                    <p class="mb-1">Total Paid: <strong>₹{{ number_format((float)$totalPaid, 2) }}</strong></p>
+                                    <p class="mb-1">Discount: <strong>₹{{ number_format((float)$discountAmount, 2) }}</strong></p>
+                                    <p class="mb-0">Unpaid: <strong>₹{{ number_format((float)$unpaidAmount, 2) }}</strong></p>
                                 </div>
                             </div>
                         @endif
@@ -395,9 +419,12 @@
                                         <i class="fas fa-exclamation-triangle me-1"></i>
                                         <strong>Deal Done</strong> is not available yet.
                                         @if($canViewFinancial)
-                                            @php $totalPaid = $lead->payments()->sum('iPaidAmount'); @endphp
+                                             @php
+                                                $totalPaid = (float) $lead->payments()->sum('iPaidAmount');
+                                                $discountAmount = ((int) ($lead->isDiscountApplicable ?? 0) === 1) ? (float) ($lead->decDiscountAmount ?? 0) : 0;
+                                            @endphp
                                             <br>
-                                            Paid: ₹{{ number_format((float)$totalPaid, 2) }} /
+                                            Paid + Discount: ₹{{ number_format((float)($totalPaid + $discountAmount), 2) }} /
                                             Required: ₹{{ number_format((float)$lead->iLeadAmount, 2) }}
                                         @endif
                                     </div>

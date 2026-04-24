@@ -30,7 +30,12 @@ class LeadController extends Controller
     public function index(Request $request)
     {
         $roleSlug = optional(auth()->user()->crmRole)->slug;
-        $query    = Lead::with(['customer', 'quotation'])->latest('iLeadId');
+              
+         $query    = Lead::with(['customer', 'quotation'])
+            ->withSum('payments as total_paid_amount', 'iPaidAmount')
+            ->withSum('payments as total_discount_amount', 'iDiscountAmount')
+            ->latest('iLeadId');
+
 
         if ($roleSlug !== 'storemanager') {
             $queue = LeadWorkflow::roleQueueStatuses($roleSlug);
@@ -41,6 +46,10 @@ class LeadController extends Controller
                 $query->where('isFittingRequired', 1);
                 $query->where('iCurrentLeadStatus', '!=', LeadWorkflow::STATUS_RECEIVED_AT_NAROL);
             }
+        }
+
+        if ($roleSlug === 'account') {
+            $query->where('iCurrentLeadStatus', '!=', LeadWorkflow::STATUS_LEAD_REJECTED);
         }
 
 
@@ -773,10 +782,17 @@ class LeadController extends Controller
         $canViewFittingCharges = $roleSlug === 'fitting';
         $dispatch = $roleSlug === 'dispatch';
 
-        $pdf = Pdf::loadView('store-manager.leads.quotation-pdf-document', compact('lead', 'canViewFinancial', 'invoicePdfSetting', 'canViewFittingCharges', 'dispatch'));
-        $pdf->setPaper('a4', 'portrait');
+            $pdfView = $roleSlug === 'account'
+            ? 'store-manager.leads.invoice-pdf-document'
+            : 'store-manager.leads.quotation-pdf-document';
 
-        return $pdf->stream('quotation-' . $lead->strLeadNo . '.pdf');
+        /*$pdf = Pdf::loadView('store-manager.leads.quotation-pdf-document', compact('lead', 'canViewFinancial', 'invoicePdfSetting', 'canViewFittingCharges', 'dispatch'));*/
+        $pdf = Pdf::loadView($pdfView, compact('lead', 'canViewFinancial', 'invoicePdfSetting', 'canViewFittingCharges', 'dispatch'));
+        $pdf->setPaper('a4', 'portrait');
+        $pdfPrefix = $roleSlug === 'account' ? 'invoice-' : 'quotation-';
+        return $pdf->stream($pdfPrefix . $lead->strLeadNo . '.pdf');
+        /*
+        return $pdf->stream('quotation-' . $lead->strLeadNo . '.pdf');*/
 
         //   return view('store-manager.leads.quotation-pdf', compact('lead', 'canViewFinancial'));
     }
