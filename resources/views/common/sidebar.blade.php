@@ -61,6 +61,46 @@
                     </li>
                     </ul>
                 </div>
+                
+
+                   
+                    <li class="nav-item">
+                        <a href="{{ route('admin.users.index') }}"
+                            class="nav-link {{ request()->is('admin/users*') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-user-cog"></i>
+                            Users
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a href="{{ route('Paymentcollection.index') }}"
+                            class="nav-link {{ request()->is('Paymentcollection/index*') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-file-invoice-dollar"></i>
+                            <p class="mb-0">Payment</p>
+                        </a>
+                    </li>
+                     
+                    <li class="nav-item">
+                        <a href="{{ route('store.invoice.index') }}"
+                            class="nav-link {{ request()->is('store-manager/invoice*') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-file-invoice-dollar"></i>
+                            <p class="mb-0">Retail Business</p>
+                        </a>
+                    </li>
+                     <!-- <li class="nav-item">
+                        <a href="{{ route('admin.invoice-settings.edit') }}"
+                            class="nav-link {{ request()->is('admin/invoice-settings*') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-file-contract"></i>
+                            Invoice PDF Settings
+                        </a>
+                    </li> -->
+                    <!-- <li class="nav-item">
+                        <a href="{{ route('store.invoice.index') }}"
+                            class="nav-link {{ request()->is('store-manager/invoice*') ? 'active' : '' }}">
+                            <i class="fa-solid fa-briefcase"></i>
+                            <p class="mb-0">Retail Business</p>
+                        </a>
+                    </li> -->
                 <li class="nav-item">
                     <a class="nav-link" href="#sidebarMore" data-bs-toggle="collapse" role="button"
                         aria-expanded="true" aria-controls="sidebarMore">
@@ -81,41 +121,16 @@
                                     Party Report
                                 </a>
                             </li>
+                             <li class="nav-item">
+                                <a href="{{ route('admin.reports.leads') }}"
+                                    class="nav-link {{ request()->is('admin/reports/leads*') ? 'active' : '' }}">
+                                    <i class="nav-icon fas fa-user-tag"></i>
+                                    Lead Report
+                                </a>
+                            </li>
                         </ul>
                     </div>
                 </li>
-
-                   
-                    <li class="nav-item">
-                        <a href="{{ route('admin.users.index') }}"
-                            class="nav-link {{ request()->is('admin/users*') ? 'active' : '' }}">
-                            <i class="nav-icon fas fa-user-cog"></i>
-                            Users
-                        </a>
-                    </li>
-                    
-                    <li class="nav-item">
-                        <a href="{{ route('Paymentcollection.index') }}"
-                            class="nav-link {{ request()->is('Paymentcollection/index*') ? 'active' : '' }}">
-                            <i class="nav-icon fas fa-file-invoice-dollar"></i>
-                            <p class="mb-0">Payment</p>
-                        </a>
-                    </li>
-                     <!-- <li class="nav-item">
-                        <a href="{{ route('admin.invoice-settings.edit') }}"
-                            class="nav-link {{ request()->is('admin/invoice-settings*') ? 'active' : '' }}">
-                            <i class="nav-icon fas fa-file-contract"></i>
-                            Invoice PDF Settings
-                        </a>
-                    </li> -->
-                    <li class="nav-item">
-                        <a href="{{ route('store.invoice.index') }}"
-                            class="nav-link {{ request()->is('store-manager/invoice*') ? 'active' : '' }}">
-                            <i class="fa-solid fa-briefcase"></i>
-                            <p class="mb-0">Retail Business</p>
-                        </a>
-                    </li>
-                
                 @else
                     <li class="nav-item">
                         <a href="{{ route('store.leads.index') }}"

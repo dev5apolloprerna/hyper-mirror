@@ -708,9 +708,11 @@ class LeadController extends Controller
     // ── Quotation view (HTML) ────────────────────────────────────────────────
     public function quotationView(Lead $lead)
     {
+        $isAdminLike = blank(optional(auth()->user()->crmRole)->slug);
         abort_unless(
             LeadWorkflow::canAccessLead(auth()->user(), $lead) ||
-                optional(auth()->user()->crmRole)->slug === 'storemanager',
+                optional(auth()->user()->crmRole)->slug === 'storemanager' ||
+                $isAdminLike,
             403
         );
 
@@ -740,9 +742,12 @@ class LeadController extends Controller
     // ── Quotation PDF ────────────────────────────────────────────────────────
     public function quotationPdf(Lead $lead)
     {
+
+        $isAdminLike = blank(optional(auth()->user()->crmRole)->slug);
         abort_unless(
             LeadWorkflow::canAccessLead(auth()->user(), $lead) ||
-                optional(auth()->user()->crmRole)->slug === 'storemanager',
+                optional(auth()->user()->crmRole)->slug === 'storemanager' ||
+                $isAdminLike,
             403
         );
 

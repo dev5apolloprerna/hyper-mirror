@@ -21,7 +21,7 @@ use App\Http\Controllers\Admin\AdminPaymentController;
 use App\Http\Controllers\Admin\InvoicePdfSettingController;
 use App\Http\Controllers\Admin\QuotationCancelReasonController;
 use App\Http\Controllers\Admin\PartyReportController;
-
+use App\Http\Controllers\Admin\LeadReportController;
 
 use App\Http\Controllers\StoreManager\LeadController;
 use App\Http\Controllers\StoreManager\LeadDesignController;
@@ -217,10 +217,15 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::delete('users/delete/{user}', [CrmUserController::class, 'destroy'])->name('users.destroy');
     Route::get('reports/business', [BusinessReportController::class, 'index'])->name('reports.business');
     Route::get('reports/party', [PartyReportController::class, 'index'])->name('reports.party');
-
-
     Route::get('invoice-settings', [InvoicePdfSettingController::class, 'edit'])->name('invoice-settings.edit');
     Route::post('invoice-settings', [InvoicePdfSettingController::class, 'update'])->name('invoice-settings.update');
+
+    Route::get('reports/leads', [LeadReportController::class, 'index'])->name('reports.leads');
+    Route::get('reports/leads/{lead}', [LeadReportController::class, 'show'])->name('reports.leads.show');
+    Route::get('reports/leads/{lead}/histories', [LeadReportController::class, 'histories'])->name('reports.leads.histories');
+    Route::get('reports/leads/{lead}/quotations', [LeadReportController::class, 'quotations'])->name('reports.leads.quotations');
+    Route::get('reports/leads/{lead}/payments', [LeadReportController::class, 'payments'])->name('reports.leads.payments');
+
 });
 
 Route::middleware('auth')->prefix('complaints')->name('complaints.')->group(function () {

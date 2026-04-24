@@ -21,9 +21,12 @@ class LeadHistoryController extends Controller
 
     public function index(Lead $lead)
     {
+        $isAdminLike = blank(optional(auth()->user()->crmRole)->slug);
+
         abort_unless(
             LeadWorkflow::canAccessLead(auth()->user(), $lead) ||
-            optional(auth()->user()->crmRole)->slug === 'storemanager',
+            optional(auth()->user()->crmRole)->slug === 'storemanager' ||
+            $isAdminLike,
             403
         );
 
@@ -35,7 +38,7 @@ class LeadHistoryController extends Controller
         $roleSlug = optional(auth()->user()->crmRole)->slug;
 
         // Determine allowed statuses for the status-change form
-        $allowedStatuses = LeadWorkflow::allowedTransitionsFor(auth()->user(), $lead);
+        $allowedStatuses = $isAdminLike ? [] : LeadWorkflow::allowedTransitionsFor(auth()->user(), $lead);
 
         $lead->load(['customer', 'quotation', 'quotations.product', 'quotations.category', 'quotations.shape', 'createdBy', 'designs']);
         $canViewFinancial = (bool) auth()->user()->can_view_financial;
@@ -55,7 +58,7 @@ class LeadHistoryController extends Controller
             }
         }
 
-        $isReadOnly = LeadWorkflow::readOnlyForRole($roleSlug, $lead->iCurrentLeadStatus)
+        $isReadOnly = $isAdminLike || LeadWorkflow::readOnlyForRole((string) $roleSlug, $lead->iCurrentLeadStatus)
             || in_array($lead->iCurrentLeadStatus, LeadWorkflow::terminalStatuses());
 
         $cancelReasons = QuotationCancelReason::query()
@@ -78,6 +81,7 @@ class LeadHistoryController extends Controller
 
     public function store(Request $request, Lead $lead)
     {
+        abort_if(blank(optional(auth()->user()->crmRole)->slug), 403, 'Admin has view-only access.');
         abort_unless(
             LeadWorkflow::canAccessLead(auth()->user(), $lead) ||
             optional(auth()->user()->crmRole)->slug === 'storemanager',

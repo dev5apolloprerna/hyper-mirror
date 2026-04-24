@@ -74,11 +74,13 @@
                 <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
                     <div>
                         <h4 class="mb-0 fw-bold">Invoices</h4>
-                        <p class="text-muted mb-0 mt-1 small">Create and manage product invoices.</p>
+                        <p class="text-muted mb-0 mt-1 small">{{ $canManageInvoices ? 'Create and manage product invoices.' : 'View all invoices and payment details (read-only).' }}</p>
                     </div>
-                    <a href="{{ route('store.invoice.create') }}" class="btn btn-primary">
-                        <i class="fas fa-plus me-1"></i> Create Invoice
-                    </a>
+                    @if($canManageInvoices)
+                        <a href="{{ route('store.invoice.create') }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i> Create Invoice
+                        </a>
+                    @endif
                 </div>
 
                 {{-- Summary Cards --}}
@@ -219,7 +221,7 @@
                                             ₹{{ number_format($inv->unpaid_amount, 2) }}
                                         </td>
                                         <td>
-                                            @if($inv->payment_received)
+                                            @if(!$canManageInvoices || $inv->payment_received)
                                             <span class="badge bg-secondary"> {{ ucfirst($inv->payment_mode ?? 'cash') }} </span>
                                             @else
                                             <form method="POST" action="{{ route('store.invoice.update-payment', $inv->iInvoiceId) }}" class="d-flex align-items-center gap-1">
@@ -237,7 +239,9 @@
                                             @endif
                                         </td>
                                         <td>
-                                            @if($inv->payment_received)
+                                            @if(!$canManageInvoices)
+                                            <span class="badge {{ $inv->payment_received ? 'bg-success' : 'bg-warning text-dark' }}">{{ $inv->payment_received ? 'Yes' : 'No' }}</span>
+                                            @elseif($inv->payment_received)
                                             <span class="badge bg-success">Yes</span>
                                             @else
                                             <form method="POST" action="{{ route('store.invoice.update-payment', $inv->iInvoiceId) }}" class="d-flex align-items-center gap-1">
@@ -255,7 +259,7 @@
                                             @endif
                                         </td>
                                         <td>
-                                            @if($inv->payment_received)
+                                            @if(!$canManageInvoices || $inv->payment_received)
                                             {{ $inv->strNotes ?: '—' }}
                                             @else
                                             <form method="POST" action="{{ route('store.invoice.update-payment', $inv->iInvoiceId) }}" class="d-flex align-items-center gap-1">
