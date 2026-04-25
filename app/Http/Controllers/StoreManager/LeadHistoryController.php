@@ -46,12 +46,10 @@ class LeadHistoryController extends Controller
         // For "Deal Done": check if payments match quotation amount
         $canCloseDeal = false;
         if (in_array(LeadWorkflow::STATUS_DEAL_DONE, $allowedStatuses)) {
-            /*$totalPaid    = $lead->payments()->sum('iPaidAmount');
-            $leadAmount   = (float) $lead->iLeadAmount;
-            $canCloseDeal = $leadAmount > 0 && abs($totalPaid - $leadAmount) < 0.01;*/
-            $totalPaid      = (float) $lead->payments()->sum('iPaidAmount');
-            $discountAmount = (int) ($lead->isDiscountApplicable ?? 0) === 1 ? (float) ($lead->decDiscountAmount ?? 0) : 0;
-            $totalSettled   = $totalPaid + $discountAmount;
+            $totalPaid            = (float) $lead->payments()->sum('iPaidAmount');
+            $leadDiscountAmount   = (int) ($lead->isDiscountApplicable ?? 0) === 1 ? (float) ($lead->decDiscountAmount ?? 0) : 0;
+            $paymentDiscountAmount = (float) $lead->payments()->sum('iDiscountAmount');
+            $totalSettled         = $totalPaid + $leadDiscountAmount + $paymentDiscountAmount;
             $leadAmount     = (float) $lead->iLeadAmount;
             $canCloseDeal   = $leadAmount > 0 && abs($totalSettled - $leadAmount) < 0.01;
             // Remove Deal Done from allowed if payment mismatch
@@ -149,12 +147,10 @@ class LeadHistoryController extends Controller
 
         // "Deal Done" payment check
         if ($isDealDone) {
-            /*$totalPaid  = $lead->payments()->sum('iPaidAmount');
-            $leadAmount = (float) $lead->iLeadAmount;
-            if ($leadAmount <= 0 || abs($totalPaid - $leadAmount) >= 0.01) {*/
-            $totalPaid      = (float) $lead->payments()->sum('iPaidAmount');
-            $discountAmount = (int) ($lead->isDiscountApplicable ?? 0) === 1 ? (float) ($lead->decDiscountAmount ?? 0) : 0;
-            $totalSettled   = $totalPaid + $discountAmount;
+            $totalPaid             = (float) $lead->payments()->sum('iPaidAmount');
+            $leadDiscountAmount    = (int) ($lead->isDiscountApplicable ?? 0) === 1 ? (float) ($lead->decDiscountAmount ?? 0) : 0;
+            $paymentDiscountAmount = (float) $lead->payments()->sum('iDiscountAmount');
+            $totalSettled          = $totalPaid + $leadDiscountAmount + $paymentDiscountAmount;
             $leadAmount     = (float) $lead->iLeadAmount;
             if ($leadAmount <= 0 || abs($totalSettled - $leadAmount) >= 0.01) {
                 return back()->withInput()->with('error',

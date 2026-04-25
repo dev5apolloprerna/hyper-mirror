@@ -163,7 +163,8 @@ Route::middleware('auth')->prefix('store-manager')->name('store.')->group(functi
     Route::post('leads/{lead}/save-quotation', [LeadController::class, 'saveQuotation'])->name('leads.save-quotation');
     Route::get('leads/{lead}/quotation-view', [LeadController::class, 'quotationView'])->name('leads.quotation-view');
     Route::get('leads/{lead}/quotation-pdf', [LeadController::class, 'quotationPdf'])->name('leads.quotation-pdf');
-
+    Route::get('leads/{lead}/invoice-pdf', [LeadController::class, 'quotationPdf'])->name('leads.invoice-pdf');
+    
     Route::post('leads/{lead}/update-status', [LeadController::class, 'updateStatus'])->name('leads.update-status');
 
     // Lead Designs

@@ -52,7 +52,11 @@
 
                             @if(in_array($roleSlug, ['storemanager', 'account']))
                                 @if($lead->quotation)
-                                    <a href="{{ route('store.leads.quotation-pdf', $lead->iLeadId) }}" class="btn btn-outline-danger btn-sm" target="_blank">
+                                @php
+                                        $pdfRoute = $roleSlug === 'account' ? 'store.leads.invoice-pdf' : 'store.leads.quotation-pdf';
+                                    @endphp
+                                    <a href="{{ route($pdfRoute, $lead->iLeadId) }}" class="btn btn-outline-danger btn-sm" target="_blank">
+
                                         <i class="fas fa-file-pdf"></i> PDF
                                     </a>
                                 @endif
@@ -184,8 +188,10 @@
                                         @endif
                                          @php
                                             $totalPaid = (float) $lead->payments()->sum('iPaidAmount');
-                                            $discountAmount = ((int) ($lead->isDiscountApplicable ?? 0) === 1) ? (float) ($lead->decDiscountAmount ?? 0) : 0;
-                                            $totalSettled = $totalPaid + $discountAmount;
+                                            $leadDiscountAmount = ((int) ($lead->isDiscountApplicable ?? 0) === 1) ? (float) ($lead->decDiscountAmount ?? 0) : 0;
+                                            $paymentDiscountAmount = (float) $lead->payments()->sum('iDiscountAmount');
+                                            $discountAmount = $leadDiscountAmount + $paymentDiscountAmount;
+                                            $totalSettled = $totalPaid + $paymentDiscountAmount;
                                             $unpaidAmount = max((float) ($lead->iLeadAmount ?? 0) - $totalSettled, 0);
                                         @endphp
 
@@ -212,7 +218,15 @@
                                                 </td>
                                             </tr>
                                             <tr>
-                                                <td class="text-muted">Discount Amount</td>
+                                                <td class="text-muted">Lead Discount</td>
+                                                <td>₹{{ number_format((float)$leadDiscountAmount, 2) }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="text-muted">Payment Discount</td>
+                                                <td>₹{{ number_format((float)$paymentDiscountAmount, 2) }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="text-muted">Total Discount</td>
                                                 <td>₹{{ number_format((float)$discountAmount, 2) }}</td>
                                             </tr>
                                             <tr>

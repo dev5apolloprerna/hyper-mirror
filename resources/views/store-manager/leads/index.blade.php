@@ -217,12 +217,15 @@
 
                                                 {{-- Quotation view --}}
                                                 @if($lead->quotation)
+                                                 @php
+                                                        $pdfRoute = $roleSlug === 'account' ? 'store.leads.invoice-pdf' : 'store.leads.quotation-pdf';
+                                                    @endphp
                                                     <a href="{{ route('store.leads.quotation-view', $lead->iLeadId) }}"
                                                        class="btn btn-sm btn-outline-secondary"
                                                        title="{{ $roleSlug === 'account' ? 'View Invoice' : 'View Quotation' }}">
                                                         <i class="fas fa-file-invoice"></i>
                                                     </a>
-                                                    <a href="{{ route('store.leads.quotation-pdf', $lead->iLeadId) }}"
+                                                    <a href="{{ route($pdfRoute, $lead->iLeadId) }}"
                                                        class="btn btn-sm btn-outline-danger"
                                                        title="{{ $roleSlug === 'account' ? 'Invoice PDF' : 'Quotation PDF' }}"
                                                        target="_blank">
