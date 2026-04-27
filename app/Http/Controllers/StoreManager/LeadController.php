@@ -476,6 +476,7 @@ class LeadController extends Controller
                     'quotation_batch_id'  => $nextBatchId,
                     'iProductCategoryId'  => $item['iProductCategoryId'],
                     'iProductId'          => $item['iProductId'],
+                    'calculation_multiple' => $multiple,
                     'unit_of_measurement' => $unit,
                     'shape_id'            => $item['shape_id'],
                     'feature_id'          => $item['feature_id'],

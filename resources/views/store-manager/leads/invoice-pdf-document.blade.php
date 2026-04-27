@@ -227,8 +227,9 @@
         $totalSqft = (float) $lead->quotations->sum('decTotalSqft');
         $totalQty = (float) $lead->quotations->sum('quantity');
         $fittingCharges = (float) ($lead->iFittingCharges ?? 0);
-        $discountAmount = (int) ($lead->isDiscountApplicable ?? 0) === 1 ? (float) ($lead->decDiscountAmount ?? 0) : 0;
-        $amountAfterDiscount = max($subtotalAmount + $fittingCharges - $discountAmount, 0);
+        $deliveryCharges = (float) ($lead->delivery_charges ?? 0);
+        $discountAmount = (float) ($lead->decDiscountAmount ?? 0);
+        $amountAfterDiscount = max($subtotalAmount + $fittingCharges + $deliveryCharges - $discountAmount, 0);
         $gstAmount =
             (int) ($lead->isGstApplicable ?? 0) === 1
                 ? (float) ($lead->decGstAmount ?? $amountAfterDiscount * 0.18)
@@ -322,8 +323,6 @@ Phone no.: +91 88662 77000 Email: hypermirror01@gmail.com";
                 <th style="width:6%">Width</th>
                 <th style="width:6%">Height</th>
                 @if ($canViewFinancial)
-                    <th style="width:8%">Sqft</th>
-                    <th style="width:8%">Rate/Sqft</th>
                     <th style="width:10%">Amount</th>
                 @endif
                 @if ($hasRemarksColumn)
@@ -344,8 +343,7 @@ Phone no.: +91 88662 77000 Email: hypermirror01@gmail.com";
                     <td>{{ $item->decWidth }}</td>
                     <td>{{ $item->decHeight }}</td>
                     @if ($canViewFinancial)
-                        <td class="text-right">{{ number_format((float) ($item->decTotalSqft ?? 0), 2) }}</td>
-                        <td class="text-right">{{ number_format((float) ($item->decRatePerSqft ?? 0), 2) }}</td>
+
                         <td class="text-right">{{ number_format((float) ($item->iAmount ?? 0), 2) }}</td>
                     @endif
                     @if ($hasRemarksColumn)
@@ -386,10 +384,7 @@ Phone no.: +91 88662 77000 Email: hypermirror01@gmail.com";
                             <td>Total Qty</td>
                             <td class="text-right">{{ number_format($totalQty, 0) }}</td>
                         </tr>
-                        <tr>
-                            <td>Total Sqft</td>
-                            <td class="text-right">{{ number_format($totalSqft, 2) }}</td>
-                        </tr>
+                        
                         <tr>
                             <td>Subtotal</td>
                             <td class="text-right">₹{{ number_format($subtotalAmount, 2) }}</td>
@@ -400,7 +395,13 @@ Phone no.: +91 88662 77000 Email: hypermirror01@gmail.com";
                                 <td class="text-right">₹{{ number_format($fittingCharges, 2) }}</td>
                             </tr>
                         @endif
-                        @if ((int) ($lead->isDiscountApplicable ?? 0) === 1 && $discountAmount > 0)
+                        @if ($deliveryCharges > 0)
+                            <tr>
+                                <td>Delivery Charges</td>
+                                <td class="text-right">₹{{ number_format($deliveryCharges, 2) }}</td>
+                            </tr>
+                        @endif
+                        @if ($discountAmount > 0)
                             <tr>
                                 <td>Discount Amount</td>
                                 <td class="text-right">- ₹{{ number_format($discountAmount, 2) }}</td>
