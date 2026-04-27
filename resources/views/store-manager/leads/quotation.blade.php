@@ -123,7 +123,7 @@
                                     'feature_id' => $quotation->feature_id,
                                     'remarks' => $quotation->remarks,
                                     'quantity' => $quotation->quantity,
-                                    'calculation_multiple' => 3,
+                                    'calculation_multiple' => (int) ($quotation->calculation_multiple ?? 3),
                                     'decHeight' => $quotation->decHeight,
                                     'decWidth' => $quotation->decWidth,
                                     'decRatePerSqft' => $quotation->decRatePerSqft,

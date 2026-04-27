@@ -17,6 +17,7 @@ class LeadQuotation extends Model
         'quotation_batch_id',
         'iProductCategoryId',
         'iProductId',
+        'calculation_multiple',
         'unit_of_measurement',
         'shape_id',
         'feature_id',
