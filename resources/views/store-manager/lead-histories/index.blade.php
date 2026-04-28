@@ -20,7 +20,7 @@
                                 {{ $lead->customer->strMobile ?? '' }}
                                 &nbsp;·&nbsp;
                                 <span class="badge bg-primary text-white">{{ $lead->iCurrentLeadStatus }}</span>
-                                @if($lead->NetFollowupdate && !in_array($lead->iCurrentLeadStatus, ['Lead Rejected', 'Deal Done', 'Measurement Done', 'Ready to Dispatched', 'Dispatched', 'Received @ Narol']))
+                               @if($lead->NetFollowupdate && !in_array($lead->iCurrentLeadStatus, ['Lead Rejected', 'Deal Done', 'Measurement Done', 'Ready to Dispatched', 'Received @ Narol']))
                                     &nbsp;·&nbsp;
                                     <span class="text-{{ now()->toDateString() > $lead->NetFollowupdate ? 'danger' : 'success' }}">
                                         <i class="fas fa-calendar-alt me-1"></i>Next: {{ \Carbon\Carbon::parse($lead->NetFollowupdate)->format('d-m-Y') }}
@@ -791,7 +791,7 @@ const NO_FOLLOWUP_STATUSES = [
     'Dispatched Done',
     'Fitting Done',
     'Ready to Dispatched',
-    'Dispatched',
+    // 'Dispatched',
     'Received @ Narol',
 ];
 
@@ -802,7 +802,8 @@ const statusHints = {
     'Quotation Approved'  : 'Enter the advance payment follow-up date.',
     'Advance Received'    : 'Enter the expected production / follow-up date.',
     'Production Accepted' : 'Enter the expected dispatch date.',
-    'Dispatched'          : 'Choose whether dispatch is completed to client or sent to Narol.',
+    //'Dispatched'          : 'Choose whether dispatch is completed to client or sent to Narol.',
+    'Ready to Dispatched' : 'Choose whether dispatch is completed to client or sent to Narol.',
     'Received @ Narol'    : 'No follow-up is required for this status.',
     'Fitting Pending'     : 'Enter the fitting date.',
 };

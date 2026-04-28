@@ -35,11 +35,11 @@
                                         </div>
 
                                         <div class="mb-3">
-                                            <label class="form-label">Email</label>
-                                            <input type="email" name="email" class="form-control"
-                                                value="{{ old('email', auth()->user()->email) }}"
-                                                placeholder="Enter your email">
-                                            @error('email')
+                                            <label class="form-label">Invoice No (Optional)</label>
+                                            <input type="text" name="invoice_no" class="form-control"
+                                                value="{{ old('invoice_no') }}"
+                                                placeholder="Enter quotation no">
+                                            @error('invoice_no')
                                                 <small class="text-danger">{{ $message }}</small>
                                             @enderror
                                         </div>
@@ -109,10 +109,13 @@
                                                 <th>Name</th>
                                                 <th>Mobile</th>
                                                 <th>Address</th>
+                                                <th>Invoice No</th>
                                                 <th>Comment</th>
                                                 <th>Status</th>
                                                 <th>Resolved Info</th>
+                                                @if ($roleSlug == 'fitting')
                                                 <th width="10%">Action</th>
+                                                @endif
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -128,6 +131,9 @@
                                                     </td>
                                                     <td>
                                                         <div>{{ $complaint->address }}</div>
+                                                    </td>
+                                                     <td>
+                                                        <div>{{ $complaint->invoice_no ?: ($complaint->quotation_no ?: '—') }}</div>
                                                     </td>
                                                     <td>{{ $complaint->comment }}</td>
                                                     <td>
@@ -152,6 +158,7 @@
                                                             <span class="text-muted">-</span>
                                                         @endif
                                                     </td>
+                                                    @if ($roleSlug == 'fitting')
                                                     <td>
                                                         @if ($roleSlug === 'fitting' && $complaint->status === 'pending')
                                                             <button type="button"
@@ -164,10 +171,11 @@
                                                             <span class="text-muted">-</span>
                                                         @endif
                                                     </td>
+                                                    @endif
                                                 </tr>
                                             @empty
                                                 <tr>
-                                                    <td colspan="6" class="text-center">No complaints found.</td>
+                                                    <td colspan="9" class="text-center">No complaints found.</td>
                                                 </tr>
                                             @endforelse
                                         </tbody>
@@ -206,6 +214,7 @@
                                     <option value="">Select</option>
                                     <option value="cash">Cash</option>
                                     <option value="online">Online</option>
+                                    <option value="warranty">Warranty</option>
                                 </select>
                             </div>
                             <div class="mb-3">

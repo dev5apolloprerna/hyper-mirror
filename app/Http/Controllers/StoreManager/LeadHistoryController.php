@@ -100,7 +100,8 @@ class LeadHistoryController extends Controller
         $isDealDone  = $request->iStatus === LeadWorkflow::STATUS_DEAL_DONE;
         $isQuotationApproved = $request->iStatus === LeadWorkflow::STATUS_QUOTATION_APPROVED;
         $shouldClearFollowup = in_array($request->iStatus, [
-            LeadWorkflow::STATUS_DISPATCHED,
+            // LeadWorkflow::STATUS_DISPATCHED,
+            LeadWorkflow::STATUS_DISPATCHED_DONE,
             LeadWorkflow::STATUS_RECEIVED_AT_NAROL,
         ], true);
 
@@ -205,7 +206,11 @@ class LeadHistoryController extends Controller
              ];
 
             if (Schema::hasColumn('leads', 'DispatchedDate')) {
-                $leadUpdateData['DispatchedDate'] = $request->iStatus === LeadWorkflow::STATUS_DISPATCHED
+                //$leadUpdateData['DispatchedDate'] = $request->iStatus === LeadWorkflow::STATUS_DISPATCHED
+                 $leadUpdateData['DispatchedDate'] = in_array($request->iStatus, [
+                    LeadWorkflow::STATUS_DISPATCHED_DONE,
+                    LeadWorkflow::STATUS_RECEIVED_AT_NAROL,
+                ], true)
                     ? now()->toDateString()
                     : $lead->DispatchedDate;
             }

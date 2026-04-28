@@ -26,6 +26,7 @@ class ComplainMasterController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                     ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('invoice_no', 'like', "%{$search}%")
                     ->orWhere('comment', 'like', "%{$search}%");
             });
         }
@@ -46,6 +47,9 @@ class ComplainMasterController extends Controller
             'comment' => 'required|string|max:2000',
             'name' => 'nullable|string|max:150',
             'email' => 'nullable|email|max:190',
+            'invoice_no' => 'nullable|string|max:50|exists:leads,strLeadNo',
+        ], [
+            'invoice_no.exists' => 'The entered number was not found in quotation numbers.',
         ]);
 
         $user = $request->user();
@@ -54,9 +58,10 @@ class ComplainMasterController extends Controller
             'irole_id' => $user?->iRoalId,
             'user_id' => $user?->id,
             'name' => $validated['name'] ?? $user?->full_name ?? $user?->strUserName,
-            'email' => $validated['email'] ?? $user?->email,
+            'email' => $validated['email'] ?? null,
             'comment' => $validated['comment'],
             'phone' => $request->phone,
+            'invoice_no' => $validated['invoice_no'] ?? null,
             'address' => $request->address,
             'status' => 'pending',
             'iStatus' => 1,

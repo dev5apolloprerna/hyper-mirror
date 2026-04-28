@@ -241,7 +241,7 @@
        
         $companyGstNo = "GSTIN: 24BIQPG6204F1ZH, State: 24-Gujarat";
         $companyAddress ="10, Sahyog Estate, Behind Anand Restaurant, Isanpur, A’bad 382443
-Phone no.: +91 88662 77000 Email: hypermirror01@gmail.com";
+     Email: hypermirror01@gmail.com";
     @endphp
 
     @php
@@ -293,11 +293,15 @@ Phone no.: +91 88662 77000 Email: hypermirror01@gmail.com";
                     <div><strong>Site Address:</strong> {{ $lead->SiteAddress ?? '—' }}</div>
                 </td>
                 <td>
-                    <div class="party-title">Prepared By:-
-                        {{ optional($lead->createdBy)->name ?? (optional($lead->createdBy)->first_name ?? 'N/A') }}
+                    <div class="party-title">Prepared By:- Accountant
+                        <!-- {{ optional($lead->createdBy)->name ?? (optional($lead->createdBy)->first_name ?? 'N/A') }} -->
                     </div>
+                    <!-- <div><strong>Accountant Name:</strong>
+                        {{ optional($branchAccountUser)->full_name ?: (optional($branchAccountUser)->strUserName ?: (optional($branchAccountUser)->first_name ?? '—')) }}
+                    </div> -->
+                    <div><strong>Accountant Mobile:</strong> 7575002108</div>
+
                     <div>{{ config('app.name', 'Mirror CRM') }}</div>
-                    <div>Generated from CRM</div>
                 </td>
             </tr>
         </table>
