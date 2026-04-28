@@ -64,6 +64,9 @@
     @endsection
 
     @section('content')
+    @php
+    
+    ($canManageInvoices = $canManageInvoices ?? false)
     <div class="main-content">
         <div class="page-content">
             <div class="container-fluid">
@@ -183,6 +186,7 @@
                                 <thead>
                                     <tr>
                                         <th>#</th>
+                                        <th>Customer Name</th>
                                         <th>Invoice No</th>
                                         <th>Date</th>
                                         <th>Showroom</th>
@@ -201,6 +205,7 @@
                                     @forelse($invoices as $inv)
                                     <tr>
                                         <td>{{ $invoices->firstItem() + $loop->index }}</td>
+                                        <td>{{ $inv->customer_name ?: '—' }}</td>
                                         <td>
                                             <a href="{{ route('store.invoice.show', $inv->iInvoiceId) }}"
                                                 class="fw-semibold text-primary text-decoration-none">
@@ -306,7 +311,7 @@
                                     </tr>
                                     @empty
                                     <tr>
-                                        <td colspan="13" class="text-center py-5 text-muted">
+                                        <td colspan="14" class="text-center py-5 text-muted">
                                             <i class="fas fa-inbox fa-2x d-block mb-2 opacity-25"></i>
                                             No invoices found.
                                         </td>
@@ -316,7 +321,7 @@
                                 @if($invoices->count())
                                 <tfoot>
                                     <tr class="table-success fw-bold">
-                                        <td colspan="5" class="text-end">Grand Total (filtered)</td>
+                                        <td colspan="6" class="text-end">Grand Total (filtered)</td>
                                         <td>₹{{ number_format($grandTotal, 2) }}</td>
                                         <td colspan="7"></td>
                                     </tr>

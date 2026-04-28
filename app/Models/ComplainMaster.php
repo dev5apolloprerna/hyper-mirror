@@ -21,6 +21,7 @@ class ComplainMaster extends Model
         'phone',
         'address',
         'comment',
+        'invoice_no',
         'status',
         'resolve_user_id',
         'resolve_comment',

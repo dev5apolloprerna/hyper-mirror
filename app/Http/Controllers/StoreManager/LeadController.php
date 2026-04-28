@@ -8,6 +8,7 @@ use App\Models\Lead;
 use App\Models\LeadHistory;
 use App\Models\LeadQuotation;
 use App\Models\Product;
+use App\Models\User;
 use App\Models\ProductCategory;
 use App\Models\ProductShape;
 use App\Models\ProductFeature;
@@ -761,7 +762,7 @@ class LeadController extends Controller
             403
         );
 
-        $lead->load(['customer', 'quotation', 'createdBy']);
+        $lead->load(['customer', 'quotation', 'createdBy', 'showroom']);
 
 
         if (!$lead->quotation) {
@@ -783,12 +784,20 @@ class LeadController extends Controller
         $canViewFittingCharges = $roleSlug === 'fitting';
         $dispatch = $roleSlug === 'dispatch';
 
+           $branchAccountUser = User::query()
+            ->where(function ($q) {
+                $q->whereHas('crmRole', fn($roleQuery) => $roleQuery->where('slug', 'account'))
+                    ->orWhereHas('roles', fn($roleQuery) => $roleQuery->where('name', 'account'));
+            })
+            ->orderBy('id')
+            ->first();
+
             $pdfView = $roleSlug === 'account'
             ? 'store-manager.leads.invoice-pdf-document'
             : 'store-manager.leads.quotation-pdf-document';
 
         /*$pdf = Pdf::loadView('store-manager.leads.quotation-pdf-document', compact('lead', 'canViewFinancial', 'invoicePdfSetting', 'canViewFittingCharges', 'dispatch'));*/
-        $pdf = Pdf::loadView($pdfView, compact('lead', 'canViewFinancial', 'invoicePdfSetting', 'canViewFittingCharges', 'dispatch'));
+        $pdf = Pdf::loadView($pdfView, compact('lead', 'canViewFinancial', 'invoicePdfSetting', 'canViewFittingCharges', 'dispatch', 'branchAccountUser'));
         $pdf->setPaper('a4', 'portrait');
         $pdfPrefix = $roleSlug === 'account' ? 'invoice-' : 'quotation-';
         return $pdf->stream($pdfPrefix . $lead->strLeadNo . '.pdf');
