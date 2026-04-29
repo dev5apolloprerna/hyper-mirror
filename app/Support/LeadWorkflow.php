@@ -118,7 +118,10 @@ class LeadWorkflow
             'account' => [
                 self::STATUS_IN_DESIGN,
                 self::STATUS_QUOTATION_SENT,
+                self::STATUS_RECEIVED_AT_NAROL,
+                self::STATUS_DISPATCHED_DONE,
                 self::STATUS_QUOTATION_APPROVED,
+                self::STATUS_DISPATCHED_DONE,
                 self::STATUS_ADVANCE_RECEIVED,
                 self::STATUS_LEAD_REJECTED,
                 self::STATUS_FITTING_DONE,
@@ -236,6 +239,11 @@ class LeadWorkflow
         if ($roleSlug === 'storemanager') {
             return true;
         }
+        if ($roleSlug === 'account'
+            && $lead->iCurrentLeadStatus === self::STATUS_DISPATCHED_DONE
+            && (int) ($lead->isFittingRequired ?? 0) === 0) {
+            return true;
+        }
 
         return in_array($lead->iCurrentLeadStatus, self::roleQueueStatuses($roleSlug), true);
     }
@@ -279,6 +287,7 @@ class LeadWorkflow
             'account' => [
                 self::STATUS_QUOTATION_APPROVED,
                 self::STATUS_ADVANCE_RECEIVED,
+                self::STATUS_DISPATCHED_DONE,
                 self::STATUS_FITTING_DONE,
                 self::STATUS_DEAL_DONE,
             ],
@@ -293,6 +302,7 @@ class LeadWorkflow
                 self::STATUS_READY_TO_DISPATCHED,
                // self::STATUS_DISPATCHED,
                 self::STATUS_RECEIVED_AT_NAROL,
+                self::STATUS_DISPATCHED_DONE,
                 self::STATUS_DISPATCHED_DONE,
                 self::STATUS_FITTING_PENDING,
                 self::STATUS_FITTING_DONE,

@@ -41,7 +41,17 @@ class LeadController extends Controller
         if ($roleSlug !== 'storemanager') {
             $queue = LeadWorkflow::roleQueueStatuses($roleSlug);
             if (!empty($queue)) {
-                $query->whereIn('iCurrentLeadStatus', $queue);
+                if ($roleSlug === 'account') {
+                    $query->where(function ($q) use ($queue) {
+                        $q->whereIn('iCurrentLeadStatus', array_diff($queue, [LeadWorkflow::STATUS_DISPATCHED_DONE]))
+                            ->orWhere(function ($sub) {
+                                $sub->where('iCurrentLeadStatus', LeadWorkflow::STATUS_DISPATCHED_DONE)
+                                    ->where('isFittingRequired', 0);
+                            });
+                    });
+                } else {
+                    $query->whereIn('iCurrentLeadStatus', $queue);
+                }
             }
             if ($roleSlug === 'fitting') {
                 $query->where('isFittingRequired', 1);
