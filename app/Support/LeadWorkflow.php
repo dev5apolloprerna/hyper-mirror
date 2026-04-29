@@ -208,25 +208,34 @@ class LeadWorkflow
         // Store manager can go anywhere in the global transition map
         if ($roleSlug === 'storemanager') {
             $transitions = self::transitionMap()[$lead->iCurrentLeadStatus] ?? [];
-            return self::applyFittingRequirementRules($lead, $transitions);
+         return self::applyFittingRequirementRules($lead, $transitions, $lead->iCurrentLeadStatus);
         }
 
         $roleMap = self::roleTransitionMap()[$roleSlug] ?? [];
         $transitions = $roleMap[$lead->iCurrentLeadStatus] ?? [];
         
-               return self::applyFittingRequirementRules($lead, $transitions);
+        return self::applyFittingRequirementRules($lead, $transitions, $lead->iCurrentLeadStatus);
     }
 
-    protected static function applyFittingRequirementRules(Lead $lead, array $transitions): array
+protected static function applyFittingRequirementRules(Lead $lead, array $transitions, string $currentStatus): array
     {
         if ((int) ($lead->isFittingRequired ?? 0) === 1) {
             return $transitions;
         }
 
-        return array_values(array_filter(
+        $filtered = array_values(array_filter(
             $transitions,
             fn (string $status) => !in_array($status, [self::STATUS_FITTING_PENDING, self::STATUS_FITTING_DONE], true)
         ));
+        if (
+            $currentStatus === self::STATUS_DISPATCHED_DONE
+            && in_array(self::STATUS_DEAL_DONE, self::transitionMap()[self::STATUS_FITTING_DONE] ?? [], true)
+            && !in_array(self::STATUS_DEAL_DONE, $filtered, true)
+        ) {
+            $filtered[] = self::STATUS_DEAL_DONE;
+        }
+
+        return $filtered;
     }
 
     /**
