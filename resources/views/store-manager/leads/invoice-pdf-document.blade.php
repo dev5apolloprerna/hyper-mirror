@@ -288,9 +288,24 @@
             <tr>
                 <td>
                     <div class="party-title">Customer Details</div>
-                    <div><strong>Name:</strong> {{ $lead->customer->strCustomer ?? '—' }}</div>
+                    <!-- <div><strong>Name:</strong> {{ $lead->customer->strCustomer ?? '—' }}</div>
                     <div><strong>Address:</strong> {{ $lead->customer->strAddress ?? '—' }}</div>
-                    <div><strong>Site Address:</strong> {{ $lead->SiteAddress ?? '—' }}</div>
+                    <div><strong>Site Address:</strong> {{ $lead->SiteAddress ?? '—' }}</div> -->
+                     @php
+                        $companyName = trim((string) ($lead->customer->company_name ?? ''));
+                        $contactPersonName = trim((string) ($lead->customer->strCustomer ?? ''));
+                        $customerAddress = trim((string) ($lead->customer->strAddress ?? ''));
+                        $siteAddress = trim((string) ($lead->SiteAddress ?? ''));
+                    @endphp
+
+                    @if ($companyName !== '')
+                        <div><strong>Company Name:</strong> {{ $companyName }}</div>
+                    @endif
+                    <div><strong>Contact Person Name:</strong> {{ $contactPersonName !== '' ? $contactPersonName : '—' }}</div>
+                    <div><strong>Address:</strong> {{ $customerAddress !== '' ? $customerAddress : '—' }}</div>
+                    @if ($siteAddress !== '')
+                        <div><strong>Site Address:</strong> {{ $siteAddress }}</div>
+                    @endif
                 </td>
                 <td>
                     <div class="party-title">Prepared By:- Accountant

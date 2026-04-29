@@ -204,12 +204,26 @@ class LeadWorkflow
 
         // Store manager can go anywhere in the global transition map
         if ($roleSlug === 'storemanager') {
-            return self::transitionMap()[$lead->iCurrentLeadStatus] ?? [];
+            $transitions = self::transitionMap()[$lead->iCurrentLeadStatus] ?? [];
+            return self::applyFittingRequirementRules($lead, $transitions);
         }
 
         $roleMap = self::roleTransitionMap()[$roleSlug] ?? [];
+        $transitions = $roleMap[$lead->iCurrentLeadStatus] ?? [];
+        
+               return self::applyFittingRequirementRules($lead, $transitions);
+    }
 
-        return $roleMap[$lead->iCurrentLeadStatus] ?? [];
+    protected static function applyFittingRequirementRules(Lead $lead, array $transitions): array
+    {
+        if ((int) ($lead->isFittingRequired ?? 0) === 1) {
+            return $transitions;
+        }
+
+        return array_values(array_filter(
+            $transitions,
+            fn (string $status) => !in_array($status, [self::STATUS_FITTING_PENDING, self::STATUS_FITTING_DONE], true)
+        ));
     }
 
     /**

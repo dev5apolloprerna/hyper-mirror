@@ -78,9 +78,11 @@ class ComplainMasterController extends Controller
         $validated = $request->validate([
             'resolve_comment' => 'required|string|max:2000',
             'resolve_date' => 'required|date',
-            'payment_type' => ['required', Rule::in(['cash', 'online'])],
-            'amount' => 'required|numeric|min:0',
+            'payment_type' => ['required', Rule::in(['cash', 'online', 'warranty'])],
+            'amount' => 'nullable|required_unless:payment_type,warranty|numeric|min:0',
         ]);
+
+        $resolvedAmount = (float) ($validated['amount'] ?? 0);
 
         $complaint->update([
             'status' => 'resolved',
@@ -88,13 +90,13 @@ class ComplainMasterController extends Controller
             'resolve_comment' => $validated['resolve_comment'],
             'resolve_date' => $validated['resolve_date'],
             'payment_type' => $validated['payment_type'],
-            'amount' => $validated['amount'],
+            'amount' => $resolvedAmount,
         ]);
 
         $auth = Auth::user()->id;
         $Cr_emp_id = $auth;
         $invoices_Id  =  $complaint->complain_id ?? 0;
-        $amount = $request->amount;
+        $amount = $resolvedAmount;
         $dr_emp_id = 0;
 
         $fromLast = DB::table('cash_payment_ledger')
