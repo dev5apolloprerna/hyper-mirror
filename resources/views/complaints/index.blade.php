@@ -210,16 +210,16 @@
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Payment Type <span class="text-danger">*</span></label>
-                                <select name="payment_type" class="form-select" required>
+                                    <select name="payment_type" id="payment_type" class="form-select" required>
                                     <option value="">Select</option>
                                     <option value="cash">Cash</option>
                                     <option value="online">Online</option>
                                     <option value="warranty">Warranty</option>
                                 </select>
                             </div>
-                            <div class="mb-3">
+                            <div class="mb-3" id="amount_wrapper">
                                 <label class="form-label">Amount <span class="text-danger">*</span></label>
-                                <input type="number" name="amount" class="form-control" min="0" step="0.01"
+                                <input type="number" name="amount" id="amount" class="form-control" min="0" step="0.01"
                                     required>
                             </div>
                             <div class="mb-3">
@@ -242,11 +242,29 @@
     @if ($roleSlug === 'fitting')
         <script>
             $(document).ready(function() {
+                function toggleAmountField() { 
+                    const isWarranty = $('#payment_type').val() === 'warranty';
+                    const amountInput = $('#amount');
+                    const amountWrapper = $('#amount_wrapper');
+
+                    amountInput.prop('required', !isWarranty);
+                    if (isWarranty) {
+                        amountInput.val('');
+                        amountWrapper.hide();
+                    } else {
+                        amountWrapper.show();
+                    }
+                }
+
+
                 $('.resolve-btn').on('click', function() {
                     const url = $(this).data('url');
                     $('#resolveForm').attr('action', url);
+                    $('#resolveForm')[0].reset();
+                    toggleAmountField();
                     $('#resolveModal').modal('show');
                 });
+                $('#payment_type').on('change', toggleAmountField);
             });
         </script>
     @endif
