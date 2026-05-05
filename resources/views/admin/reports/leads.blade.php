@@ -46,10 +46,7 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-2">
-                            <label class="form-label mb-1 small fw-semibold">Sales Person Search</label>
-                            <input type="text" name="sales_person_search" value="{{ request('sales_person_search') }}" class="form-control form-control-sm" placeholder="Sales person name">
-                        </div>
+                    <div class="col-12"></div>
                         <div class="col-md-2">
                             <label class="form-label mb-1 small fw-semibold">From Date</label>
                             <input type="date" name="from_date" value="{{ request('from_date') }}" class="form-control form-control-sm">
@@ -58,9 +55,22 @@
                             <label class="form-label mb-1 small fw-semibold">To Date</label>
                             <input type="date" name="to_date" value="{{ request('to_date') }}" class="form-control form-control-sm">
                         </div>
+                        <div class="col-md-2">
+                            <label class="form-label mb-1 small fw-semibold">Customer Type</label>
+                            <select name="customer_type" class="form-select form-select-sm">
+                                <option value="">All</option>
+                                <option value="Retail" {{ request('customer_type') === 'Retail' ? 'selected' : '' }}>Retail</option>
+                                <option value="B2B" {{ request('customer_type') === 'B2B' ? 'selected' : '' }}>B2B</option>
+                            </select>
+                        </div>
                         <div class="col-md-2 d-flex gap-2">
                             <button type="submit" class="btn btn-success btn-sm flex-fill"><i class="fas fa-search me-1"></i>Search</button>
                             <a href="{{ route('admin.reports.leads') }}" class="btn btn-secondary btn-sm"><i class="fas fa-undo"></i></a>
+                        </div>
+                         <div class="col-md-2">
+                            <a href="{{ route('admin.reports.leads.export', request()->query()) }}" class="btn btn-outline-primary btn-sm w-100">
+                                <i class="fas fa-file-excel me-1"></i>Export Excel
+                            </a>
                         </div>
                     </form>
                 </div>

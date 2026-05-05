@@ -222,6 +222,7 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::post('invoice-settings', [InvoicePdfSettingController::class, 'update'])->name('invoice-settings.update');
 
     Route::get('reports/leads', [LeadReportController::class, 'index'])->name('reports.leads');
+        Route::get('reports/leads-export', [LeadReportController::class, 'export'])->name('reports.leads.export');
     Route::get('reports/leads/{lead}', [LeadReportController::class, 'show'])->name('reports.leads.show');
     Route::get('reports/leads/{lead}/histories', [LeadReportController::class, 'histories'])->name('reports.leads.histories');
     Route::get('reports/leads/{lead}/quotations', [LeadReportController::class, 'quotations'])->name('reports.leads.quotations');
@@ -243,6 +244,7 @@ Route::middleware('auth')->prefix('Accountuser')->name('Accountuser.')->group(fu
     Route::get('Create-payments', [AccountPaymentController::class, 'Create'])->name('Create');
     Route::get('available-amount/{userId}', [AccountPaymentController::class, 'getUserAvailableAmount'])->name('availableAmount');
     Route::post('Store-payments', [AccountPaymentController::class, 'Store'])->name('Store');
+      Route::get('reports/party', [PartyReportController::class, 'index'])->name('reports.party');
     Route::get('payment-delete/{id?}/{emp_id?}', [AccountPaymentController::class, 'delete'])
         ->name('deletePayment');
 });
@@ -250,6 +252,7 @@ Route::middleware('auth')->prefix('Accountuser')->name('Accountuser.')->group(fu
 Route::prefix('admin')->name('Paymentcollection.')->middleware('auth')->group(function () {
     Route::get('Payment-index', [AdminPaymentController::class, 'index'])->name('index');
     Route::get('Create-payments', [AdminPaymentController::class, 'Create'])->name('Create');
+        Route::get('available-amount/{userId}', [AdminPaymentController::class, 'getUserAvailableAmount'])->name('availableAmount');
     Route::post('Store-payments', [AdminPaymentController::class, 'Store'])->name('Store');
     Route::get('payment-delete/{id?}/{emp_id?}', [AdminPaymentController::class, 'delete'])
         ->name('deletePayment');

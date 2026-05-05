@@ -77,9 +77,21 @@
              width: 50%;
          }
 
+        .meta-row {
+             margin-bottom: 3px;
+         }
+
+         .meta-row:last-child {
+             margin-bottom: 0;
+         }
+                  .meta-value {
+             display: inline-block;
+             vertical-align: top;
+         }
+
          .meta-title {
              display: inline-block;
-             min-width: 108px;
+             min-width: 118px;
              font-weight: 700;
              color: #0f172a;
          }
@@ -183,8 +195,19 @@
 
          @php
 		  $companyGstNo = "GSTIN: 24BIQPG6204F1ZH, State: 24-Gujarat";
-        $companyAddress ="10, Sahyog Estate, Behind Anand Restaurant, Isanpur, A’bad 382443
-Phone no.: +91 88662 77000 Email: hypermirror01@gmail.com";
+        $defaultAddress = "10, Sahyog Estate, Behind Anand Restaurant, Isanpur, A’bad 382443";
+        $salesPersonAddress = trim((string) (optional($invoice->createdBy)->strUserAddress ?? ''));
+        $salesPersonMobile = trim((string) (optional($invoice->createdBy)->mobile_number ?? optional($invoice->createdBy)->strUserMobile ?? ''));
+
+        $companyAddressLines = [
+            $salesPersonAddress !== '' ? $salesPersonAddress : $defaultAddress,
+        ];
+
+        if ($salesPersonMobile !== '') {
+            $companyAddressLines[] = 'Phone no.: +91 ' . $salesPersonMobile;
+        }
+
+        $companyAddress = implode("\n", $companyAddressLines);
 
         $logoPath = base_path('assets/images/logo.png');
         $logoSrc = file_exists($logoPath) ? $logoPath : null;
@@ -212,22 +235,16 @@ Phone no.: +91 88662 77000 Email: hypermirror01@gmail.com";
      <table class="box meta">
          <tr>
              <td>
-                 <div><span class="meta-title">Invoice
-                         Date</span>{{ \Carbon\Carbon::parse($invoice->InvoiceDate)->format('d F Y') }}</div>
-                 <div><span class="meta-title">Showroom</span>{{ optional($invoice->showroom)->strShowRoomName ?? '—' }}
-                 </div>
-                 <div><span class="meta-title">Payment Mode</span>{{ ucfirst($invoice->payment_mode ?? 'cash') }}</div>
-                 <div><span class="meta-title">Status</span>{{ strtoupper($invoice->status ?? 'draft') }}</div>
+                 <div class="meta-row"><span class="meta-title">Invoice Date</span><span class="meta-value">{{ \Carbon\Carbon::parse($invoice->InvoiceDate)->format('d F Y') }}</span></div>
+                 <div class="meta-row"><span class="meta-title">Showroom</span><span class="meta-value">{{ optional($invoice->showroom)->strShowRoomName ?? '—' }}</span></div>
+                 <div class="meta-row"><span class="meta-title">Payment Mode</span><span class="meta-value">{{ ucfirst($invoice->payment_mode ?? 'cash') }}</span></div>
+                 <div class="meta-row"><span class="meta-title">Status</span><span class="meta-value">{{ strtoupper($invoice->status ?? 'draft') }}</span></div>
              </td>
              <td>
-                 <div><span class="meta-title">Created
-                         By</span>{{ optional($invoice->createdBy)->strUserName ?: optional($invoice->createdBy)->first_name ?? '—' }}
-                 </div>
-                 <div><span class="meta-title">Payment Received</span>{{ $invoice->payment_received ? 'Yes' : 'No' }}
-                 </div>
-                 <div><span class="meta-title">Subtotal</span>₹{{ number_format((float) $invoice->total_amount, 2) }}
-                 </div>
-                 <div><span class="meta-title">Total</span>₹{{ number_format((float) $invoice->total_amount, 2) }}</div>
+                 <div class="meta-row"><span class="meta-title">Created By</span><span class="meta-value">{{ optional($invoice->createdBy)->strUserName ?: optional($invoice->createdBy)->first_name ?? '—' }}</span></div>
+                 <div class="meta-row"><span class="meta-title">Payment Received</span><span class="meta-value">{{ $invoice->payment_received ? 'Yes' : 'No' }}</span></div>
+                 <div class="meta-row"><span class="meta-title">Subtotal</span><span class="meta-value">₹{{ number_format((float) $invoice->total_amount, 2) }}</span></div>
+                 <div class="meta-row"><span class="meta-title">Total</span><span class="meta-value">₹{{ number_format((float) $invoice->total_amount, 2) }}</span></div>
              </td>
          </tr>
      </table>

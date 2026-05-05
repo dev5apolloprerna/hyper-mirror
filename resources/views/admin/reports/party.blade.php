@@ -56,14 +56,18 @@
             </div>
 
             <div class="card border-0  shadow-sm mb-3">
-                <div class="card-header bg-white">
+                 <div class="card-header bg-white d-flex justify-content-between align-items-center gap-2">
                     <h6 class="mb-0">Party Wise Summary</h6>
+                    <a href="{{ route('admin.reports.party', array_merge(request()->query(), ['export' => 1])) }}" class="btn btn-sm btn-success">
+                        <i class="fas fa-file-excel me-1"></i> Export to Excel
+                    </a>
                 </div>
                 <div class="card-body p-2">
                     <div class="table-responsive">
                         <table class="table table-bordered table-hover  mb-0">
                             <thead class="table-light">
                                 <tr>
+                                    <th class="p-2">Sales Manager Name</th>
                                     <th class="p-2">Party Name</th>
                                     <th class="p-2">Mobile No</th>
                                     <th class="text-end">Total Amount</th>
@@ -79,6 +83,7 @@
                             <tbody>
                                 @forelse($partySummary as $index => $party)
                                     <tr>
+                                        <td class="fw-semibold p-2">{{ $party['sales_manager_name'] }}</td>
                                         <td class="fw-semibold p-2">{{ $party['party_name'] }}</td>
                                         <td class="fw-semibold p-2">{{ $party['mobile'] }}</td>
                                         <td class="text-end">₹{{ number_format((float) $party['total_amount'], 2) }}</td>
@@ -108,7 +113,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="9" class="text-center text-muted py-3">No data found</td>
+                                        <td colspan="11" class="text-center text-muted py-3">No data found</td>
                                     </tr>
                                 @endforelse
                             </tbody>

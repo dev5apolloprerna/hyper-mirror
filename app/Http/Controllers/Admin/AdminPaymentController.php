@@ -40,13 +40,38 @@ class AdminPaymentController extends Controller
             $totalCollection = DB::table('admin_payments_collection')
                 ->whereNull('is_Delete_recode')
                 ->sum('amount');
-            $userBalances = DB::table('admin_payments_collection')
-                ->whereNull('is_Delete_recode')
-                ->select('emp_id', DB::raw('SUM(amount) as total_paid'))
-                ->groupBy('emp_id')
-                ->get();
+             $latestStoreLedger = DB::table('cash_payment_ledger as cpl')
+                ->join(
+                    DB::raw('(SELECT emp_id, MAX(cash_payment_ledger_id) as max_id FROM cash_payment_ledger WHERE UserType = 1 GROUP BY emp_id) as latest'),
+                    function ($join) {
+                        $join->on('cpl.emp_id', '=', 'latest.emp_id')
+                            ->on('cpl.cash_payment_ledger_id', '=', 'latest.max_id');
+                    }
+                )
+                ->select('cpl.emp_id', 'cpl.close as pending_amount');
 
-            return view('admin.paymentcollection.index', compact('payments', 'totalCollection', 'userBalances'));
+            $pendingCollections = DB::query()
+                ->fromSub($latestStoreLedger, 'ledger')
+                ->join('users', 'users.id', '=', 'ledger.emp_id')
+                ->where('users.iRoalId', 6)
+                ->where('ledger.pending_amount', '>', 0)
+                ->select(
+                    'users.id',
+                    'users.first_name',
+                    'users.last_name',
+                    'users.mobile_number',
+                    'ledger.pending_amount'
+                )
+                ->orderByDesc('ledger.pending_amount')
+                ->get();
+           
+            $totalPendingCollection = (float) $pendingCollections->sum('pending_amount');
+
+            return view(
+                'admin.paymentcollection.index',
+                compact('payments', 'totalCollection', 'pendingCollections', 'totalPendingCollection')
+            );
+
         } catch (\Exception $e) {
             DB::rollback();
             return back()
@@ -62,7 +87,28 @@ class AdminPaymentController extends Controller
                 ->whereIn('iRoalId', [6])
                 ->get();
 
-            return view('admin.paymentcollection.create', compact('getuser'));
+                        $totalCollection = DB::table('admin_payments_collection')
+                ->whereNull('is_Delete_recode')
+                ->sum('amount');
+
+            $latestStoreLedger = DB::table('cash_payment_ledger as cpl')
+                ->join(
+                    DB::raw('(SELECT emp_id, MAX(cash_payment_ledger_id) as max_id FROM cash_payment_ledger WHERE UserType = 1 GROUP BY emp_id) as latest'),
+                    function ($join) {
+                        $join->on('cpl.emp_id', '=', 'latest.emp_id')
+                            ->on('cpl.cash_payment_ledger_id', '=', 'latest.max_id');
+                    }
+                )
+                ->select('cpl.emp_id', 'cpl.close as pending_amount');
+
+            $totalPendingCollection = (float) DB::query()
+                ->fromSub($latestStoreLedger, 'ledger')
+                ->join('users', 'users.id', '=', 'ledger.emp_id')
+                ->where('users.iRoalId', 6)
+                ->where('ledger.pending_amount', '>', 0)
+                ->sum('ledger.pending_amount');
+
+            return view('admin.paymentcollection.create', compact('getuser', 'totalCollection', 'totalPendingCollection'));
         } catch (\Exception $e) {
             DB::rollback();
             return back()
@@ -83,6 +129,21 @@ class AdminPaymentController extends Controller
         try {
             $auth = Auth::user()->id;
             $paymentmode = strtolower($request->payment_mode) === 'cash' ? 0 : 1;
+             if ($paymentmode === 0) {
+                $availableAmount = $this->getAvailableAmountForUser((int) $request->user_id);
+                if ((float) $request->amount > $availableAmount) {
+                    return back()
+                        ->with('error', 'Amount cannot be greater than available closing balance (₹' . number_format($availableAmount, 2) . ').')
+                        ->withInput();
+                }
+            }
+
+            $availableAmount = $this->getAvailableAmountForUser((int) $request->user_id);
+            if ((float) $request->amount > $availableAmount) {
+                return back()
+                    ->with('error', 'Amount cannot be greater than available collection amount (₹' . number_format($availableAmount, 2) . ').')
+                    ->withInput();
+            }
             $getdataid = DB::table('admin_payments_collection')->insertGetId([
                 'user_id'      => $auth,
                 'amount'       => $request->amount,
@@ -115,6 +176,25 @@ class AdminPaymentController extends Controller
                 ->with('error', $e->getMessage())
                 ->withInput();
         }
+    }
+     public function getUserAvailableAmount($userId)
+    {
+        $availableAmount = $this->getAvailableAmountForUser((int) $userId);
+
+        return response()->json([
+            'available_amount' => $availableAmount,
+        ]);
+    }
+
+    private function getAvailableAmountForUser(int $userId): float
+    {
+        $ledger = DB::table('cash_payment_ledger')
+            ->where('emp_id', $userId)
+            ->where('UserType', 2)
+            ->orderByDesc('cash_payment_ledger_id')
+            ->first();
+
+        return max(0, (float) ($ledger->close ?? 0));
     }
     public function delete($id = null, $emp_id = null)
     {
@@ -196,4 +276,6 @@ class AdminPaymentController extends Controller
             return back()->with('error', $e->getMessage());
         }
     }
+     
+ 
 }

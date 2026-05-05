@@ -23,16 +23,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="row mb-3">
-                    <div class="col-md-4">
-                        <div class="card bg-success text-white">
-                            <div class="card-body">
-                                <h6>Total Collection</h6>
-                                <h4>₹ {{ number_format($totalCollection, 2) }}</h4>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                
                 {{-- Filters --}}
                 <div class="card mb-3">
                     <div class="card-body py-3">
@@ -151,6 +142,56 @@
 
                     </div>
                 </div>
+
+ <div class="modal fade" id="pendingCollectionModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-lg modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Pending Collection List</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-sm mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>No</th>
+                                                <th>User</th>
+                                                <th>Mobile</th>
+                                                <th class="text-end">Pending Amount</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @forelse ($pendingCollections as $index => $pendingUser)
+                                                <tr>
+                                                    <td>{{ $index + 1 }}</td>
+                                                    <td>{{ trim(($pendingUser->first_name ?? '') . ' ' . ($pendingUser->last_name ?? '')) }}</td>
+                                                    <td>{{ $pendingUser->mobile_number ?? '-' }}</td>
+                                                    <td class="text-end">₹ {{ number_format((float) $pendingUser->pending_amount, 2) }}</td>
+                                                </tr>
+                                            @empty
+                                                <tr>
+                                                    <td colspan="4" class="text-center text-muted">No pending collection found.</td>
+                                                </tr>
+                                            @endforelse
+                                        </tbody>
+                                        @if ($pendingCollections->isNotEmpty())
+                                            <tfoot class="table-light">
+                                                <tr>
+                                                    <th colspan="3" class="text-end">Total Pending</th>
+                                                    <th class="text-end">₹ {{ number_format($totalPendingCollection, 2) }}</th>
+                                                </tr>
+                                            </tfoot>
+                                        @endif
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+            </div>
 
 
             </div>
