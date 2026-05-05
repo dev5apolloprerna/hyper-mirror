@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Exports\AdminLeadReportExport;
 use App\Models\Lead;
 use App\Models\LeadPayment;
 use App\Models\LeadQuotation;
 use App\Models\User;
 use App\Support\LeadWorkflow;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 
 class LeadReportController extends Controller
 {
@@ -49,22 +51,18 @@ class LeadReportController extends Controller
             $query->where('iCreatedBy', $request->sales_person);
         }
 
-        if ($request->filled('sales_person_search')) {
-            $salesPersonSearch = trim((string) $request->sales_person_search);
-            $query->whereHas('createdBy', function ($sub) use ($salesPersonSearch) {
-                $sub->where('strUserName', 'like', "%{$salesPersonSearch}%")
-                    ->orWhere('name', 'like', "%{$salesPersonSearch}%")
-                    ->orWhere('first_name', 'like', "%{$salesPersonSearch}%")
-                    ->orWhere('last_name', 'like', "%{$salesPersonSearch}%");
-            });
-        }
-
+        
         if ($request->filled('from_date')) {
             $query->whereDate('CreatedDate', '>=', $request->from_date);
         }
 
         if ($request->filled('to_date')) {
             $query->whereDate('CreatedDate', '<=', $request->to_date);
+        }
+        if ($request->filled('customer_type')) {
+            $query->whereHas('customer', function ($sub) use ($request) {
+                $sub->where('customer_type', $request->customer_type);
+            });
         }
 
         $filteredLeads = (clone $query)->get();
@@ -102,6 +100,62 @@ class LeadReportController extends Controller
             ->values();
 
         return view('admin.reports.leads', compact('leads', 'statusOptions', 'salesPersons', 'salesPersonWiseData'));
+    }
+    public function export(Request $request)
+    {
+        $this->authoriseAdmin();
+
+        $query = $this->buildFilteredQuery($request);
+
+        if ($request->filled('search')) {
+            $search = trim((string) $request->search);
+            $query->where(function ($q) use ($search) {
+                $q->where('strLeadNo', 'like', "%{$search}%")
+                    ->orWhere('iCurrentLeadStatus', 'like', "%{$search}%")
+                    ->orWhereHas('customer', function ($sub) use ($search) {
+                        $sub->where('strCustomer', 'like', "%{$search}%")
+                            ->orWhere('strMobile', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('showroom', function ($sub) use ($search) {
+                        $sub->where('strShowRoomName', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        if ($request->filled('status')) {
+            $query->where('iCurrentLeadStatus', $request->status);
+        }
+
+        if ($request->filled('sales_person')) {
+            $query->where('iCreatedBy', $request->sales_person);
+        }
+
+        if ($request->filled('from_date')) {
+            $query->whereDate('CreatedDate', '>=', $request->from_date);
+        }
+
+        if ($request->filled('to_date')) {
+            $query->whereDate('CreatedDate', '<=', $request->to_date);
+        }
+
+        if ($request->filled('customer_type')) {
+            $query->whereHas('customer', function ($sub) use ($request) {
+                $sub->where('customer_type', $request->customer_type);
+            });
+        }
+
+        return Excel::download(
+            new AdminLeadReportExport($query->get()),
+            'lead-report-' . now()->format('Y-m-d-His') . '.xlsx'
+        );
+    }
+
+    private function buildFilteredQuery(Request $request)
+    {
+        return Lead::query()
+            ->with(['customer', 'showroom', 'createdBy.showrooms', 'quotations', 'payments', 'histories'])
+            ->withMax('histories as last_history_entry', 'EntryDate')
+            ->latest('iLeadId');
     }
 
     public function show(Lead $lead)

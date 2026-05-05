@@ -170,6 +170,13 @@
                             <p class="mb-0">Paymentcollection</p>
                         </a>
                     </li>
+                     <li class="nav-item">
+                        <a href="{{ route('Accountuser.reports.party') }}"
+                            class="nav-link {{ request()->is('Accountuser/reports/party*') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-users"></i>
+                            <p class="mb-0">Party Report</p>
+                        </a>
+                    </li>
                 @endif
                  @if(in_array($roleSlug, ['storemanager', 'account','fitting'], true))
                     <li class="nav-item">

@@ -110,6 +110,7 @@ class LeadWorkflow
                 self::STATUS_DISPATCHED_DONE,
             ],
             'fitting' => [
+                self::STATUS_QUOTATION_APPROVED,
                 //self::STATUS_DISPATCHED,
                 self::STATUS_DISPATCHED_DONE,
                 self::STATUS_FITTING_PENDING,
@@ -140,7 +141,7 @@ class LeadWorkflow
             self::STATUS_IN_DESIGN           => [self::STATUS_QUOTATION_SENT, self::STATUS_LEAD_REJECTED],
             self::STATUS_QUOTATION_SENT      => [self::STATUS_QUOTATION_APPROVED, self::STATUS_LEAD_REJECTED],
             //self::STATUS_QUOTATION_APPROVED  => [self::STATUS_ADVANCE_RECEIVED, self::STATUS_LEAD_REJECTED],
-            self::STATUS_QUOTATION_APPROVED  => [self::STATUS_ADVANCE_RECEIVED],
+            self::STATUS_QUOTATION_APPROVED  => [self::STATUS_ADVANCE_RECEIVED, self::STATUS_FITTING_PENDING],
             self::STATUS_ADVANCE_RECEIVED    => [self::STATUS_PRODUCTION_ACCEPTED],
             self::STATUS_PRODUCTION_ACCEPTED => [self::STATUS_READY_TO_DISPATCHED],
             /*self::STATUS_READY_TO_DISPATCHED => [self::STATUS_DISPATCHED],
@@ -182,12 +183,14 @@ class LeadWorkflow
             ],
 
             'fitting' => [
+                self::STATUS_QUOTATION_APPROVED => [self::STATUS_FITTING_PENDING],
                 //self::STATUS_DISPATCHED => [self::STATUS_FITTING_PENDING, self::STATUS_FITTING_DONE],
                 self::STATUS_DISPATCHED_DONE => [self::STATUS_FITTING_PENDING, self::STATUS_FITTING_DONE],
                 self::STATUS_FITTING_PENDING => [self::STATUS_FITTING_DONE],
             ],
 
             'account' => [
+                self::STATUS_QUOTATION_APPROVED => [self::STATUS_ADVANCE_RECEIVED, self::STATUS_FITTING_PENDING],
                 self::STATUS_FITTING_DONE => [self::STATUS_DEAL_DONE],
             ],
         ];
@@ -220,6 +223,12 @@ class LeadWorkflow
 protected static function applyFittingRequirementRules(Lead $lead, array $transitions, string $currentStatus): array
     {
         if ((int) ($lead->isFittingRequired ?? 0) === 1) {
+             if ($currentStatus === self::STATUS_QUOTATION_APPROVED) {
+                return array_values(array_filter(
+                    $transitions,
+                    fn (string $status) => $status !== self::STATUS_ADVANCE_RECEIVED
+                ));
+            }
             return $transitions;
         }
 

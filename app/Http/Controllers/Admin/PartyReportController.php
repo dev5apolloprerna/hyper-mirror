@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Lead;
 use Illuminate\Http\Request;
 use App\Support\LeadWorkflow;
+use App\Exports\PartyReportExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class PartyReportController extends Controller
 {
@@ -16,6 +18,7 @@ class PartyReportController extends Controller
         $partyName = trim((string) $request->input('party_name', ''));
         $mobileNo = trim((string) $request->input('mobile_no', ''));
         $quotationSearch = trim((string) $request->input('quotation_search', ''));
+        $export = $request->boolean('export');
 
         $leadQuery = Lead::query()->with([
             'customer',
@@ -68,7 +71,9 @@ class PartyReportController extends Controller
 
 
         $partySummary = $leads
-            ->groupBy('iCustomerId')
+            ->groupBy(function ($lead) {
+                return ($lead->iCreatedBy ?? '0') . '_' . ($lead->iCustomerId ?? '0');
+            })
             ->map(function ($group) use ($approvedStatuses) {
                 $first = $group->first();
 
@@ -89,7 +94,12 @@ class PartyReportController extends Controller
                     ->sortDesc()
                     ->first();
 
+
+                $salesManagerName = trim((string) (optional($first->createdBy)->full_name ?? ''))
+                    ?: (optional($first->createdBy)->strUserName ?? optional($first->createdBy)->name ?? 'N/A');
+
                 return [
+                    'sales_manager_name' => $salesManagerName,
                     'party_name' => optional($first->customer)->strCustomer ?? 'N/A',
                     'mobile' => optional($first->customer)->strMobile ?? 'N/A',
                     'total_amount' => $totalAmount,
@@ -107,6 +117,10 @@ class PartyReportController extends Controller
             })
             ->sortByDesc('total_amount')
             ->values();
+
+            if ($export) {
+                    return Excel::download(new PartyReportExport($partySummary), 'party-report-' . now()->format('Ymd_His') . '.xlsx');
+                }
 
         return view('admin.reports.party', compact('fromDate', 'toDate', 'partyName', 'mobileNo', 'quotationSearch', 'partySummary'));
     }
