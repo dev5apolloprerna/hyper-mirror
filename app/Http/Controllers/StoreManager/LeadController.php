@@ -521,7 +521,7 @@ class LeadController extends Controller
             $gstApplicable = (int) $data['isGstApplicable'] === 1;
             $gstAmount = $gstApplicable ? ($afterDiscount * 0.18) : 0;
 
-            $grandTotal = $afterDiscount + $gstAmount;
+            $grandTotal = round($afterDiscount + $gstAmount);
 
             $lead->update([
                 'iQuotationId'          => $firstQuotation?->iQuotationId,

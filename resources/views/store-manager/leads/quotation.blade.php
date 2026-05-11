@@ -389,7 +389,7 @@
 
                                             <div class="col-md-1">
                                                 <label class="form-label">Rate <span style="color:red;">*</span></label>
-                                                <input type="number" step="0.01" min="0"
+                                                <input type="number" step="any" min="0"
                                                     name="items[{{ $index }}][decRatePerSqft]"
                                                     class="form-control decRatePerSqft"
                                                     value="{{ $item['decRatePerSqft'] ?? '' }}" required>
@@ -931,12 +931,17 @@
                 const gst = isGstApplicable ? (afterDiscount * 0.18) : 0;
 
 
-                $('#subtotalAmount').val(baseAmount.toFixed(2));
+                //$('#subtotalAmount').val(baseAmount.toFixed(2));
+                $('#subtotalAmount').val(Math.round(baseAmount));
                 $('#totalSqftAmount').val(totalSqft.toFixed(2));
                 $('#totalQtyAmount').val(totalQty.toFixed(0));
-                $('#amountBeforeGst').val(afterDiscount.toFixed(2));
+                $('#amountBeforeGst').val(Math.round(afterDiscount));
+                $('#gstAmount').val(Math.round(gst));
+                $('#grandTotalAmount').val(Math.round(afterDiscount + gst));
+
+                /*$('#amountBeforeGst').val(afterDiscount.toFixed(2));
                 $('#gstAmount').val(gst.toFixed(2));
-                $('#grandTotalAmount').val((afterDiscount + gst).toFixed(2));
+                $('#grandTotalAmount').val((afterDiscount + gst).toFixed(2));*/
 
             }
 
@@ -1077,7 +1082,7 @@
             
             <div class="col-md-1">
                 <label class="form-label">Rate <span style="color:red;">*</span></label>
-                <input type="number" step="0.01" min="0" name="items[${nextIndex}][decRatePerSqft]" class="form-control decRatePerSqft" required>
+                <input type="number" step="any" min="0" name="items[${nextIndex}][decRatePerSqft]" class="form-control decRatePerSqft" required>
             </div>
 
            
