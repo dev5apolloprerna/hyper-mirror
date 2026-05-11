@@ -18,7 +18,7 @@ class BusinessReportController extends Controller
         $fromDate = $request->input('from_date');
         $toDate = $request->input('to_date');
 
-        $leadQuery = Lead::query()->with(['customer', 'createdBy.showrooms', 'showroom', 'quotations.category', 'quotations.product', 'histories.user', 'payments']);
+        $leadQuery = Lead::query()->with(['customer', 'createdBy', 'showroom', 'quotations.category', 'quotations.product', 'histories.user', 'payments']);
 
         if ($fromDate) {
             $leadQuery->whereDate('CreatedDate', '>=', $fromDate);
@@ -28,8 +28,6 @@ class BusinessReportController extends Controller
         }
 
         $leads = $leadQuery->get();
-        $showroomNameMap = Showroom::query()
-            ->pluck('strShowRoomName', 'iShowroomId');
 
         $totalQuotationValue = (float) $leads->sum('iLeadAmount');
 
@@ -134,8 +132,8 @@ class BusinessReportController extends Controller
             ->groupBy(function ($lead) {
                 return $lead->iCustomerId . '|' . $lead->iCreatedBy;
             })
-            ->map(function ($group) use ($showroomNameMap) {
-             $first = $group->first();
+            ->map(function ($group) {
+                $first = $group->first();
 
                 $approvedStatuses = [
                     LeadWorkflow::STATUS_QUOTATION_APPROVED,
@@ -165,13 +163,7 @@ class BusinessReportController extends Controller
 
                 return [
                     'customer_name' => optional($first->customer)->strCustomer ?? 'N/A',
-                    'sales_executive_name' => optional($first->createdBy)->first_name ?? 'N/A',
-                    'showroom_names' => $group
-                        ->map(fn ($lead) => optional($lead->showroom)->strShowRoomName)
-                        ->filter()
-                        ->unique()
-                        ->values()
-                        ->implode(', ') ?: 'N/A',
+                    'sales_executive_name' => optional($first->createdBy)->name ?? 'N/A',
                     'history' => $group,
                     'total_quotation_given' => $quotationGivenAmount,
                     'total_quotation_done' => $quotationDoneAmount,
@@ -209,8 +201,7 @@ class BusinessReportController extends Controller
             'todayTotalAmount',
             'showroomWiseBusiness',
             'salesExecutiveSummary',
-            'invoiceItems',
-            'showroomNameMap'
+            'invoiceItems'
         ));
     }
 }
