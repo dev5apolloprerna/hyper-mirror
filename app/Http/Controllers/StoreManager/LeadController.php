@@ -32,10 +32,19 @@ class LeadController extends Controller
     {
         $roleSlug = optional(auth()->user()->crmRole)->slug;
               
+            $assignedShowroomIds = in_array($roleSlug, ['admin', 'account'], true)
+            ? []
+            : auth()->user()->showrooms()->pluck('showrooms.iShowroomId')->all();
+
+
          $query    = Lead::with(['customer', 'quotation'])
             ->withSum('payments as total_paid_amount', 'iPaidAmount')
             ->withSum('payments as total_discount_amount', 'iDiscountAmount')
             ->latest('iLeadId');
+
+        if (!empty($assignedShowroomIds)) {
+            $query->whereIn('iShowroomId', $assignedShowroomIds);
+        }
 
 
         if ($roleSlug !== 'storemanager') {
@@ -171,6 +180,8 @@ class LeadController extends Controller
         //abort_unless(LeadWorkflow::canEditLeadDetails($lead->iCurrentLeadStatus), 403, 'Lead cannot be edited after quotation approval.');
         //abort_unless(optional(auth()->user()->crmRole)->slug === 'storemanager', 403);
 
+        $assignedShowroomIds = auth()->user()->showrooms()->pluck('showrooms.iShowroomId')->all();
+
         $data = $request->validate([
             'strMobile'             => 'required|digits:10',
             'strCustomer'           => 'required|string|max:100',
@@ -189,6 +200,7 @@ class LeadController extends Controller
             'MeasurementVisitDate'  => 'nullable|date|required_if:IsMeasureMentRequired,1',
             'design_followup_date'  => 'nullable|date|required_if:IsMeasureMentRequired,0',
             'strComments'           => 'nullable|string|max:2000',
+            'iShowroomId'            => array_filter(['nullable','integer','exists:showrooms,iShowroomId', !empty($assignedShowroomIds) ? Rule::in($assignedShowroomIds) : null]),
         ]);
 
         DB::beginTransaction();
@@ -236,6 +248,8 @@ class LeadController extends Controller
                 ? ($data['MeasurementVisitDate'] ?? null)
                 : ($data['design_followup_date'] ?? null);
 
+            $defaultShowroomId = $assignedShowroomIds[0] ?? null;
+            
             $lead = Lead::create([
                 'iCustomerId'           => $customer->iCustomerId,
                 'iCurrentYearLeadId'    => $fy,
@@ -250,6 +264,7 @@ class LeadController extends Controller
                 'isFittingRequired'     => $isFittingRequired,
                 'isFittingChargeIncluded' => $isFittingChargeIncluded,
                 'iCreatedBy'            => auth()->id(),
+                'iShowroomId'           => $data['iShowroomId'] ?? $defaultShowroomId,
             ]);
 
             LeadHistory::create([
@@ -274,6 +289,8 @@ class LeadController extends Controller
     {
         abort_unless(optional(auth()->user()->crmRole)->slug === 'storemanager', 403);
 
+        $assignedShowroomIds = auth()->user()->showrooms()->pluck('showrooms.iShowroomId')->all();
+
         $data = $request->validate([
             'strCustomer'         => 'required|string|max:100',
             'strAddress'          => 'nullable|string',
@@ -290,6 +307,7 @@ class LeadController extends Controller
             'MeasurementVisitDate'  => 'nullable|date|required_if:IsMeasureMentRequired,1',
             'design_followup_date'  => 'nullable|date|required_if:IsMeasureMentRequired,0',
             'strComments'           => 'nullable|string|max:2000',
+            'iShowroomId'            => array_filter(['nullable','integer','exists:showrooms,iShowroomId', !empty($assignedShowroomIds) ? Rule::in($assignedShowroomIds) : null]),
         ]);
 
         DB::beginTransaction();
@@ -822,6 +840,8 @@ class LeadController extends Controller
     {
         abort_unless(LeadWorkflow::canAccessLead(auth()->user(), $lead), 403);
 
+        $assignedShowroomIds = auth()->user()->showrooms()->pluck('showrooms.iShowroomId')->all();
+        
         $data = $request->validate([
             'iStatus'         => 'required|string|in:' . implode(',', LeadWorkflow::allStatuses()),
             'NetFollowupdate' => 'nullable|date',

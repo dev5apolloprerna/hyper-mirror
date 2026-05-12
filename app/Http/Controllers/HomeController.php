@@ -35,7 +35,16 @@ use App\Models\Role;
              $showroomCount = Showroom::count();
              $userShowroomCount = UserShowroom::count();
  
+             $assignedShowroomIds = in_array($roleSlug, ['admin', 'account'], true)
+                ? []
+                : auth()->user()->showrooms()->pluck('showrooms.iShowroomId')->all();
+
+
             $leadBaseQuery = Lead::query();
+            if (!empty($assignedShowroomIds)) {
+                $leadBaseQuery->whereIn('iShowroomId', $assignedShowroomIds);
+            }
+
             if ($roleSlug !== 'storemanager' && $roleSlug) {
                 $leadBaseQuery->whereIn('iCurrentLeadStatus', LeadWorkflow::roleQueueStatuses($roleSlug));
                 if ($roleSlug === 'fitting') {
@@ -84,6 +93,7 @@ use App\Models\Role;
             $fittingCollectionThisMonth = 0;
             if ($roleSlug === 'fitting') {
                 $fittingCollectionThisMonth = Lead::where('isFittingChargeIncluded', 1)
+                    ->when(!empty($assignedShowroomIds), fn ($q) => $q->whereIn('iShowroomId', $assignedShowroomIds))
                     ->where('iCurrentLeadStatus', LeadWorkflow::STATUS_FITTING_DONE)
                     ->whereMonth('updated_at', now()->month)
                     ->whereYear('updated_at', now()->year)

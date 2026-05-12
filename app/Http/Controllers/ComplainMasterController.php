@@ -8,13 +8,26 @@ use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Auth;
 use App\Helpers\LedgerHelper;
 use Illuminate\Support\Facades\DB;
+use App\Models\Showroom;
 
 class ComplainMasterController extends Controller
 {
     public function index(Request $request)
     {
+        $user = $request->user();
+        $roleSlug = optional($user?->crmRole)->slug;
+
+        $assignedShowroomIds = in_array($roleSlug, ['admin', 'account'])
+            ? Showroom::query()->pluck('iShowroomId')
+            : $user->showrooms()->pluck('showrooms.iShowroomId');
+
+
         $query = ComplainMaster::query()
             ->where('isDelete', 0)
+            ->with('showroom')
+            ->when($assignedShowroomIds->isNotEmpty(), function ($q) use ($assignedShowroomIds) {
+                $q->whereIn('iShowroomId', $assignedShowroomIds);
+            })
             ->latest('complain_id');
 
         if ($request->filled('status')) {
@@ -31,9 +44,14 @@ class ComplainMasterController extends Controller
             });
         }
 
-        $complaints = $query->paginate(15)->withQueryString();
+        if ($request->filled('iShowroomId')) {
+            $query->where('iShowroomId', $request->iShowroomId);
+        }
 
-        return view('complaints.index', compact('complaints'));
+        $complaints = $query->paginate(15)->withQueryString();
+        $showrooms = Showroom::whereIn('iShowroomId', $assignedShowroomIds)->orderBy('strShowRoomName')->get();
+
+       return view('complaints.index', compact('complaints', 'showrooms'));
     }
 
     public function store(Request $request)
@@ -42,17 +60,22 @@ class ComplainMasterController extends Controller
             return redirect()->route('complaints.index')
                 ->with('error', 'Account users can only resolve complaints.');
         }
+        $assignedShowroomIds = $request->user()->showrooms()->pluck('showrooms.iShowroomId')->all();
 
         $validated = $request->validate([
             'comment' => 'required|string|max:2000',
             'name' => 'nullable|string|max:150',
             'email' => 'nullable|email|max:190',
             'invoice_no' => 'nullable|string|max:50|exists:leads,strLeadNo',
+            'iShowroomId' => array_filter(['nullable', 'integer', 'exists:showrooms,iShowroomId', !empty($assignedShowroomIds) ? Rule::in($assignedShowroomIds) : null]),
         ], [
             'invoice_no.exists' => 'The entered number was not found in quotation numbers.',
+            'iShowroomId.in' => 'Please select your assigned showroom only.',
         ]);
 
         $user = $request->user();
+            
+        $defaultShowroomId = $assignedShowroomIds[0] ?? null;
 
         ComplainMaster::create([
             'irole_id' => $user?->iRoalId,
@@ -62,6 +85,7 @@ class ComplainMasterController extends Controller
             'comment' => $validated['comment'],
             'phone' => $request->phone,
             'invoice_no' => $validated['invoice_no'] ?? null,
+            'iShowroomId' => $validated['iShowroomId'] ?? $defaultShowroomId,
             'address' => $request->address,
             'status' => 'pending',
             'iStatus' => 1,
