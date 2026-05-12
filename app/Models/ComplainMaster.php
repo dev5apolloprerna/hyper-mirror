@@ -22,6 +22,7 @@ class ComplainMaster extends Model
         'address',
         'comment',
         'invoice_no',
+        'iShowroomId',
         'status',
         'resolve_user_id',
         'resolve_comment',
@@ -47,5 +48,9 @@ class ComplainMaster extends Model
     public function resolvedBy()
     {
         return $this->belongsTo(User::class, 'resolve_user_id');
+    }
+    public function showroom()
+    {
+        return $this->belongsTo(Showroom::class, 'iShowroomId', 'iShowroomId');
     }
 }

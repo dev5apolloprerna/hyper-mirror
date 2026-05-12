@@ -44,6 +44,18 @@
                                             @enderror
                                         </div>
                                         <div class="mb-3">
+                                            <label class="form-label">Showroom</label>
+                                            <select name="iShowroomId" class="form-select">
+                                                <option value="">Select showroom</option>
+                                                @foreach(($showrooms ?? collect()) as $showroom)
+                                                    <option value="{{ $showroom->iShowroomId }}" @selected(old('iShowroomId') == $showroom->iShowroomId)>{{ $showroom->strShowRoomName }}</option>
+                                                @endforeach
+                                            </select>
+                                            @error('iShowroomId')
+                                                <small class="text-danger">{{ $message }}</small>
+                                            @enderror
+                                        </div>
+                                        <div class="mb-3">
                                             <label class="form-label">Mobile</label>
                                             <input type="text" name="phone" class="form-control"
                                                 value="{{ old('phone') }}"
@@ -93,7 +105,16 @@
                                                 {{ request('status') === 'resolved' ? 'selected' : '' }}>Resolved</option>
                                         </select>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-2">
+                                        <select name="iShowroomId" class="form-select">
+                                            <option value="">All Showrooms</option>
+                                            @foreach(($showrooms ?? collect()) as $showroom)
+                                                <option value="{{ $showroom->iShowroomId }}" @selected((string)request('iShowroomId') === (string)$showroom->iShowroomId)>{{ $showroom->strShowRoomName }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+
                                         <button type="submit" class="btn btn-success btn-sm">Filter</button>
                                         <a href="{{ route('complaints.index') }}"
                                             class="btn btn-secondary btn-sm">Reset</a>
@@ -110,6 +131,7 @@
                                                 <th>Mobile</th>
                                                 <th>Address</th>
                                                 <th>Invoice No</th>
+                                                <th>Showroom</th>
                                                 <th>Comment</th>
                                                 <th>Status</th>
                                                 <th>Resolved Info</th>
@@ -135,6 +157,7 @@
                                                      <td>
                                                         <div>{{ $complaint->invoice_no ?: ($complaint->quotation_no ?: '—') }}</div>
                                                     </td>
+                                                    <td>{{ optional($complaint->showroom)->strShowRoomName ?? '—' }}</td>
                                                     <td>{{ $complaint->comment }}</td>
                                                     <td>
                                                         @if ($complaint->status === 'resolved')
@@ -175,7 +198,7 @@
                                                 </tr>
                                             @empty
                                                 <tr>
-                                                    <td colspan="9" class="text-center">No complaints found.</td>
+                                                    <td colspan="10" class="text-center">No complaints found.</td>
                                                 </tr>
                                             @endforelse
                                         </tbody>

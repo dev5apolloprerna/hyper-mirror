@@ -126,7 +126,17 @@ class LeadStatusController extends Controller
     {
         $query = Lead::with(['customer', 'createdBy', 'showroom']);
 
-        switch ($roleSlug) {
+        $user = User::with('showrooms')->find($userId);
+        $role = $roleSlug ?: optional($user?->crmRole)->slug;
+        $assignedShowroomIds = in_array($role, ['admin', 'account'], true)
+            ? []
+            : ($user?->showrooms?->pluck('iShowroomId')->all() ?? []);
+
+        if (!empty($assignedShowroomIds)) {
+            $query->whereIn('iShowroomId', $assignedShowroomIds);
+        }
+
+        switch ($role) {
             case 'storemanager':
                 $query->ownedBy($userId);
                 if ($statusFilter) {
@@ -174,6 +184,16 @@ class LeadStatusController extends Controller
     private function findLeadForRole(int $leadId, ?string $roleSlug, int $userId): ?Lead
     {
         $query = Lead::where('iLeadId', $leadId);
+
+        $user = User::with('showrooms')->find($userId);
+        $assignedShowroomIds = in_array($roleSlug, ['admin', 'account'], true)
+            ? []
+            : ($user?->showrooms?->pluck('iShowroomId')->all() ?? []);
+
+        if (!empty($assignedShowroomIds)) {
+            $query->whereIn('iShowroomId', $assignedShowroomIds);
+        }
+
 
         match ($roleSlug) {
             'storemanager' => $query->where('iCreatedBy', $userId),
