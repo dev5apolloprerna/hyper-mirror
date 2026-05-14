@@ -446,7 +446,8 @@
 
                                 <form method="POST"
                                       action="{{ route('store.leads.histories.store', $lead->iLeadId) }}"
-                                      id="historyForm">
+                                      id="historyForm"
+                                      enctype="multipart/form-data">
                                     @csrf
 
                                     <div class="mb-3">
@@ -620,7 +621,35 @@
                                                     <td>
                                                         {{ $history->user->full_name ?? ($history->user->strUserName ?? '—') }}
                                                     </td>
-                                                    <td style="min-width:260px; white-space:pre-wrap;">{{ $history->strComments ?: '—' }}</td>
+                                                    <td style="min-width:260px;">
+                                                        @php
+                                                            $rawComments = (string) ($history->strComments ?? '');
+                                                            $imageMarker = '[Fitting Images]';
+                                                            $commentText = $rawComments;
+                                                            $historyImagePaths = [];
+                                                            if (strpos($rawComments, $imageMarker) !== false) {
+                                                                [$commentText, $imagesPart] = array_pad(explode($imageMarker, $rawComments, 2), 2, '');
+                                                                foreach (explode('|', trim($imagesPart)) as $item) {
+                                                                    $trimmedItem = trim($item);
+                                                                    if ($trimmedItem !== '') {
+                                                                        $historyImagePaths[] = $trimmedItem;
+                                                                    }
+                                                                }
+                                                            }
+                                                        @endphp
+                                                        <div>{{ trim($commentText) !== '' ? trim($commentText) : '—' }}</div>
+                                                        @if(!empty($historyImagePaths))
+                                                            <div class="mt-2 d-flex flex-wrap gap-2">
+                                                                @foreach($historyImagePaths as $imagePath)
+                                                                    <a href="{{ asset($imagePath) }}"
+                                                                       target="_blank"
+                                                                       class="btn btn-sm btn-outline-info">
+                                                                        <i class="fas fa-image me-1"></i> View Image
+                                                                    </a>
+                                                                @endforeach
+                                                            </div>
+                                                        @endif
+                                                    </td>
                                                     <td class="text-nowrap">
                                                         {{ $history->EntryDate
                                                             ? \Carbon\Carbon::parse($history->EntryDate)->format('d-m-Y')

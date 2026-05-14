@@ -11,6 +11,7 @@ use App\Models\QuotationCancelReason;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 
 class LeadHistoryController extends Controller
 {
@@ -240,5 +241,45 @@ class LeadHistoryController extends Controller
     public function bulkDelete(Request $request, Lead $lead)
     {
         abort(403, 'History records cannot be deleted.');
+    }
+    public function uploadFittingImages(Request $request, Lead $lead)
+    {
+        $roleSlug = optional(auth()->user()->crmRole)->slug;
+        abort_unless(in_array($roleSlug, ['fitting', 'storemanager'], true), 403);
+
+        $request->validate([
+            'fitting_images' => 'required|array|min:1|max:6',
+            'fitting_images.*' => 'image|mimes:jpg,jpeg,png,webp|max:5120',
+            'strComments' => 'nullable|string|max:1000',
+        ]);
+
+        $destinationPath = public_path('uploads/lead-fitting-images');
+        if (!is_dir($destinationPath)) {
+            mkdir($destinationPath, 0775, true);
+        }
+
+        $uploadedImagePaths = [];
+        foreach ($request->file('fitting_images') as $image) {
+            $filename = $lead->iLeadId . '_' . now()->format('YmdHis') . '_' . Str::random(6) . '.' . $image->getClientOriginalExtension();
+            $image->move($destinationPath, $filename);
+            $uploadedImagePaths[] = 'public/uploads/lead-fitting-images/' . $filename;
+        }
+
+        $comments = trim((string) $request->strComments);
+        if ($comments === '') {
+            $comments = 'Fitting images uploaded from listing.';
+        }
+        $comments .= "\n[Fitting Images] " . implode('|', $uploadedImagePaths);
+
+        LeadHistory::create([
+            'iLeadId' => $lead->iLeadId,
+            'strComments' => $comments,
+            'NetFolloupwdate' => $lead->NetFollowupdate,
+            'iStatus' => $lead->iCurrentLeadStatus,
+            'iEnterBy' => auth()->id(),
+            'EntryDate' => now(),
+        ]);
+
+        return back()->with('success', 'Fitting images uploaded successfully.');
     }
 }
