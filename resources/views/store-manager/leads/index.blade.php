@@ -214,6 +214,31 @@
                                                         <span class="ms-1 d-none d-md-inline"></span>
                                                     </a>
                                                 @endif
+                                                <!-- @if($roleSlug === 'fitting')
+                                                    <button type="button"
+                                                            class="btn btn-sm btn-outline-success js-upload-fitting-images"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#fittingImagesModal"
+                                                            data-action="{{ route('store.leads.fitting-images.store', $lead->iLeadId) }}"
+                                                            data-leadno="{{ $lead->strLeadNo }}"
+                                                            title="Upload Fitting Images">
+                                                        <i class="fas fa-upload"></i>
+                                                        <span class="ms-1 d-none d-md-inline">Upload Images</span>
+                                                    </button>
+                                                @endif -->
+
+                                                @if($roleSlug === 'fitting' && $lead->iCurrentLeadStatus === 'Fitting Done')
+                                                    <button type="button"
+                                                            class="btn btn-sm btn-outline-success js-upload-fitting-images"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#fittingImagesModal"
+                                                            data-action="{{ route('store.leads.fitting-images.store', $lead->iLeadId) }}"
+                                                            data-leadno="{{ $lead->strLeadNo }}"
+                                                            title="Upload Fitting Images">
+                                                        <i class="fas fa-upload"></i>
+                                                        <span class="ms-1 d-none d-md-inline">Upload Images</span>
+                                                    </button>
+                                                @endif
 
                                                 {{-- Quotation view --}}
                                                 @if($lead->quotation)
@@ -287,4 +312,49 @@
         </div>
     </div>
 </div>
+@endsection
+
+<div class="modal fade" id="fittingImagesModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="fittingImagesForm" method="POST" enctype="multipart/form-data">
+                @csrf
+                <div class="modal-header">
+                    <h5 class="modal-title">Upload Fitting Images</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-2 small text-muted">Lead No: <strong id="fittingLeadNo">—</strong></p>
+                    <div class="mb-3">
+                        <label class="form-label">Images <span class="text-danger">*</span></label>
+                        <input type="file" name="fitting_images[]" class="form-control" accept=".jpg,.jpeg,.png,.webp" multiple required>
+                        <small class="text-muted">Upload up to 6 images (max 5MB each).</small>
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label">Remarks (Optional)</label>
+                        <textarea name="strComments" class="form-control" rows="2" placeholder="Add note for sales manager"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Upload</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var modalForm = document.getElementById('fittingImagesForm');
+    var leadNoText = document.getElementById('fittingLeadNo');
+    document.querySelectorAll('.js-upload-fitting-images').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            modalForm.action = btn.getAttribute('data-action');
+            leadNoText.textContent = btn.getAttribute('data-leadno') || '—';
+        });
+    });
+});
+</script>
 @endsection

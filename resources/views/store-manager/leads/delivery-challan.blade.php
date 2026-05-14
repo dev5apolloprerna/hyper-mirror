@@ -236,8 +236,8 @@ Phone no.: +91 88662 77000 Email: hypermirror01@gmail.com";
                 </td>
                 <td>
                     <div class="party-title">Prepared By</div>
-                    <div>{{ config('app.name', 'Mirror CRM') }}</div>
-                    <div>Generated from CRM</div>
+                    <div><strong>Name:</strong> {{ optional($lead->createdBy)->name ?? (optional($lead->createdBy)->first_name ?? '—') }}</div>
+                    <div><strong>Mobile:</strong> {{ optional($lead->createdBy)->mobile_number ?? optional($lead->createdBy)->strUserMobile ?? '—' }}</div>
                 </td>
             </tr>
         </table>
