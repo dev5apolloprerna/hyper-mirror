@@ -19,6 +19,8 @@ class InvoiceItem extends Model
         'quantity',
         'unit_price',
         'iAmount',
+        'width',
+        'height',
         'item_remark',
     ];
 

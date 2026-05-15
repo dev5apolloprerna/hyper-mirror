@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\File;
 
 class LeadHistoryController extends Controller
 {
@@ -281,5 +282,53 @@ class LeadHistoryController extends Controller
         ]);
 
         return back()->with('success', 'Fitting images uploaded successfully.');
+    }
+        public function deleteFittingImage(Request $request, Lead $lead, LeadHistory $history)
+    {
+        $roleSlug = optional(auth()->user()->crmRole)->slug;
+        abort_unless(in_array($roleSlug, ['fitting', 'storemanager'], true), 403);
+        abort_unless((int) $history->iLeadId === (int) $lead->iLeadId, 404);
+
+        $request->validate([
+            'image_path' => 'required|string',
+        ]);
+
+        $rawComments = (string) ($history->strComments ?? '');
+        $marker = '[Fitting Images]';
+        if (strpos($rawComments, $marker) === false) {
+            return back()->with('error', 'No fitting images found in this history record.');
+        }
+
+        [$commentText, $imagesPart] = array_pad(explode($marker, $rawComments, 2), 2, '');
+        $paths = [];
+        foreach (explode('|', trim($imagesPart)) as $item) {
+            $trimmed = trim($item);
+            if ($trimmed !== '') {
+                $paths[] = $trimmed;
+            }
+        }
+
+        $imagePath = trim((string) $request->image_path);
+        $remaining = array_values(array_filter($paths, function ($path) use ($imagePath) {
+            return $path !== $imagePath;
+        }));
+
+        if (count($remaining) === count($paths)) {
+            return back()->with('error', 'Selected image was not found.');
+        }
+
+        $absolutePath = public_path(str_replace('public/', '', $imagePath));
+        if (File::exists($absolutePath)) {
+            File::delete($absolutePath);
+        }
+
+        $updatedComments = trim($commentText);
+        if (!empty($remaining)) {
+            $updatedComments .= ($updatedComments !== '' ? "\n" : '') . $marker . ' ' . implode('|', $remaining);
+        }
+        $history->strComments = $updatedComments;
+        $history->save();
+
+        return back()->with('success', 'Fitting image deleted successfully.');
     }
 }

@@ -902,7 +902,7 @@
                         finalWidth = wData.feet;
                     }
                     const lineSqft = qty * finalHeight * finalWidth;
-                    const lineAmount = qty * finalHeight * finalWidth * rate;
+                    const lineAmount = Math.round(qty * finalHeight * finalWidth * rate);
 
                     // const calculationHeight = normalizeDimensionForAmount(height, multiple);
                     // const calculationWidth = normalizeDimensionForAmount(width, multiple);
@@ -912,7 +912,7 @@
                     totalSqft += lineSqft;
                     totalQty += qty;
                     $(this).find('.lineSqft').val(lineSqft.toFixed(2));
-                    $(this).find('.lineAmount').val(lineAmount.toFixed(2));
+                    $(this).find('.lineAmount').val(lineAmount.toFixed(0));
 
                 });
 

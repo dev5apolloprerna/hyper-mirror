@@ -621,7 +621,7 @@
                                                     <td>
                                                         {{ $history->user->full_name ?? ($history->user->strUserName ?? '—') }}
                                                     </td>
-                                                    <td style="min-width:260px;">
+                                                     <td style="min-width:260px;">
                                                         @php
                                                             $rawComments = (string) ($history->strComments ?? '');
                                                             $imageMarker = '[Fitting Images]';
@@ -639,14 +639,39 @@
                                                         @endphp
                                                         <div>{{ trim($commentText) !== '' ? trim($commentText) : '—' }}</div>
                                                         @if(!empty($historyImagePaths))
-                                                            <div class="mt-2 d-flex flex-wrap gap-2">
-                                                                @foreach($historyImagePaths as $imagePath)
-                                                                    <a href="{{ asset($imagePath) }}"
-                                                                       target="_blank"
-                                                                       class="btn btn-sm btn-outline-info">
-                                                                        <i class="fas fa-image me-1"></i> View Image
-                                                                    </a>
-                                                                @endforeach
+                                                            <div class="mt-2">
+                                                                <div class="small text-muted mb-2 fw-semibold">Uploaded Fitting Images</div>
+                                                                <div class="d-flex flex-wrap gap-2">
+                                                                    @foreach($historyImagePaths as $imagePath)
+                                                                        <div>
+                                                                            <a href="{{ asset($imagePath) }}"
+                                                                               target="_blank"
+                                                                               class="text-decoration-none"
+                                                                               title="Open full image">
+                                                                                <div class="border rounded overflow-hidden bg-light" style="width:84px;">
+                                                                                    <img src="{{ asset($imagePath) }}"
+                                                                                         alt="Fitting Image"
+                                                                                         style="width:84px; height:84px; object-fit:cover; display:block;">
+                                                                                    <div class="text-center py-1 small text-primary fw-semibold">View</div>
+                                                                                </div>
+                                                                            </a>
+                                                                            @if($roleSlug === 'fitting')
+                                                                                <form method="POST"
+                                                                                      action="{{ route('store.leads.fitting-images.delete', [$lead->iLeadId, $history->id]) }}"
+                                                                                      class="mt-1">
+                                                                                    @csrf
+                                                                                    @method('DELETE')
+                                                                                    <input type="hidden" name="image_path" value="{{ $imagePath }}">
+                                                                                    <button type="submit"
+                                                                                            class="btn btn-sm btn-outline-danger w-100 py-0"
+                                                                                            onclick="return confirm('Delete this image?')">
+                                                                                        Delete
+                                                                                    </button>
+                                                                                </form>
+                                                                            @endif
+                                                                        </div>
+                                                                    @endforeach
+                                                                </div>
                                                             </div>
                                                         @endif
                                                     </td>

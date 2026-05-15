@@ -498,7 +498,7 @@ class LeadController extends Controller
                 $widthFeet  = $this->convertToFeet($width, $unit, $multiple);
 
                 $sqft   = $qty * $widthFeet * $heightFeet;
-                $amount = $sqft * $rate;
+                $amount = round($sqft * $rate);
 
                 $quotation = LeadQuotation::create([
                     'iLeadId'             => $lead->iLeadId,
@@ -537,7 +537,7 @@ class LeadController extends Controller
 
             // ✅ GST
             $gstApplicable = (int) $data['isGstApplicable'] === 1;
-            $gstAmount = $gstApplicable ? ($afterDiscount * 0.18) : 0;
+            $gstAmount = $gstApplicable ? round($afterDiscount * 0.18) : 0;
 
             $grandTotal = round($afterDiscount + $gstAmount);
 
