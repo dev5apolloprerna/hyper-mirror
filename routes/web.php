@@ -180,6 +180,7 @@ Route::middleware('auth')->prefix('store-manager')->name('store.')->group(functi
     Route::get('leads/{lead}/histories', [LeadHistoryController::class, 'index'])->name('leads.histories.index');
     Route::post('leads/{lead}/histories/store', [LeadHistoryController::class, 'store'])->name('leads.histories.store');
     Route::post('leads/{lead}/fitting-images', [LeadHistoryController::class, 'uploadFittingImages'])->name('leads.fitting-images.store');
+    Route::delete('leads/{lead}/histories/{history}/fitting-image', [LeadHistoryController::class, 'deleteFittingImage'])->name('leads.fitting-images.delete');
     // Update & delete are intentionally blocked (403)
     Route::post('leads/{lead}/histories/{history}/update', [LeadHistoryController::class, 'update'])->name('leads.histories.update');
     Route::delete('leads/{lead}/histories/{history}/delete', [LeadHistoryController::class, 'destroy'])->name('leads.histories.delete');

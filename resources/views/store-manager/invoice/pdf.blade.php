@@ -273,9 +273,10 @@
                  <th style="width: 17%;">Category</th>
                  <th>Product</th>
 
-                 <th class="center" style="width: 8%;">Qty</th>
-                 <th style="width: 18%;">Remark</th>
-
+                <th class="center" style="width: 6%;">Qty</th>
+                <th class="center" style="width: 8%;">Width</th>
+                <th class="center" style="width: 8%;">Height</th>
+                <th style="width: 14%;">Remark</th>
                  <th class="right" style="width: 16%;">Unit Price</th>
                  <th class="right" style="width: 16%;">Amount</th>
              </tr>
@@ -288,6 +289,8 @@
                      <td>{{ optional($item->product)->strProductName ?? '—' }}</td>
 
                      <td class="center">{{ $item->quantity }}</td>
+                    <td class="center">{{ $item->width !== null ? number_format((float) $item->width, 2) : '—' }}</td>
+                     <td class="center">{{ $item->height !== null ? number_format((float) $item->height, 2) : '—' }}</td>
                      <td>{{ $item->item_remark ?: '—' }}</td>
 
                      <td class="right">₹{{ number_format((float) $item->unit_price, 2) }}</td>

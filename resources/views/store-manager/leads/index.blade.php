@@ -238,6 +238,12 @@
                                                         <i class="fas fa-upload"></i>
                                                         <span class="ms-1 d-none d-md-inline">Upload Images</span>
                                                     </button>
+                                                    <!-- <a href="{{ route('Paymentcollection.Create') }}"
+                                                       class="btn btn-sm btn-outline-warning"
+                                                       title="Collect Payment">
+                                                        <i class="fas fa-rupee-sign"></i>
+                                                        <span class="ms-1 d-none d-md-inline">Collect Payment</span>
+                                                    </a> -->
                                                 @endif
 
                                                 {{-- Quotation view --}}

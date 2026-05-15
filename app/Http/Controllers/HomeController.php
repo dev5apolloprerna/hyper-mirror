@@ -17,7 +17,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 use App\Models\Role;
- 
+use App\Models\ComplainMaster;
+
  class HomeController extends Controller
  {
      public function __construct()
@@ -91,6 +92,8 @@ use App\Models\Role;
             })->all();
 
             $fittingCollectionThisMonth = 0;
+            $resolvedComplaintCount = 0;
+            
             if ($roleSlug === 'fitting') {
                 $fittingCollectionThisMonth = Lead::where('isFittingChargeIncluded', 1)
                     ->when(!empty($assignedShowroomIds), fn ($q) => $q->whereIn('iShowroomId', $assignedShowroomIds))
@@ -98,6 +101,12 @@ use App\Models\Role;
                     ->whereMonth('updated_at', now()->month)
                     ->whereYear('updated_at', now()->year)
                     ->sum('iFittingCharges');
+
+             $resolvedComplaintCount = ComplainMaster::query()
+                    ->where('isDelete', 0)
+                    ->where('status', 'resolved')
+                    ->when(!empty($assignedShowroomIds), fn ($q) => $q->whereIn('iShowroomId', $assignedShowroomIds))
+                    ->count();
             }
  
             return view('home', compact(
@@ -110,7 +119,8 @@ use App\Models\Role;
                 'overdueFollowupCount',
                 'statusCards',
                 'roleSlug',
-                'fittingCollectionThisMonth'
+                'fittingCollectionThisMonth',
+                'resolvedComplaintCount'
             ));
          } catch (\Exception $e) {
             report($e);
