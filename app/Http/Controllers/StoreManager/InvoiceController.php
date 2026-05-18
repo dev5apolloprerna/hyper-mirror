@@ -8,8 +8,6 @@ use App\Models\InvoiceItem;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\Showroom;
-use App\Models\ProductShape;
-use App\Models\ProductFeature;
 use Illuminate\Http\Request;
 use App\Models\InvoicePdfSetting;
 use Illuminate\Support\Facades\DB;
@@ -59,7 +57,7 @@ class InvoiceController extends Controller
             $query->where(function ($q) use ($s) {
                 $q->where('strInvoiceNo', 'like', "%{$s}%")
                     ->orWhereHas('showroom', fn($sub) => $sub->where('strShowRoomName', 'like', "%{$s}%"));*/
-        $query = Invoice::with(['showroom', 'createdBy', 'items.category', 'items.product', 'items.shape', 'items.feature'])
+        $query = Invoice::with(['showroom', 'createdBy', 'items.category', 'items.product'])
             ->when($assignedShowroomIds->isNotEmpty(), function ($q) use ($assignedShowroomIds) {
                 $q->whereIn('iShowroomId', $assignedShowroomIds);
             });
@@ -164,10 +162,7 @@ class InvoiceController extends Controller
         $categories = ProductCategory::orderBy('strCategoryName')->get();
         $products   = Product::orderBy('strProductName')->get();
 
-                $shapes = ProductShape::where('iStatus', 1)->where('isDelete', 0)->orderBy('shape_title')->get();
-        $features = ProductFeature::where('iStatus', 1)->where('isDelete', 0)->orderBy('feature_name')->get();
-
-        return view('store-manager.invoice.create', compact('showrooms', 'categories', 'products', 'shapes', 'features', 'defaultShowroomId'));
+        return view('store-manager.invoice.create', compact('showrooms', 'categories', 'products', 'defaultShowroomId'));
     }
 
     // ── Store ────────────────────────────────────────────────────────────────
@@ -200,14 +195,8 @@ class InvoiceController extends Controller
             'items.*.iCategoryId'      => 'required|exists:product_categories,iCategoryId',
             'items.*.iProductId'       => 'required|exists:products,iProductId',
             'items.*.quantity'         => 'required|integer|min:1',
+            'items.*.unit_price'       => 'required|numeric|min:0',
             'items.*.item_remark'      => 'nullable|string|max:255',
-            'items.*.width'            => 'nullable|numeric|min:0',
-            'items.*.height'           => 'nullable|numeric|min:0',
-            'items.*.unit_of_measurement' => 'required|in:inch,MM,Feet',
-            'items.*.shape_id'            => 'required|exists:product_shape,shape_id',
-            'items.*.feature_id'          => 'required|exists:product_feature,feature_id',
-            'items.*.decRatePerSqft'      => 'required|numeric|min:0',
-            'items.*.calculation_multiple' => ['required', Rule::in([3, 6])],
         ], [
             'iShowroomId.in' => 'Please select your assigned showroom.',
             'strNotes.required_if' => 'Notes / Comments are mandatory when payment is pending.',
@@ -239,26 +228,8 @@ class InvoiceController extends Controller
             $totalAmount = 0;
             foreach ($request->items as $row) {
                 $qty    = (int)   $row['quantity'];
-                $width  = (float) ($row['width'] ?? 1);
-                $height = (float) ($row['height'] ?? 1);
-                 $rate  = (float) ($row['decRatePerSqft'] ?? 0);
-                $unit = (string) ($row['unit_of_measurement'] ?? 'inch');
-                $multiple = (int) ($row['calculation_multiple'] ?? 3);
-
-                $toInch = static function (float $value, string $u): float {
-                    return match ($u) {
-                        'MM' => $value / 25.4,
-                        'Feet' => $value * 12,
-                        default => $value,
-                    };
-                };
-
-                $normalizedHeight = ceil($toInch($height, $unit) / ($multiple === 6 ? 6 : 3)) * ($multiple === 6 ? 6 : 3);
-                $normalizedWidth = ceil($toInch($width, $unit) / ($multiple === 6 ? 6 : 3)) * ($multiple === 6 ? 6 : 3);
-                $sqftPerPiece = ($normalizedWidth / 12) * ($normalizedHeight / 12);
-                $sqft = $qty * $sqftPerPiece;
-                $amount = round($sqft * $rate);
-
+                $price  = (float) $row['unit_price'];
+                $amount = $qty * $price;
 
                 $totalAmount += $amount;
                 InvoiceItem::create([
@@ -266,17 +237,9 @@ class InvoiceController extends Controller
                     'iCategoryId' => $row['iCategoryId'],
                     'iProductId'  => $row['iProductId'],
                     'quantity'    => $qty,
-                    'width'       => $width,
-                    'height'      => $height,
-                    'shape_id' => $row['shape_id'],
-                    'feature_id' => $row['feature_id'],
-                    'decRatePerSqft' => $rate,
-                    'decTotalSqft' => $sqft,
+                    'unit_price'  => $price,
                     'iAmount'     => $amount,
                     'item_remark' => $row['item_remark'] ?? null,
-                    'unit_of_measurement' => $unit,
-                    'calculation_multiple' => $multiple,
-
                 ]);
             }
 
@@ -342,7 +305,7 @@ class InvoiceController extends Controller
     public function pdf(Invoice $invoice)
     {
         $this->authorise();
-        $invoice->load(['showroom', 'createdBy', 'items.category', 'items.product', 'items.shape', 'items.feature']);
+        $invoice->load(['showroom', 'createdBy', 'items.category', 'items.product']);
         $invoicePdfSetting = InvoicePdfSetting::query()->first();
 
         $pdf = Pdf::loadView('store-manager.invoice.pdf', compact('invoice', 'invoicePdfSetting'));
@@ -356,7 +319,7 @@ class InvoiceController extends Controller
     public function show(Invoice $invoice)
     {
         $this->authorise();
-        $invoice->load(['showroom', 'createdBy', 'items.category', 'items.product', 'items.shape', 'items.feature']);
+        $invoice->load(['showroom', 'createdBy', 'items.category', 'items.product']);
         return view('store-manager.invoice.show', compact('invoice'));
     }
     public function updatePayment(Request $request, Invoice $invoice)

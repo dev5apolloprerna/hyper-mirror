@@ -19,15 +19,7 @@ class InvoiceItem extends Model
         'quantity',
         'unit_price',
         'iAmount',
-        'width',
-        'height',
         'item_remark',
-        'unit_of_measurement',
-        'calculation_multiple',
-        'shape_id',
-        'feature_id',
-        'decRatePerSqft',
-        'decTotalSqft',
     ];
 
     public function invoice()
@@ -43,14 +35,5 @@ class InvoiceItem extends Model
     public function product()
     {
         return $this->belongsTo(Product::class, 'iProductId', 'iProductId');
-    }
-     public function shape()
-    {
-        return $this->belongsTo(ProductShape::class, 'shape_id', 'shape_id');
-    }
-
-    public function feature()
-    {
-        return $this->belongsTo(ProductFeature::class, 'feature_id', 'feature_id');
     }
 }
