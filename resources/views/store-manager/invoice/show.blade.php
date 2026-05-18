@@ -193,14 +193,8 @@
                                         <th>Category</th>
                                         <th>Product</th>
                                         <th class="text-center">Qty</th>
-                                        <th class="text-center">Width</th>
-                                        <th class="text-center">Height</th>
-                                        <th class="text-center">Shape</th>
-                                        <th class="text-center">Feature</th>
-                                        <th class="text-center">Calculated By</th>
-                                        <th class="text-center">Sqft</th>
-                                        <th class="text-end">Sqft Rate</th>
                                         <th>Remark</th>
+                                        <th class="text-end">Unit Price</th>
                                         <th class="text-end">Amount</th>
                                     </tr>
                                 </thead>
@@ -211,15 +205,8 @@
                                             <td>{{ optional($item->category)->strCategoryName ?? '—' }}</td>
                                             <td>{{ optional($item->product)->strProductName ?? '—' }}</td>
                                             <td class="text-center fw-semibold">{{ $item->quantity }}</td>
-                                            <td class="text-center">{{ $item->width !== null ? number_format((float) $item->width, 2) : '—' }}</td>
-                                            <td class="text-center">{{ $item->height !== null ? number_format((float) $item->height, 2) : '—' }}</td>
-                                            <td class="text-center">{{ $item->unit_of_measurement ?? 'inch' }}</td>
-                                            <td class="text-center">{{ optional($item->shape)->shape_title ?? '—' }}</td>
-                                            <td class="text-center">{{ optional($item->feature)->feature_name ?? '—' }}</td>
-                                            <td class="text-center">{{ (int) ($item->calculation_multiple ?? 3) }}</td>
-                                            <td class="text-center">{{ number_format((float) ($item->decTotalSqft ?? 0), 2) }}</td>
-                                            <td class="text-end">₹{{ number_format((float) ($item->decRatePerSqft ?? 0), 2) }}</td>
                                             <td>{{ $item->item_remark ?: '—' }}</td>
+                                            <td class="text-end">₹{{ number_format((float) $item->unit_price, 2) }}</td>
                                             <td class="text-end fw-bold">₹{{ number_format((float) $item->iAmount, 2) }}
                                             </td>
                                         </tr>
@@ -227,7 +214,7 @@
                                 </tbody>
                                 <tfoot>
                                     <tr>
-                                        <td colspan="14" class="text-end pe-4">TOTAL</td>
+                                        <td colspan="6" class="text-end pe-4">TOTAL</td>
                                         <td class="text-end pe-3">₹{{ number_format($invoice->total_amount, 2) }}</td>
                                     </tr>
                                 </tfoot>
