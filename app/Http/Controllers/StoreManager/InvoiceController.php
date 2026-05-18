@@ -197,6 +197,8 @@ class InvoiceController extends Controller
             'items.*.quantity'         => 'required|integer|min:1',
             'items.*.unit_price'       => 'required|numeric|min:0',
             'items.*.item_remark'      => 'nullable|string|max:255',
+            'items.*.width'            => 'nullable|numeric|min:0',
+            'items.*.height'           => 'nullable|numeric|min:0',
         ], [
             'iShowroomId.in' => 'Please select your assigned showroom.',
             'strNotes.required_if' => 'Notes / Comments are mandatory when payment is pending.',
@@ -229,6 +231,8 @@ class InvoiceController extends Controller
             foreach ($request->items as $row) {
                 $qty    = (int)   $row['quantity'];
                 $price  = (float) $row['unit_price'];
+                $width  = (float) ($row['width'] ?? 1);
+                $height = (float) ($row['height'] ?? 1);
                 $amount = $qty * $price;
 
                 $totalAmount += $amount;
@@ -237,9 +241,12 @@ class InvoiceController extends Controller
                     'iCategoryId' => $row['iCategoryId'],
                     'iProductId'  => $row['iProductId'],
                     'quantity'    => $qty,
+                    'width'       => $width,
+                    'height'      => $height,
                     'unit_price'  => $price,
                     'iAmount'     => $amount,
                     'item_remark' => $row['item_remark'] ?? null,
+
                 ]);
             }
 

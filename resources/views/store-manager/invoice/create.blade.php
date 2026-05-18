@@ -212,6 +212,8 @@
                                         'unit_price' => '',
                                         'iAmount' => '',
                                         'item_remark' => '',
+                                        'width' => '',
+                                        'height' => '',
                                     ],
                                 ]);
                             @endphp
@@ -258,7 +260,7 @@
                                         </div>
 
                                         {{-- Quantity --}}
-                                        <div class="col-md-2">
+                                        <div class="col-md-1">
                                             <label class="form-label small fw-semibold mb-1">
                                                 Quantity <span class="text-danger">*</span>
                                             </label>
@@ -266,6 +268,25 @@
                                                 name="items[{{ $idx }}][quantity]"
                                                 value="{{ $row['quantity'] ?? 1 }}"
                                                 class="form-control form-control-sm qty-input" required>
+                                        </div>
+                                                                                <div class="col-md-1">
+                                            <label class="form-label small fw-semibold mb-1">
+                                                Width
+                                            </label>
+                                            <input type="number" step="0.01" min="0"
+                                                name="items[{{ $idx }}][width]"
+                                                value="{{ $row['width'] ?? '' }}"
+                                                class="form-control form-control-sm width-input" placeholder="0.00">
+                                        </div>
+
+                                        <div class="col-md-1">
+                                            <label class="form-label small fw-semibold mb-1">
+                                                Height
+                                            </label>
+                                            <input type="number" step="0.01" min="0"
+                                                name="items[{{ $idx }}][height]"
+                                                value="{{ $row['height'] ?? '' }}"
+                                                class="form-control form-control-sm height-input" placeholder="0.00">
                                         </div>
 
                                         {{-- Unit Price --}}
@@ -414,7 +435,11 @@
         function calcRow(row) {
             const qty = parseFloat($(row).find('.qty-input').val()) || 0;
             const price = parseFloat($(row).find('.price-input').val()) || 0;
+
+            const width = parseFloat($(row).find('.width-input').val()) || 1;
+            const height = parseFloat($(row).find('.height-input').val()) || 1;
             const amt = qty * price;
+
             $(row).find('.amount-field').val(amt > 0 ? amt.toFixed(2) : '');
             updateGrandTotal();
         }
@@ -466,11 +491,22 @@
                 </select>
             </div>
 
-            <div class="col-md-2">
+            <div class="col-md-1">
                 <label class="form-label small fw-semibold mb-1">Quantity <span class="text-danger">*</span></label>
                 <input type="number" min="1" name="items[${rowIndex}][quantity]"
                        value="1" class="form-control form-control-sm qty-input" required>
             </div>
+            <div class="col-md-1">
+                <label class="form-label small fw-semibold mb-1">Width</label>
+                <input type="number" step="0.01" min="0" name="items[${rowIndex}][width]"
+                       class="form-control form-control-sm width-input" placeholder="0.00">
+            </div>
+
+            <div class="col-md-1">
+                <label class="form-label small fw-semibold mb-1">Height</label>
+                <input type="number" step="0.01" min="0" name="items[${rowIndex}][height]"
+                       class="form-control form-control-sm height-input" placeholder="0.00">
+            </div>   
 
             <div class="col-md-2">
                 <label class="form-label small fw-semibold mb-1">Unit Price (₹) <span class="text-danger">*</span></label>
