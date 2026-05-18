@@ -210,6 +210,12 @@
                                         'iProductId' => '',
                                         'quantity' => 1,
                                         'unit_price' => '',
+                                        'decRatePerSqft' => '',
+                                        'decTotalSqft' => '',
+                                        'shape_id' => '',
+                                        'feature_id' => '',
+                                        'unit_of_measurement' => 'inch',
+                                        'calculation_multiple' => 3,
                                         'iAmount' => '',
                                         'item_remark' => '',
                                         'width' => '',
@@ -289,18 +295,48 @@
                                                 class="form-control form-control-sm height-input" placeholder="0.00">
                                         </div>
 
-                                        {{-- Unit Price --}}
-                                        <div class="col-md-2">
-                                            <label class="form-label small fw-semibold mb-1">
-                                                Unit Price (₹) <span class="text-danger">*</span>
-                                            </label>
-                                            <input type="number" step="0.01" min="0"
-                                                name="items[{{ $idx }}][unit_price]"
-                                                value="{{ $row['unit_price'] ?? '' }}"
-                                                class="form-control form-control-sm price-input" placeholder="0.00"
-                                                required>
+<div class="col-md-1">
+                                            <label class="form-label small fw-semibold mb-1">Unit</label>
+                                            <select name="items[{{ $idx }}][unit_of_measurement]" class="form-select form-select-sm uom-input">
+                                                <option value="inch" {{ ($row['unit_of_measurement'] ?? 'inch') === 'inch' ? 'selected' : '' }}>Inch</option>
+                                                <option value="MM" {{ ($row['unit_of_measurement'] ?? '') === 'cm' ? 'selected' : '' }}>MM</option>
+                                                <option value="Feet" {{ ($row['unit_of_measurement'] ?? '') === 'ft' ? 'selected' : '' }}>Feet</option>
+                                            </select>
                                         </div>
 
+                                        <div class="col-md-1">
+                                            <label class="form-label small fw-semibold mb-1">Calculated By</label>
+                                            <select name="items[{{ $idx }}][calculation_multiple]" class="form-select form-select-sm calc-multiple">
+                                                <option value="3" {{ (string) ($row['calculation_multiple'] ?? '3') === '3' ? 'selected' : '' }}>3</option>
+                                                <option value="6" {{ (string) ($row['calculation_multiple'] ?? '') === '6' ? 'selected' : '' }}>6</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-1">
+                                            <label class="form-label small fw-semibold mb-1">Shape <span class="text-danger">*</span></label>
+                                            <select name="items[{{ $idx }}][shape_id]" class="form-select form-select-sm" required>
+                                                <option value="">Shape</option>
+                                                @foreach ($shapes as $shape)
+                                                <option value="{{ $shape->shape_id }}" {{ (string) ($row['shape_id'] ?? '') === (string) $shape->shape_id ? 'selected' : '' }}>{{ $shape->shape_title }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="col-md-1">
+                                            <label class="form-label small fw-semibold mb-1">Feature <span class="text-danger">*</span></label>
+                                            <select name="items[{{ $idx }}][feature_id]" class="form-select form-select-sm" required>
+                                                <option value="">Feature</option>
+                                                @foreach ($features as $feature)
+                                                <option value="{{ $feature->feature_id }}" {{ (string) ($row['feature_id'] ?? '') === (string) $feature->feature_id ? 'selected' : '' }}>{{ $feature->feature_name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="col-md-1">
+                                            <label class="form-label small fw-semibold mb-1">Sqft</label>
+                                            <input type="text" name="items[{{ $idx }}][decTotalSqft]" value="{{ $row['decTotalSqft'] ?? '' }}" class="form-control form-control-sm sqft-field" readonly>
+                                        </div>
+                                        <div class="col-md-1">
+                                            <label class="form-label small fw-semibold mb-1">Sqft Rate <span class="text-danger">*</span></label>
+                                            <input type="number" step="0.01" min="0" name="items[{{ $idx }}][decRatePerSqft]" value="{{ $row['decRatePerSqft'] ?? '' }}" class="form-control form-control-sm sqft-rate-input" required>
+                                        </div>
                                         {{-- Amount --}}
                                         <div class="col-md-2">
                                             <label class="form-label small fw-semibold mb-1">Amount</label>
@@ -438,7 +474,18 @@
 
             const width = parseFloat($(row).find('.width-input').val()) || 1;
             const height = parseFloat($(row).find('.height-input').val()) || 1;
-            const amt = qty * width * height * price;
+            const unit = ($(row).find('.uom-input').val() || 'inch').toLowerCase();
+            const multiple = parseInt($(row).find('.calc-multiple').val(), 10) || 3;
+
+            const toInch = (value, u) => u === 'MM' ? (value / 25.4) : (u === 'Feet' ? (value * 12) : value);
+            const step = multiple === 6 ? 6 : 3;
+            const finalWidth = Math.ceil(toInch(width, unit) / step) * step;
+            const finalHeight = Math.ceil(toInch(height, unit) / step) * step;
+            const sqft = qty * ((finalWidth / 12) * (finalHeight / 12));
+            const rate = parseFloat($(row).find('.sqft-rate-input').val()) || 0;
+            $(row).find('.sqft-field').val(sqft > 0 ? sqft.toFixed(2) : '');
+            const amt = Math.round(sqft * rate);
+
 
             $(row).find('.amount-field').val(amt > 0 ? amt.toFixed(2) : '');
             updateGrandTotal();
@@ -508,10 +555,21 @@
                        class="form-control form-control-sm height-input" placeholder="0.00">
             </div>   
 
-            <div class="col-md-2">
-                <label class="form-label small fw-semibold mb-1">Unit Price (₹) <span class="text-danger">*</span></label>
-                <input type="number" step="0.01" min="0" name="items[${rowIndex}][unit_price]"
-                       class="form-control form-control-sm price-input" placeholder="0.00" required>
+             <div class="col-md-1">
+                <label class="form-label small fw-semibold mb-1">Unit</label>
+                <select name="items[${rowIndex}][unit_of_measurement]" class="form-select form-select-sm uom-input">
+                    <option value="inch">Inch</option><option value="MM">MM</option><option value="Feet">Feet</option>
+                </select>
+            </div>
+
+            <div class="col-md-1">
+                <label class="form-label small fw-semibold mb-1">Calculated By</label>
+                <select name="items[${rowIndex}][calculation_multiple]" class="form-select form-select-sm calc-multiple">
+                    <option value="3">3</option><option value="6">6</option>
+                </select>
+            </div>
+
+            <div class="col-md-1"><label class="form-label small fw-semibold mb-1">Shape <span class="text-danger">*</span></label><select name="items[${rowIndex}][shape_id]" class="form-select form-select-sm" required><option value="">Shape</option>@foreach ($shapes as $shape)<option value="{{ $shape->shape_id }}">{{ addslashes($shape->shape_title) }}</option>@endforeach</select></div><div class="col-md-1"><label class="form-label small fw-semibold mb-1">Feature <span class="text-danger">*</span></label><select name="items[${rowIndex}][feature_id]" class="form-select form-select-sm" required><option value="">Feature</option>@foreach ($features as $feature)<option value="{{ $feature->feature_id }}">{{ addslashes($feature->feature_name) }}</option>@endforeach</select></div><div class="col-md-1"><label class="form-label small fw-semibold mb-1">Sqft</label><input type="text" name="items[${rowIndex}][decTotalSqft]" class="form-control form-control-sm sqft-field" readonly></div><div class="col-md-1"><label class="form-label small fw-semibold mb-1">Sqft Rate <span class="text-danger">*</span></label><input type="number" step="0.01" min="0" name="items[${rowIndex}][decRatePerSqft]" class="form-control form-control-sm sqft-rate-input" required></div><div class="col-md-2">
             </div>
 
             <div class="col-md-2">
@@ -560,7 +618,7 @@
             });
 
             // ── Qty / price change → recalc ──
-            $(document).on('input change', '.qty-input, .price-input', function() {
+            $(document).on('input change', '.qty-input, .price-input, .width-input, .height-input, .uom-input, .calc-multiple, .sqft-rate-input', function() {
                 calcRow($(this).closest('.item-row'));
             });
 
