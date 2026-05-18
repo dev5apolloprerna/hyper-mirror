@@ -237,7 +237,7 @@ class AccountPaymentController extends Controller
     {
         $ledger = DB::table('cash_payment_ledger')
             ->where('emp_id', $userId)
-            ->where('UserType', 1)
+            // ->where('UserType', 1)
             ->orderByDesc('cash_payment_ledger_id')
             ->first();
 

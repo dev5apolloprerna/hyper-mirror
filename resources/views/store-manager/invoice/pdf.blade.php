@@ -276,9 +276,15 @@
                 <th class="center" style="width: 6%;">Qty</th>
                 <th class="center" style="width: 8%;">Width</th>
                 <th class="center" style="width: 8%;">Height</th>
-                <th style="width: 14%;">Remark</th>
-                 <th class="right" style="width: 16%;">Unit Price</th>
-                 <th class="right" style="width: 16%;">Amount</th>
+                <th class="center" style="width: 8%;">Unit</th>
+                <th class="center" style="width: 10%;">Shape</th>
+                <th class="center" style="width: 10%;">Feature</th>
+                <th class="center" style="width: 8%;">Calculated By</th>
+                <th class="center" style="width: 8%;">Sqft</th>
+                <th class="right" style="width: 10%;">Sqft Rate</th>
+                <th style="width: 8%;">Remark</th>
+                 <th class="right" style="width: 12%;">Amount</th>
+
              </tr>
          </thead>
          <tbody>
@@ -291,9 +297,14 @@
                      <td class="center">{{ $item->quantity }}</td>
                     <td class="center">{{ $item->width !== null ? number_format((float) $item->width, 2) : '—' }}</td>
                      <td class="center">{{ $item->height !== null ? number_format((float) $item->height, 2) : '—' }}</td>
+                     <td class="center">{{ $item->unit_of_measurement ?? 'inch' }}</td>
+                     <td class="center">{{ optional($item->shape)->shape_title ?? '—' }}</td>
+                     <td class="center">{{ optional($item->feature)->feature_name ?? '—' }}</td>
+                     <td class="center">{{ (int) ($item->calculation_multiple ?? 3) }}</td>
+                     <td class="center">{{ number_format((float) ($item->decTotalSqft ?? 0), 2) }}</td>
+                     <td class="right">₹{{ number_format((float) ($item->decRatePerSqft ?? 0), 2) }}</td>
                      <td>{{ $item->item_remark ?: '—' }}</td>
 
-                     <td class="right">₹{{ number_format((float) $item->unit_price, 2) }}</td>
                      <td class="right">₹{{ number_format((float) $item->iAmount, 2) }}</td>
                  </tr>
              @endforeach

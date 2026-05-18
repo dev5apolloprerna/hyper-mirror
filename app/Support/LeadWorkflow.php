@@ -222,8 +222,10 @@ class LeadWorkflow
 
 protected static function applyFittingRequirementRules(Lead $lead, array $transitions, string $currentStatus): array
     {
-        if ((int) ($lead->isFittingRequired ?? 0) === 1) {
-             if ($currentStatus === self::STATUS_QUOTATION_APPROVED) {
+        $isOnlyFittingQuotation = (int) ($lead->isFittingLeadOnly ?? 0) === 1;
+
+        if ($isOnlyFittingQuotation) {
+            if ($currentStatus === self::STATUS_QUOTATION_APPROVED) {
                 return array_values(array_filter(
                     $transitions,
                     fn (string $status) => $status !== self::STATUS_ADVANCE_RECEIVED
