@@ -112,17 +112,17 @@
                         <thead class="table-light">
                             <tr>
                                 <th>#</th>
-                                <th>Lead No</th>
+                                <th width="7%">Lead No</th>
                                 <th>Customer</th>
                                 <th>Sales Person</th>
                                 <th>Assigned Showrooms</th>
                                 <th>Status</th>
                                 <th>Last Updated</th>
                                 <th>Lead Amount</th>
-                                <th>Quotation Entries</th>
+                                <th width="1%">Quotation Entries</th>
                                 <th>Payment Received</th>
-                                <th>History Entries</th>
-                                <th>Actions</th>
+                                <th width="1%">History Entries</th>
+                                <th width="13%">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -162,6 +162,11 @@
                                             <a href="{{ route('admin.reports.leads.histories', $lead->iLeadId) }}" class="btn btn-sm btn-outline-info" title="Lead history"><i class="fas fa-history"></i></a>
                                             <a href="{{ route('admin.reports.leads.quotations', $lead->iLeadId) }}" class="btn btn-sm btn-outline-secondary" title="Quotation history"><i class="fas fa-file-invoice"></i></a>
                                             <a href="{{ route('admin.reports.leads.payments', $lead->iLeadId) }}" class="btn btn-sm btn-outline-dark" title="Payment history"><i class="fas fa-money-bill-wave"></i></a>
+                                            <form method="POST" action="{{ route('admin.reports.leads.destroy', $lead->iLeadId) }}" onsubmit="return confirm('Delete this lead and all related details? This cannot be undone.');" class="d-inline">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete lead"><i class="fas fa-trash"></i></button>
+                                            </form>
                                         </div>
                                     </td>
                                 </tr>
