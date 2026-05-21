@@ -229,7 +229,7 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::get('reports/leads/{lead}/histories', [LeadReportController::class, 'histories'])->name('reports.leads.histories');
     Route::get('reports/leads/{lead}/quotations', [LeadReportController::class, 'quotations'])->name('reports.leads.quotations');
     Route::get('reports/leads/{lead}/payments', [LeadReportController::class, 'payments'])->name('reports.leads.payments');
-
+    Route::delete('reports/leads/{lead}', [LeadReportController::class, 'destroy'])->name('reports.leads.destroy');
 });
 
 Route::middleware('auth')->prefix('complaints')->name('complaints.')->group(function () {

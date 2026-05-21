@@ -15,6 +15,10 @@
                         <div>
                             <h4 class="mb-0 fw-bold">{{ $lead->strLeadNo }}</h4>
                             <p class="mb-0 mt-1 text-muted">
+                                @if(!empty($lead->customer->company_name))
+                                        <strong>{{ $lead->customer->company_name }}</strong>
+                                        &nbsp;·&nbsp;
+                                    @endif
                                 <strong>{{ $lead->customer->strCustomer ?? '—' }}</strong>
                                 &nbsp;·&nbsp;
                                 {{ $lead->customer->strMobile ?? '' }}
@@ -112,6 +116,10 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <table class="table table-sm table-borderless mb-0">
+                                        <tr>
+                                            <td class="text-muted" style="width:45%">Company Name</td>
+                                            <td><strong>{{ $lead->customer->company_name ?? '—' }}</strong></td>
+                                        </tr>
                                         <tr>
                                             <td class="text-muted" style="width:45%">Customer</td>
                                             <td><strong>{{ $lead->customer->strCustomer ?? '—' }}</strong></td>

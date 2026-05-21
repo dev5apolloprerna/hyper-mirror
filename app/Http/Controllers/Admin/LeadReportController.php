@@ -10,6 +10,7 @@ use App\Models\LeadQuotation;
 use App\Models\User;
 use App\Support\LeadWorkflow;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 
 class LeadReportController extends Controller
@@ -156,6 +157,20 @@ class LeadReportController extends Controller
             ->with(['customer', 'showroom', 'createdBy.showrooms', 'quotations', 'payments', 'histories'])
             ->withMax('histories as last_history_entry', 'EntryDate')
             ->latest('iLeadId');
+    }
+     public function destroy(Lead $lead)
+    {
+        $this->authoriseAdmin();
+
+        DB::transaction(function () use ($lead) {
+            $lead->designs()->delete();
+            $lead->histories()->delete();
+            $lead->payments()->delete();
+            $lead->quotations()->delete();
+            $lead->delete();
+        });
+
+        return redirect()->route('admin.reports.leads')->with('success', 'Lead and all related details deleted successfully.');
     }
 
     public function show(Lead $lead)
