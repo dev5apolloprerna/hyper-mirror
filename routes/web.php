@@ -38,6 +38,12 @@ Route::fallback(function () {
     return view('errors.404');
 });
 
+Route::get('/', function () {
+    return Auth::check()
+        ? redirect()->route('home')
+        : redirect()->route('login');
+});
+
 Route::get('/login', function () {
     return redirect()->route('login');
 });
@@ -76,7 +82,7 @@ Route::middleware('auth')->prefix('users')->name('users.')->group(function () {
 });
 
 // Admin: Customers
-Route::prefix('admin')->name('admin.')->group(function () {
+Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::get('customer', [CustomerController::class, 'index'])->name('customer.index');
     Route::post('customer/store', [CustomerController::class, 'store'])->name('customer.store');
     Route::post('customer/update/{id}', [CustomerController::class, 'update'])->name('customer.update');
@@ -85,7 +91,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 });
 
 // Admin: Product Categories
-Route::prefix('admin')->name('admin.')->group(function () {
+Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::get('product-category', [ProductCategoryController::class, 'index'])->name('product-category.index');
     Route::post('product-category/store', [ProductCategoryController::class, 'store'])->name('product-category.store');
     Route::post('product-category/update/{id}', [ProductCategoryController::class, 'update'])->name('product-category.update');
@@ -94,7 +100,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 });
 
 // Admin: Product Shapes
-Route::prefix('admin')->name('admin.')->group(function () {
+Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::get('product-shape', [ProductShapeController::class, 'index'])->name('product-shape.index');
     Route::post('product-shape/store', [ProductShapeController::class, 'store'])->name('product-shape.store');
     Route::post('product-shape/update/{id}', [ProductShapeController::class, 'update'])->name('product-shape.update');
@@ -103,7 +109,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 });
 
 // Admin: Product Features
-Route::prefix('admin')->name('admin.')->group(function () {
+Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::get('product-feature', [ProductFeatureController::class, 'index'])->name('product-feature.index');
     Route::post('product-feature/store', [ProductFeatureController::class, 'store'])->name('product-feature.store');
     Route::post('product-feature/update/{id}', [ProductFeatureController::class, 'update'])->name('product-feature.update');
@@ -112,7 +118,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 });
 
 // Admin: Quotation Cancel Reasons
-Route::prefix('admin')->name('admin.')->group(function () {
+Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::get('quotation-cancel-reason', [QuotationCancelReasonController::class, 'index'])->name('quotation-cancel-reason.index');
     Route::post('quotation-cancel-reason/store', [QuotationCancelReasonController::class, 'store'])->name('quotation-cancel-reason.store');
     Route::post('quotation-cancel-reason/update/{id}', [QuotationCancelReasonController::class, 'update'])->name('quotation-cancel-reason.update');
@@ -121,7 +127,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 });
 
 // Admin: Products
-Route::prefix('admin')->name('admin.')->group(function () {
+Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::get('product', [ProductController::class, 'index'])->name('product.index');
     Route::post('product/store', [ProductController::class, 'store'])->name('product.store');
     Route::post('product/update/{id}', [ProductController::class, 'update'])->name('product.update');
@@ -130,7 +136,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 });
 
 // Admin: Showrooms
-Route::prefix('admin')->name('admin.')->group(function () {
+Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::get('showroom', [ShowroomController::class, 'index'])->name('showroom.index');
     Route::post('showroom/store', [ShowroomController::class, 'store'])->name('showroom.store');
     Route::post('showroom/update/{id}', [ShowroomController::class, 'update'])->name('showroom.update');
@@ -139,7 +145,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 });
 
 // Admin: User-Showroom mapping
-Route::prefix('admin')->name('admin.')->group(function () {
+Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::get('user-showroom', [UserShowroomController::class, 'index'])->name('user-showroom.index');
     Route::post('user-showroom/store', [UserShowroomController::class, 'store'])->name('user-showroom.store');
     Route::post('user-showroom/update/{id}', [UserShowroomController::class, 'update'])->name('user-showroom.update');
@@ -164,7 +170,7 @@ Route::middleware('auth')->prefix('store-manager')->name('store.')->group(functi
     Route::get('leads/{lead}/quotation-view', [LeadController::class, 'quotationView'])->name('leads.quotation-view');
     Route::get('leads/{lead}/quotation-pdf', [LeadController::class, 'quotationPdf'])->name('leads.quotation-pdf');
     Route::get('leads/{lead}/invoice-pdf', [LeadController::class, 'quotationPdf'])->name('leads.invoice-pdf');
-    
+
     Route::post('leads/{lead}/update-status', [LeadController::class, 'updateStatus'])->name('leads.update-status');
 
     // Lead Designs
@@ -181,6 +187,7 @@ Route::middleware('auth')->prefix('store-manager')->name('store.')->group(functi
     Route::post('leads/{lead}/histories/store', [LeadHistoryController::class, 'store'])->name('leads.histories.store');
     Route::post('leads/{lead}/fitting-images', [LeadHistoryController::class, 'uploadFittingImages'])->name('leads.fitting-images.store');
     Route::delete('leads/{lead}/histories/{history}/fitting-image', [LeadHistoryController::class, 'deleteFittingImage'])->name('leads.fitting-images.delete');
+
     // Update & delete are intentionally blocked (403)
     Route::post('leads/{lead}/histories/{history}/update', [LeadHistoryController::class, 'update'])->name('leads.histories.update');
     Route::delete('leads/{lead}/histories/{history}/delete', [LeadHistoryController::class, 'destroy'])->name('leads.histories.delete');
@@ -224,12 +231,14 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::post('invoice-settings', [InvoicePdfSettingController::class, 'update'])->name('invoice-settings.update');
 
     Route::get('reports/leads', [LeadReportController::class, 'index'])->name('reports.leads');
-        Route::get('reports/leads-export', [LeadReportController::class, 'export'])->name('reports.leads.export');
+            Route::get('reports/leads-export', [LeadReportController::class, 'export'])->name('reports.leads.export');
+
     Route::get('reports/leads/{lead}', [LeadReportController::class, 'show'])->name('reports.leads.show');
     Route::get('reports/leads/{lead}/histories', [LeadReportController::class, 'histories'])->name('reports.leads.histories');
     Route::get('reports/leads/{lead}/quotations', [LeadReportController::class, 'quotations'])->name('reports.leads.quotations');
     Route::get('reports/leads/{lead}/payments', [LeadReportController::class, 'payments'])->name('reports.leads.payments');
     Route::delete('reports/leads/{lead}', [LeadReportController::class, 'destroy'])->name('reports.leads.destroy');
+
 });
 
 Route::middleware('auth')->prefix('complaints')->name('complaints.')->group(function () {
@@ -245,16 +254,17 @@ Route::middleware('auth')->prefix('Accountuser')->name('Accountuser.')->group(fu
     Route::get('Accountpayments', [AccountPaymentController::class, 'index'])->name('Accountpayments');
     Route::get('Create-payments', [AccountPaymentController::class, 'Create'])->name('Create');
     Route::get('available-amount/{userId}', [AccountPaymentController::class, 'getUserAvailableAmount'])->name('availableAmount');
+    Route::get('reports/party', [PartyReportController::class, 'index'])->name('reports.party');
     Route::post('Store-payments', [AccountPaymentController::class, 'Store'])->name('Store');
-      Route::get('reports/party', [PartyReportController::class, 'index'])->name('reports.party');
     Route::get('payment-delete/{id?}/{emp_id?}', [AccountPaymentController::class, 'delete'])
         ->name('deletePayment');
 });
 
 Route::prefix('admin')->name('Paymentcollection.')->middleware('auth')->group(function () {
     Route::get('Payment-index', [AdminPaymentController::class, 'index'])->name('index');
+    Route::get('available-amount/{userId}', [AdminPaymentController::class, 'getUserAvailableAmount'])->name('availableAmount');
+
     Route::get('Create-payments', [AdminPaymentController::class, 'Create'])->name('Create');
-        Route::get('available-amount/{userId}', [AdminPaymentController::class, 'getUserAvailableAmount'])->name('availableAmount');
     Route::post('Store-payments', [AdminPaymentController::class, 'Store'])->name('Store');
     Route::get('payment-delete/{id?}/{emp_id?}', [AdminPaymentController::class, 'delete'])
         ->name('deletePayment');
