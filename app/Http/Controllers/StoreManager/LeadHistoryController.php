@@ -126,7 +126,7 @@ class LeadHistoryController extends Controller
 
         // Rejection reason required
         if ($isRejection) {
-            $rules['rejection_reason'] = 'required|string|max:500';
+            //$rules['rejection_reason'] = 'required|string|max:500';
             $rules['rejection_reason_id'] = 'required|integer|exists:quotation_cancel_reasons,id';
             $rules['rejection_reason_note'] = 'nullable|string|max:500';
         }
