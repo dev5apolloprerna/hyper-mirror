@@ -41,6 +41,12 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a href="{{ route('admin.stock.index') }}"
+                            class="nav-link {{ request()->is('admin/stock*') ? 'active' : '' }}"><i
+                                class="nav-icon fas fa-warehouse"></i>Stock Management
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a href="{{ route('admin.product-shape.index') }}"
                             class="nav-link {{ request()->is('admin/product-shape*') ? 'active' : '' }}"><i
                                 class="nav-icon fas fa-draw-polygon"></i>Product Shape

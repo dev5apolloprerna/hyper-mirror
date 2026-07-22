@@ -15,4 +15,9 @@ class Showroom extends Model
     protected $fillable = [
         'strShowRoomName',
     ];
+
+     public function stocks()
+    {
+        return $this->hasMany(ProductStock::class, 'iShowroomId', 'iShowroomId');
+    }
 }
