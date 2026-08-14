@@ -12,76 +12,250 @@
                 <div class="col-12">
                     <div class="page-title-box d-sm-flex align-items-center justify-content-between">
                         <h4 class="mb-sm-0">Stock Management</h4>
+                        <div>
+                            <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#stockInModal">
+                                <i class="fas fa-plus"></i> Stock In
+                            </button>
+                            <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#stockOutModal">
+                                <i class="fas fa-minus"></i> Stock Out
+                            </button>
+                            <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#transferModal">
+                                <i class="fas fa-exchange-alt"></i> Transfer
+                            </button>
+                            <a href="{{ route('admin.stock.ledger') }}" class="btn btn-secondary btn-sm">
+                                <i class="fas fa-history"></i> Movement Ledger
+                            </a>
+                        </div>
                     </div>
                 </div>
-            </div>
-
-            <div class="row mb-3">
-                <div class="col-md-3"><div class="card"><div class="card-body"><p class="text-muted mb-1">Inside Stock</p><h4>{{ $totals['inside'] }}</h4></div></div></div>
-                <div class="col-md-3"><div class="card"><div class="card-body"><p class="text-muted mb-1">Showroom Stock</p><h4>{{ $totals['showroom'] }}</h4></div></div></div>
-                <div class="col-md-3"><div class="card"><div class="card-body"><p class="text-muted mb-1">Sales</p><h4>{{ $totals['sales'] }}</h4></div></div></div>
-                <div class="col-md-3"><div class="card"><div class="card-body"><p class="text-muted mb-1">Available</p><h4>{{ $totals['available'] }}</h4></div></div></div>
             </div>
 
             <div class="row">
-                <div class="col-md-4">
-                    <div class="card">
-                        <div class="card-header"><h5 class="mb-0">Add / Receive Stock</h5></div>
-                        <div class="card-body">
-                            <form action="{{ route('admin.stock.store') }}" method="POST">
-                                @csrf
-                                @include('admin.stock.partials.form', ['stock' => null])
-                                <button type="submit" class="btn btn-primary">Save Stock</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-8">
+                <div class="col-12">
                     <div class="card">
                         <div class="card-header">
-                            <form method="GET" action="{{ route('admin.stock.index') }}" class="row g-2">
-                                <div class="col-md-5"><input type="text" name="search" class="form-control" value="{{ request('search') }}" placeholder="Search product, category, showroom"></div>
-                                <div class="col-md-4"><select name="iShowroomId" class="form-control"><option value="">All Showrooms</option>@foreach($showrooms as $showroom)<option value="{{ $showroom->iShowroomId }}" @selected(request('iShowroomId') == $showroom->iShowroomId)>{{ $showroom->strShowRoomName }}</option>@endforeach</select></div>
-                                <div class="col-md-3"><button class="btn btn-success btn-sm"><i class="fas fa-search"></i></button> <a href="{{ route('admin.stock.index') }}" class="btn btn-secondary btn-sm">Reset</a></div>
+                            <form method="GET" action="{{ route('admin.stock.index') }}" class="row g-2 align-items-center">
+                                <div class="col-md-3">
+                                    <select name="iShowroomId" class="form-control" onchange="this.form.submit()">
+                                        <option value="">All Showrooms</option>
+                                        @foreach($showrooms as $showroom)
+                                            <option value="{{ $showroom->iShowroomId }}" {{ request('iShowroomId') == $showroom->iShowroomId ? 'selected' : '' }}>
+                                                {{ $showroom->strShowRoomName }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <select name="iCategoryId" class="form-control" onchange="this.form.submit()">
+                                        <option value="">All Categories</option>
+                                        @foreach($categories as $category)
+                                            <option value="{{ $category->iCategoryId }}" {{ request('iCategoryId') == $category->iCategoryId ? 'selected' : '' }}>
+                                                {{ $category->strCategoryName }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="d-flex">
+                                        <input type="text" name="search" class="form-control me-2" value="{{ request('search') }}" placeholder="Search Product">
+                                        <button type="submit" class="btn btn-success btn-sm me-1"><i class="fas fa-search"></i></button>
+                                        <a href="{{ route('admin.stock.index') }}" class="btn btn-secondary btn-sm">Reset</a>
+                                    </div>
+                                </div>
                             </form>
                         </div>
+
                         <div class="card-body">
                             <div class="table-responsive">
                                 <table class="table table-bordered table-striped align-middle">
-                                    <thead><tr><th>Product</th><th>Category</th><th>Showroom</th><th>Inside</th><th>Showroom</th><th>Sales</th><th>Available</th><th>Status</th><th>Action</th></tr></thead>
+                                    <thead>
+                                        <tr>
+                                            <th>Product</th>
+                                            <th>Category</th>
+                                            <th>Showroom</th>
+                                            <th>Quantity in Stock</th>
+                                        </tr>
+                                    </thead>
                                     <tbody>
                                         @forelse($stocks as $stock)
-                                            @php
-                                                $sold = (int) optional($salesByStock->get($stock->iProductId . '-' . $stock->iShowroomId))->sold_quantity;
-                                                $available = $stock->inside_quantity + $stock->showroom_quantity - $sold;
-                                            @endphp
                                             <tr>
-                                                <td>{{ $stock->product->strProductName ?? '' }}</td><td>{{ $stock->product->category->strCategoryName ?? '' }}</td><td>{{ $stock->showroom->strShowRoomName ?? '' }}</td>
-                                                <td>{{ $stock->inside_quantity }}</td><td>{{ $stock->showroom_quantity }}</td><td>{{ $sold }}</td><td>{{ $available }}</td>
-                                                <td>@if($available <= $stock->minimum_quantity)<span class="badge bg-danger">Low Stock</span>@else<span class="badge bg-success">OK</span>@endif</td>
+                                                <td>{{ $stock->product->strProductName ?? '' }}</td>
+                                                <td>{{ $stock->product->category->strCategoryName ?? '' }}</td>
+                                                <td>{{ $stock->showroom->strShowRoomName ?? '' }}</td>
                                                 <td>
-                                                    <button type="button" class="btn btn-sm btn-primary edit-stock" data-id="{{ $stock->iProductStockId }}" data-product="{{ $stock->iProductId }}" data-showroom="{{ $stock->iShowroomId }}" data-inside="{{ $stock->inside_quantity }}" data-room="{{ $stock->showroom_quantity }}" data-min="{{ $stock->minimum_quantity }}" data-remarks="{{ $stock->remarks }}">Edit</button>
-                                                    <form action="{{ route('admin.stock.delete', $stock) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this stock record?')">@csrf @method('DELETE')<button class="btn btn-sm btn-danger">Delete</button></form>
+                                                    <span class="badge {{ $stock->iQuantity <= 0 ? 'bg-danger' : 'bg-success' }}">
+                                                        {{ $stock->iQuantity }}
+                                                    </span>
                                                 </td>
                                             </tr>
-                                        @empty<tr><td colspan="9" class="text-center">No stock records found.</td></tr>@endforelse
+                                        @empty
+                                            <tr>
+                                                <td colspan="4" class="text-center">No stock records found. Use "Stock In" to add stock.</td>
+                                            </tr>
+                                        @endforelse
                                     </tbody>
                                 </table>
                             </div>
-                            <div class="d-flex justify-content-center mt-3">{{ $stocks->links() }}</div>
+
+                            <div class="d-flex justify-content-center mt-3">
+                                {{ $stocks->links() }}
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
+
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="editStockModal" tabindex="-1"><div class="modal-dialog"><form method="POST" id="editStockForm">@csrf<div class="modal-content"><div class="modal-header"><h5 class="modal-title">Edit Stock</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body">@include('admin.stock.partials.form', ['stock' => null, 'prefix' => 'edit_'])</div><div class="modal-footer"><button class="btn btn-primary">Update</button><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button></div></div></form></div></div>
-@endsection
+{{-- Stock In Modal --}}
+<div class="modal fade" id="stockInModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <form method="POST" action="{{ route('admin.stock.in') }}">
+            @csrf
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Stock In</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Product <span style="color:red;">*</span></label>
+                        <select name="iProductId" class="form-control" required>
+                            <option value="">Select Product</option>
+                            @foreach($products as $product)
+                                <option value="{{ $product->iProductId }}">{{ $product->strProductName }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Showroom <span style="color:red;">*</span></label>
+                        <select name="iShowroomId" class="form-control" required>
+                            <option value="">Select Showroom</option>
+                            @foreach($showrooms as $showroom)
+                                <option value="{{ $showroom->iShowroomId }}">{{ $showroom->strShowRoomName }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Quantity <span style="color:red;">*</span></label>
+                        <input type="number" name="quantity" class="form-control" min="1" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Reason / Notes</label>
+                        <input type="text" name="reason" class="form-control" placeholder="e.g. Purchase order #123" maxlength="255">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success">Add Stock</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
 
-@section('scripts')
-<script>
-$(function(){ $('.edit-stock').on('click', function(){ let b=$(this); $('#editStockForm').attr('action', "{{ url('admin/stock/update') }}/"+b.data('id')); $('#edit_iProductId').val(b.data('product')); $('#edit_iShowroomId').val(b.data('showroom')); $('#edit_inside_quantity').val(b.data('inside')); $('#edit_showroom_quantity').val(b.data('room')); $('#edit_minimum_quantity').val(b.data('min')); $('#edit_remarks').val(b.data('remarks')); $('#editStockModal').modal('show'); }); });
-</script>
+{{-- Stock Out Modal --}}
+<div class="modal fade" id="stockOutModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <form method="POST" action="{{ route('admin.stock.out') }}">
+            @csrf
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Stock Out</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Product <span style="color:red;">*</span></label>
+                        <select name="iProductId" class="form-control" required>
+                            <option value="">Select Product</option>
+                            @foreach($products as $product)
+                                <option value="{{ $product->iProductId }}">{{ $product->strProductName }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Showroom <span style="color:red;">*</span></label>
+                        <select name="iShowroomId" class="form-control" required>
+                            <option value="">Select Showroom</option>
+                            @foreach($showrooms as $showroom)
+                                <option value="{{ $showroom->iShowroomId }}">{{ $showroom->strShowRoomName }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Quantity <span style="color:red;">*</span></label>
+                        <input type="number" name="quantity" class="form-control" min="1" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Reason / Notes</label>
+                        <input type="text" name="reason" class="form-control" placeholder="e.g. Damaged goods" maxlength="255">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-danger">Remove Stock</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- Transfer Modal --}}
+<div class="modal fade" id="transferModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <form method="POST" action="{{ route('admin.stock.transfer') }}">
+            @csrf
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Transfer Stock Between Showrooms</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Product <span style="color:red;">*</span></label>
+                        <select name="iProductId" class="form-control" required>
+                            <option value="">Select Product</option>
+                            @foreach($products as $product)
+                                <option value="{{ $product->iProductId }}">{{ $product->strProductName }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">From Showroom <span style="color:red;">*</span></label>
+                        <select name="iFromShowroomId" class="form-control" required>
+                            <option value="">Select Showroom</option>
+                            @foreach($showrooms as $showroom)
+                                <option value="{{ $showroom->iShowroomId }}">{{ $showroom->strShowRoomName }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">To Showroom <span style="color:red;">*</span></label>
+                        <select name="iToShowroomId" class="form-control" required>
+                            <option value="">Select Showroom</option>
+                            @foreach($showrooms as $showroom)
+                                <option value="{{ $showroom->iShowroomId }}">{{ $showroom->strShowRoomName }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Quantity <span style="color:red;">*</span></label>
+                        <input type="number" name="quantity" class="form-control" min="1" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Reason / Notes</label>
+                        <input type="text" name="reason" class="form-control" placeholder="e.g. Rebalancing showroom stock" maxlength="255">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-info text-white">Transfer</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
 @endsection

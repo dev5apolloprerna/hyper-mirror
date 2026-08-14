@@ -34,7 +34,7 @@
                     <td>{{ $quotation->quotation_batch_id ?? '—' }}</td>
                     <td>{{ optional($quotation->category)->strCategoryName ?? '—' }}</td>
                     <td>{{ optional($quotation->product)->strProductName ?? '—' }}</td>
-                    <td>{{ optional($quotation->shape)->shape_name ?? '—' }}</td>
+                    <td>{{ optional($quotation->shape)->shape_title  ?? '—' }}</td>
                     <td>{{ optional($quotation->feature)->feature_name ?? '—' }}</td>
                     <td>{{ $quotation->quantity ?? 0 }}</td>
                     <td>{{ number_format((float)($quotation->decTotalSqft ?? 0), 2) }}</td>

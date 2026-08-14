@@ -17,12 +17,12 @@ use App\Http\Controllers\Admin\CrmUserController;
 use App\Http\Controllers\Admin\BusinessReportController;
 use App\Http\Controllers\Admin\ProductShapeController;
 use App\Http\Controllers\Admin\ProductFeatureController;
+use App\Http\Controllers\Admin\StockController;
 use App\Http\Controllers\Admin\AdminPaymentController;
 use App\Http\Controllers\Admin\InvoicePdfSettingController;
 use App\Http\Controllers\Admin\QuotationCancelReasonController;
 use App\Http\Controllers\Admin\PartyReportController;
 use App\Http\Controllers\Admin\LeadReportController;
-use App\Http\Controllers\Admin\StockController;
 
 use App\Http\Controllers\StoreManager\LeadController;
 use App\Http\Controllers\StoreManager\LeadDesignController;
@@ -139,9 +139,10 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
 // Admin: Stock Management
 Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::get('stock', [StockController::class, 'index'])->name('stock.index');
-    Route::post('stock/store', [StockController::class, 'store'])->name('stock.store');
-    Route::post('stock/update/{stock}', [StockController::class, 'update'])->name('stock.update');
-    Route::delete('stock/delete/{stock}', [StockController::class, 'destroy'])->name('stock.delete');
+    Route::get('stock/ledger', [StockController::class, 'ledger'])->name('stock.ledger');
+    Route::post('stock/in', [StockController::class, 'stockIn'])->name('stock.in');
+    Route::post('stock/out', [StockController::class, 'stockOut'])->name('stock.out');
+    Route::post('stock/transfer', [StockController::class, 'transfer'])->name('stock.transfer');
 });
 
 // Admin: Showrooms
