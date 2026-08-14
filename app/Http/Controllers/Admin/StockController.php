@@ -3,16 +3,21 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\InvoiceItem;
 use App\Models\Product;
+use App\Models\ProductCategory;
 use App\Models\ProductStock;
 use App\Models\Showroom;
+use App\Models\StockMovement;
+use App\Support\StockManager;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
 
 class StockController extends Controller
 {
+    /**
+     * Current stock levels, one row per product per showroom that has ever
+     * had a movement (products with no stock activity anywhere are not shown
+     * here since there is nothing to display for them yet).
+     */
     public function index(Request $request)
     {
         $query = ProductStock::with(['product.category', 'showroom']);
@@ -21,89 +26,139 @@ class StockController extends Controller
             $query->where('iShowroomId', $request->iShowroomId);
         }
 
-        if ($request->filled('search')) {
-            $search = trim($request->search);
-            $query->where(function ($q) use ($search) {
-                $q->whereHas('product', function ($productQuery) use ($search) {
-                    $productQuery->where('strProductName', 'like', "%{$search}%")
-                        ->orWhereHas('category', function ($categoryQuery) use ($search) {
-                            $categoryQuery->where('strCategoryName', 'like', "%{$search}%");
-                        });
-                })->orWhereHas('showroom', function ($showroomQuery) use ($search) {
-                    $showroomQuery->where('strShowRoomName', 'like', "%{$search}%");
-                });
+        if ($request->filled('iCategoryId')) {
+            $query->whereHas('product', function ($q) use ($request) {
+                $q->where('iCategoryId', $request->iCategoryId);
             });
         }
 
-        $stocks = $query->orderByDesc('iProductStockId')->paginate(15)->withQueryString();
-        $salesByStock = $this->salesByStock($stocks->pluck('iProductId'), $stocks->pluck('iShowroomId'));
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+            $query->whereHas('product', function ($q) use ($search) {
+                $q->where('strProductName', 'like', "%{$search}%");
+            });
+        }
 
-        $totals = [
-            'inside' => (int) ProductStock::sum('inside_quantity'),
-            'showroom' => (int) ProductStock::sum('showroom_quantity'),
-            'sales' => (int) InvoiceItem::join('invoices', 'invoice_items.iInvoiceId', '=', 'invoices.iInvoiceId')
-                ->where('invoices.status', '!=', 'cancelled')
-                ->sum('invoice_items.quantity'),
-        ];
-        $totals['available'] = $totals['inside'] + $totals['showroom'] - $totals['sales'];
+        $stocks = $query->orderBy('iShowroomId')
+            ->paginate(15)
+            ->withQueryString();
 
-        $products = Product::with('category')->orderBy('strProductName')->get();
+        $products   = Product::orderBy('strProductName')->get();
+        $showrooms  = Showroom::orderBy('strShowRoomName')->get();
+        $categories = ProductCategory::orderBy('strCategoryName')->get();
+
+        return view('admin.stock.index', compact('stocks', 'products', 'showrooms', 'categories'));
+    }
+
+    /**
+     * Movement ledger / history, optionally filtered.
+     */
+    public function ledger(Request $request)
+    {
+        $query = StockMovement::with(['product', 'showroom', 'relatedShowroom', 'createdBy']);
+
+        if ($request->filled('iProductId')) {
+            $query->where('iProductId', $request->iProductId);
+        }
+
+        if ($request->filled('iShowroomId')) {
+            $query->where('iShowroomId', $request->iShowroomId);
+        }
+
+        if ($request->filled('strType')) {
+            $query->where('strType', $request->strType);
+        }
+
+        if ($request->filled('from')) {
+            $query->whereDate('created_at', '>=', $request->from);
+        }
+
+        if ($request->filled('to')) {
+            $query->whereDate('created_at', '<=', $request->to);
+        }
+
+        $movements = $query->orderBy('iMovementId', 'desc')
+            ->paginate(20)
+            ->withQueryString();
+
+        $products  = Product::orderBy('strProductName')->get();
         $showrooms = Showroom::orderBy('strShowRoomName')->get();
 
-        return view('admin.stock.index', compact('stocks', 'products', 'showrooms', 'salesByStock', 'totals'));
+        return view('admin.stock.ledger', compact('movements', 'products', 'showrooms'));
     }
 
-    public function store(Request $request)
+    public function stockIn(Request $request)
     {
-        $validated = $this->validatedData($request);
-
-        ProductStock::create($validated);
-
-        return redirect()->route('admin.stock.index')->with('success', 'Stock added successfully.');
-    }
-
-    public function update(Request $request, ProductStock $stock)
-    {
-        $validated = $this->validatedData($request, $stock->iProductStockId);
-        $stock->update($validated);
-
-        return redirect()->route('admin.stock.index')->with('success', 'Stock updated successfully.');
-    }
-
-    public function destroy(ProductStock $stock)
-    {
-        $stock->delete();
-
-        return redirect()->route('admin.stock.index')->with('success', 'Stock deleted successfully.');
-    }
-
-    private function validatedData(Request $request, ?int $ignoreId = null): array
-    {
-        return $request->validate([
-            'iProductId' => [
-                'required',
-                'exists:products,iProductId',
-                Rule::unique('product_stocks', 'iProductId')
-                    ->where('iShowroomId', $request->iShowroomId)
-                    ->ignore($ignoreId, 'iProductStockId'),
-            ],
+        $request->validate([
+            'iProductId'  => 'required|exists:products,iProductId',
             'iShowroomId' => 'required|exists:showrooms,iShowroomId',
-            'inside_quantity' => 'required|integer|min:0',
-            'showroom_quantity' => 'required|integer|min:0',
-            'minimum_quantity' => 'nullable|integer|min:0',
-            'remarks' => 'nullable|string|max:1000',
+            'quantity'    => 'required|integer|min:1',
+            'reason'      => 'nullable|string|max:255',
         ]);
+
+        StockManager::stockIn(
+            (int) $request->iProductId,
+            (int) $request->iShowroomId,
+            (int) $request->quantity,
+            $request->reason,
+            auth()->id()
+        );
+
+        return redirect()->route('admin.stock.index')
+            ->with('success', 'Stock added successfully.');
     }
 
-    private function salesByStock($productIds, $showroomIds)
+    public function stockOut(Request $request)
     {
-        return InvoiceItem::select('invoice_items.iProductId', 'invoices.iShowroomId', DB::raw('SUM(invoice_items.quantity) as sold_quantity'))
-            ->join('invoices', 'invoice_items.iInvoiceId', '=', 'invoices.iInvoiceId')
-            ->where('invoices.status', '!=', 'cancelled')
-            ->whereIn('invoice_items.iProductId', $productIds->filter()->unique())
-            ->whereIn('invoices.iShowroomId', $showroomIds->filter()->unique())
-            ->groupBy('invoice_items.iProductId', 'invoices.iShowroomId')
-            ->get()
-            ->keyBy(fn ($row) => $row->iProductId . '-' . $row->iShowroomId);
+        $request->validate([
+            'iProductId'  => 'required|exists:products,iProductId',
+            'iShowroomId' => 'required|exists:showrooms,iShowroomId',
+            'quantity'    => 'required|integer|min:1',
+            'reason'      => 'nullable|string|max:255',
+        ]);
+
+        try {
+            StockManager::stockOut(
+                (int) $request->iProductId,
+                (int) $request->iShowroomId,
+                (int) $request->quantity,
+                $request->reason,
+                auth()->id()
+            );
+        } catch (\RuntimeException $e) {
+            return redirect()->route('admin.stock.index')
+                ->with('error', $e->getMessage());
+        }
+
+        return redirect()->route('admin.stock.index')
+            ->with('success', 'Stock removed successfully.');
+    }
+
+    public function transfer(Request $request)
+    {
+        $request->validate([
+            'iProductId'      => 'required|exists:products,iProductId',
+            'iFromShowroomId' => 'required|exists:showrooms,iShowroomId|different:iToShowroomId',
+            'iToShowroomId'   => 'required|exists:showrooms,iShowroomId',
+            'quantity'        => 'required|integer|min:1',
+            'reason'          => 'nullable|string|max:255',
+        ]);
+
+        try {
+            StockManager::transfer(
+                (int) $request->iProductId,
+                (int) $request->iFromShowroomId,
+                (int) $request->iToShowroomId,
+                (int) $request->quantity,
+                $request->reason,
+                auth()->id()
+            );
+        } catch (\RuntimeException $e) {
+            return redirect()->route('admin.stock.index')
+                ->with('error', $e->getMessage());
+        }
+
+        return redirect()->route('admin.stock.index')
+            ->with('success', 'Stock transferred successfully.');
     }
 }

@@ -10,21 +10,12 @@ class ProductStock extends Model
     use HasFactory;
 
     protected $table = 'product_stocks';
-    protected $primaryKey = 'iProductStockId';
+    protected $primaryKey = 'iStockId';
 
     protected $fillable = [
         'iProductId',
         'iShowroomId',
-        'inside_quantity',
-        'showroom_quantity',
-        'minimum_quantity',
-        'remarks',
-    ];
-
-    protected $casts = [
-        'inside_quantity' => 'integer',
-        'showroom_quantity' => 'integer',
-        'minimum_quantity' => 'integer',
+        'iQuantity',
     ];
 
     public function product()
@@ -35,10 +26,5 @@ class ProductStock extends Model
     public function showroom()
     {
         return $this->belongsTo(Showroom::class, 'iShowroomId', 'iShowroomId');
-    }
-
-    public function getTotalStockAttribute(): int
-    {
-        return (int) $this->inside_quantity + (int) $this->showroom_quantity;
     }
 }

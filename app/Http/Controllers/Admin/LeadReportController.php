@@ -184,12 +184,47 @@ class LeadReportController extends Controller
         $paymentCount = $lead->payments()->count();
         $paymentTotal = (float) $lead->payments()->sum('iPaidAmount');
 
+        $latestQuotationBatchId = $lead->quotations()->max('quotation_batch_id');
+        $latestQuotations = collect();
+
+        if ($latestQuotationBatchId !== null) {
+            $latestQuotations = $lead->quotations()
+                ->with(['category', 'product', 'shape', 'feature'])
+                ->where('quotation_batch_id', $latestQuotationBatchId)
+                ->orderBy('iQuotationId')
+                ->get();
+        }
+
+        $latestQuotationSubtotal = (float) $latestQuotations->sum('iAmount');
+        $latestQuotationFitting = (float) ($lead->iFittingCharges ?? 0);
+        $latestQuotationDelivery = (float) ($lead->delivery_charges ?? 0);
+        $latestQuotationBeforeDiscount = $latestQuotationSubtotal
+            + $latestQuotationFitting
+            + $latestQuotationDelivery;
+        $latestQuotationDiscount = (int) ($lead->isDiscountApplicable ?? 0) === 1
+            ? min((float) ($lead->decDiscountAmount ?? 0), $latestQuotationBeforeDiscount)
+            : 0;
+        $latestQuotationTaxable = max($latestQuotationBeforeDiscount - $latestQuotationDiscount, 0);
+        $latestQuotationGst = (int) ($lead->isGstApplicable ?? 0) === 1
+            ? (float) ($lead->decGstAmount ?? ($latestQuotationTaxable * 0.18))
+            : 0;
+        $latestQuotationTotal = $latestQuotationTaxable + $latestQuotationGst;
+
         return view('admin.reports.lead-detail', compact(
             'lead',
             'historyCount',
             'quotationCount',
             'paymentCount',
-            'paymentTotal'
+            'paymentTotal',
+            'latestQuotationBatchId',
+            'latestQuotations',
+            'latestQuotationSubtotal',
+            'latestQuotationFitting',
+            'latestQuotationDelivery',
+            'latestQuotationDiscount',
+            'latestQuotationTaxable',
+            'latestQuotationGst',
+            'latestQuotationTotal'
         ));
     }
 

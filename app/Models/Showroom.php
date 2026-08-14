@@ -16,8 +16,13 @@ class Showroom extends Model
         'strShowRoomName',
     ];
 
-     public function stocks()
+    public function stocks()
     {
         return $this->hasMany(ProductStock::class, 'iShowroomId', 'iShowroomId');
+    }
+
+    public function stockMovements()
+    {
+        return $this->hasMany(StockMovement::class, 'iShowroomId', 'iShowroomId');
     }
 }

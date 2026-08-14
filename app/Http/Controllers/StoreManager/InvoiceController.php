@@ -15,6 +15,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Auth;
 use App\Helpers\LedgerHelper;
+use App\Support\StockManager;
 
 class InvoiceController extends Controller
 {
@@ -248,6 +249,15 @@ class InvoiceController extends Controller
                     'item_remark' => $row['item_remark'] ?? null,
 
                 ]);
+
+                // Deduct sold quantity from this showroom's stock.
+                StockManager::deductForInvoice(
+                    (int) $row['iProductId'],
+                    (int) $invoice->iShowroomId,
+                    $qty,
+                    (int) $invoice->iInvoiceId,
+                    auth()->id()
+                );
             }
 
             $auth = Auth::user()->id;
@@ -369,7 +379,12 @@ class InvoiceController extends Controller
     public function destroy(Invoice $invoice)
     {
         abort_unless($this->isStoreManager(), 403);
-        $invoice->delete();
+
+        DB::transaction(function () use ($invoice) {
+            StockManager::reverseInvoiceDeductions((int) $invoice->iInvoiceId, auth()->id());
+            $invoice->delete();
+        });
+
         return redirect()->route('store.invoice.index')
             ->with('success', 'Invoice deleted successfully.');
     }
