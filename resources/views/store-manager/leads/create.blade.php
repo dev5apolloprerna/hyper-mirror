@@ -75,6 +75,12 @@
                                         <span class="text-danger">{{ $errors->first('company_name') }}</span>
                                     @endif
                                 </div>
+                                <div class="col-md-6 mb-4">
+                                    <label class="form-label">GST No. (Optional)</label>
+                                    <input type="text" name="gst_no" id="gst_no" class="form-control text-uppercase"
+                                        value="{{ old('gst_no') }}" maxlength="15" placeholder="Enter 15-character GSTIN">
+                                    @error('gst_no')<span class="text-danger">{{ $message }}</span>@enderror
+                                </div>
 
                                 <div class="col-md-12 mb-4">
                                     <label class="form-label">Address</label>
@@ -283,6 +289,7 @@
                             $('#strAddress').val(response.strAddress);
                             $('#customer_type').val(response.customer_type || 'Retail');
                             $('#company_name').val(response.company_name || '');
+                            $('#gst_no').val(response.gst_no || '');
                             toggleCompanyField();
 
                         } else {

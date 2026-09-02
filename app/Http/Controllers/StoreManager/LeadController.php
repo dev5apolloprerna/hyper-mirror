@@ -189,6 +189,7 @@ class LeadController extends Controller
             'SiteAddress'           => 'nullable|string',
             'customer_type'         => 'required|in:B2B,Retail',
             'company_name'          => 'nullable|string|max:150',
+            'gst_no'                => ['nullable', 'string', 'size:15', 'regex:/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][A-Z0-9]Z[A-Z0-9]$/i'],
             'IsOnlyFittingQuotation' => 'required|in:0,1',
             'isFittingChargeIncluded' => [
                 'nullable',
@@ -213,6 +214,7 @@ class LeadController extends Controller
                     'strAddress' => $data['strAddress'] ?? null,
                     'customer_type' => $data['customer_type'],
                     'company_name' => $data['company_name'] ?? null,
+                    'gst_no' => !empty($data['gst_no']) ? strtoupper($data['gst_no']) : null,
                 ]
             );
 
@@ -222,6 +224,7 @@ class LeadController extends Controller
                     'strAddress'  => $data['strAddress'] ?? null,
                     'customer_type' => $data['customer_type'],
                     'company_name' => $data['company_name'] ?? null,
+                    'gst_no' => !empty($data['gst_no']) ? strtoupper($data['gst_no']) : null,
                 ]);
             }
 
@@ -229,6 +232,7 @@ class LeadController extends Controller
                 $customer->update([
                     'customer_type' => $data['customer_type'],
                     'company_name' => $data['company_name'] ?? null,
+                    'gst_no' => !empty($data['gst_no']) ? strtoupper($data['gst_no']) : null,
                 ]);
             }
 
@@ -297,6 +301,7 @@ class LeadController extends Controller
             'SiteAddress'         => 'nullable|string',
             'customer_type'       => 'required|in:B2B,Retail',
             'company_name'        => 'nullable|string|max:150',
+            'gst_no'              => ['nullable', 'string', 'size:15', 'regex:/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][A-Z0-9]Z[A-Z0-9]$/i'],
             'IsOnlyFittingQuotation' => 'required|in:0,1',
             'isFittingChargeIncluded' => [
                 'nullable',
@@ -319,6 +324,7 @@ class LeadController extends Controller
                     'strAddress'    => $data['strAddress'] ?? null,
                     'customer_type' => $data['customer_type'],
                     'company_name'  => $data['company_name'] ?? null,
+                    'gst_no'        => !empty($data['gst_no']) ? strtoupper($data['gst_no']) : null,
                 ]);
             }
 
@@ -456,6 +462,7 @@ class LeadController extends Controller
             'delivery_charges'                          => $requiresManualFittingCharge
                 ? 'required|numeric|min:0'
                 : 'nullable|numeric|min:0',
+            'packing_charges'                          => 'nullable|numeric|min:0',
         ];
 
         $data = $request->validate($rules);
@@ -527,7 +534,8 @@ class LeadController extends Controller
 
             $fittingCharges = (float) ($data['iFittingCharges'] ?? 0);
             $deliveryCharges = (float) ($data['delivery_charges'] ?? 0);
-            $baseAmount = $subtotal + $fittingCharges + $deliveryCharges;
+            $packingCharges = (float) ($data['packing_charges'] ?? 0);
+            $baseAmount = $subtotal + $fittingCharges + $deliveryCharges + $packingCharges;
 
             $discountApplicable = (int) $data['isDiscountApplicable'] === 1;
             $rawDiscount = (float) ($data['discount_amount'] ?? 0);
@@ -552,6 +560,7 @@ class LeadController extends Controller
                 'isGstApplicable'       => $gstApplicable ? 1 : 0,
                 'decGstAmount'          => $gstAmount,
                 'delivery_charges'      => $deliveryCharges ?? 0,
+                'packing_charges'       => $packingCharges,
             ]);
 
             LeadHistory::create([
