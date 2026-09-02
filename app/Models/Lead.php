@@ -36,6 +36,7 @@ class Lead extends Model
         'iCreatedBy',
         'iShowroomId',
         'delivery_charges',
+        'packing_charges',
     ];
 
     public function customer()

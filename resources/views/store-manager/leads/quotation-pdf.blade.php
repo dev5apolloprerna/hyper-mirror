@@ -173,8 +173,10 @@
 
         $subtotalAmount = (float) $lead->quotations->sum('iAmount');
         $fittingCharges = (float) ($lead->iFittingCharges ?? 0);
+        $deliveryCharges = (float) ($lead->delivery_charges ?? 0);
+        $packingCharges = (float) ($lead->packing_charges ?? 0);
         $discountAmount = (int) ($lead->isDiscountApplicable ?? 0) === 1 ? (float) ($lead->decDiscountAmount ?? 0) : 0;
-        $amountAfterDiscount = max($subtotalAmount + $fittingCharges - $discountAmount, 0);
+        $amountAfterDiscount = max($subtotalAmount + $fittingCharges + $deliveryCharges + $packingCharges - $discountAmount, 0);
         $gstAmount =
             (int) ($lead->isGstApplicable ?? 0) === 1
                 ? (float) ($lead->decGstAmount ?? $amountAfterDiscount * 0.18)
@@ -214,6 +216,8 @@
                 class="info-value">{{ $lead->customer->strCustomer ?? '—' }}</span></div>
         <div class="info-row"><span class="info-label">Mobile</span><span
                 class="info-value">{{ $lead->customer->strMobile ?? '—' }}</span></div>
+        <div class="info-row"><span class="info-label">GST No.</span><span
+                class="info-value">{{ $lead->customer->gst_no ?? '—' }}</span></div>
         <div class="info-row"><span class="info-label">Address</span><span
                 class="info-value">{{ $lead->customer->strAddress ?? '—' }}</span></div>
         <div class="info-row"><span class="info-label">Site Address</span><span
@@ -286,6 +290,18 @@
                     <tr>
                         <th colspan="{{ $summaryColspan }}" style="text-align:right;">Fitting Charges</th>
                         <th>₹{{ number_format($fittingCharges, 2) }}</th>
+                    </tr>
+                @endif
+                @if ($deliveryCharges > 0)
+                    <tr>
+                        <th colspan="{{ $summaryColspan }}" style="text-align:right;">Delivery Charges</th>
+                        <th>₹{{ number_format($deliveryCharges, 2) }}</th>
+                    </tr>
+                @endif
+                @if ($packingCharges > 0)
+                    <tr>
+                        <th colspan="{{ $summaryColspan }}" style="text-align:right;">Packing Charges</th>
+                        <th>₹{{ number_format($packingCharges, 2) }}</th>
                     </tr>
                 @endif
                 @if ((int) ($lead->isDiscountApplicable ?? 0) === 1 && $discountAmount > 0)

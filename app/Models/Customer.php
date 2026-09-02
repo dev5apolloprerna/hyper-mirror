@@ -18,5 +18,6 @@ class Customer extends Model
         'strAddress',
         'customer_type',
         'company_name',
+        'gst_no',
     ];
 }

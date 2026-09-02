@@ -38,6 +38,7 @@
 
                         @php
                             $DeliveryCharges = (float) ($lead->delivery_charges ?? 0);
+                            $packingCharges = (float) ($lead->packing_charges ?? 0);
                             $subtotalAmount = (float) $lead->quotations->sum('iAmount');
                             $totalSqft = (float) $lead->quotations->sum('decTotalSqft');
                             $totalQty = (float) $lead->quotations->sum('quantity');
@@ -46,7 +47,7 @@
                                 (int) ($lead->isDiscountApplicable ?? 0) === 1
                                     ? (float) ($lead->decDiscountAmount ?? 0)
                                     : 0;
-                            $amountAfterDiscount = max($subtotalAmount + $fittingCharges - $discountAmount, 0);
+                            $amountAfterDiscount = max($subtotalAmount + $fittingCharges + $DeliveryCharges + $packingCharges - $discountAmount, 0);
                             $gstAmount =
                                 (int) ($lead->isGstApplicable ?? 0) === 1
                                     ? (float) ($lead->decGstAmount ?? $amountAfterDiscount * 0.18)
@@ -66,6 +67,10 @@
                                     <tr>
                                         <th>Mobile</th>
                                         <td>{{ $lead->customer->strMobile ?? '' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>GST No.</th>
+                                        <td>{{ $lead->customer->gst_no ?? '—' }}</td>
                                     </tr>
                                     <tr>
                                         <th>Address</th>
@@ -235,6 +240,12 @@
                                                     <tr>
                                                         <th colspan="9" class="text-end">Delivery Charges</th>
                                                         <th colspan="3">₹{{ number_format($DeliveryCharges, 2) }}</th>
+                                                    </tr>
+                                                @endif
+                                                @if ($packingCharges > 0)
+                                                    <tr>
+                                                        <th colspan="9" class="text-end">Packing Charges</th>
+                                                        <th colspan="3">₹{{ number_format($packingCharges, 2) }}</th>
                                                     </tr>
                                                 @endif
                                                 @if ((int) ($lead->isDiscountApplicable ?? 0) === 1)

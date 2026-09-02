@@ -60,6 +60,12 @@
                                     @error('company_name')<span class="text-danger">{{ $message }}</span>@enderror
                                 </div>
 
+                                <div class="col-md-6 mb-4">
+                                    <label class="form-label">GST No. (Optional)</label>
+                                    <input type="text" name="gst_no" class="form-control text-uppercase" maxlength="15"
+                                        value="{{ old('gst_no', $lead->customer->gst_no ?? '') }}" placeholder="Enter 15-character GSTIN">
+                                    @error('gst_no')<span class="text-danger">{{ $message }}</span>@enderror
+                                </div>
                                 <div class="col-md-12 mb-4">
                                     <label class="form-label">Address</label>
                                     <textarea name="strAddress" class="form-control" rows="2">{{ old('strAddress', $lead->customer->strAddress ?? '') }}</textarea>
