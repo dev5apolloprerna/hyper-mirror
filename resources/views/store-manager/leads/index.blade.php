@@ -52,7 +52,7 @@
                             <label class="form-label mb-1 small fw-semibold">Search</label>
                             <input type="text" name="search" class="form-control form-control-sm"
                                    value="{{ request('search') }}"
-                                   placeholder="Lead no / customer / mobile / status">
+                                   placeholder="Lead no / customer / company / mobile / status">
                         </div>
                         <div class="col-md-3">
                             <label class="form-label mb-1 small fw-semibold">Status</label>
@@ -106,7 +106,8 @@
                             <thead class="table-light">
                                 <tr>
                                     <th class="ps-3">Lead No</th>
-                                    <th>Customer</th>
+                                    <th>Customer Name</th>
+                                    <th>Company Name</th>
                                     <th>Mobile</th>
                                     <th>Status</th>
                                     @if(in_array($roleSlug, ['storemanager', 'account']))
@@ -156,6 +157,7 @@
                                     <tr class="{{ $isOverdue ? 'table-danger' : ($isToday ? 'table-warning' : '') }}">
                                         <td class="ps-3 fw-semibold">{{ $lead->strLeadNo }}</td>
                                         <td>{{ $lead->customer->strCustomer ?? '—' }}</td>
+                                        <td>{{ $lead->customer->company_name ?? '—' }}</td>
                                         <td>{{ $lead->customer->strMobile ?? '—' }}</td>
                                         <td>
                                             <span class="badge {{ $badgeClass }}">
