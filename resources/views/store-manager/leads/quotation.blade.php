@@ -460,6 +460,15 @@
                                             <span class="text-danger d-block">{{ $message }}</span>
                                         @enderror
                                     </div>
+                                    <div class="col-md-4 mb-4">
+                                        <label class="form-label">Loading and Unloading Charges</label>
+                                        <input type="number" step="0.01" min="0" name="loading_unloading_charges"
+                                            id="loadingUnloadingCharges" class="form-control"
+                                            value="{{ old('loading_unloading_charges', (float) ($lead->loading_unloading_charges ?? 0)) }}">
+                                        @error('loading_unloading_charges')
+                                            <span class="text-danger d-block">{{ $message }}</span>
+                                        @enderror
+                                    </div>
                                     {{-- 20-04-26 --}}
                                     <div class="col-md-2 mb-4">
                                         <label class="form-label">Total Sqft</label>
@@ -590,6 +599,7 @@
                     $currentFittingCharges = (float) ($lead->iFittingCharges ?? 0);
                     $currentDeliveryCharges = (float) ($lead->delivery_charges ?? 0);
                     $currentPackingCharges = (float) ($lead->packing_charges ?? 0);
+                    $currentLoadingUnloadingCharges = (float) ($lead->loading_unloading_charges ?? 0);
                     $currentDiscount =
                         (int) ($lead->isDiscountApplicable ?? 0) === 1 ? (float) ($lead->decDiscountAmount ?? 0) : 0;
                 @endphp
@@ -602,8 +612,7 @@
                                 <small class="text-muted">Click the eye icon to view product + amount details</small>
                             </div>
                             <p class="small text-muted mb-3">
-                                Note: Fitting/Delivery/Packing/Discount/GST are shown using current lead charges for quick
-                                comparison.
+                                Note: Fitting/Delivery/Packing/Loading and Unloading/Discount/GST are shown using current lead charges for quick comparison.
                             </p>
                             <div class="table-responsive">
                                 <table class="table table-bordered table-hover quotation-history-table align-middle mb-0">
@@ -616,6 +625,7 @@
                                             <th>Fitting</th>
                                             <th>Delivery</th>
                                             <th>Packing</th>
+                                            <th>Loading &amp; Unloading</th>
                                             <th>Discount</th>
                                             <th>GST</th>
                                             <th>Grand Total</th>
@@ -629,7 +639,8 @@
                                                     (float) $batch->subtotal +
                                                     $currentFittingCharges +
                                                     $currentDeliveryCharges +
-                                                    $currentPackingCharges;
+                                                    $currentPackingCharges +
+                                                    $currentLoadingUnloadingCharges;
                                                 $batchDiscount = min($currentDiscount, $batchBeforeDiscount);
                                                 $batchTaxable = max($batchBeforeDiscount - $batchDiscount, 0);
                                                 $batchGst =
@@ -653,6 +664,7 @@
                                                 <td>₹{{ number_format($currentDeliveryCharges, 2) }}</td>
                                                 <td>₹{{ number_format($currentPackingCharges, 2) }}</td>
                                                 <td>- ₹{{ number_format($batchDiscount, 2) }}</td>
+                                                <td>₹{{ number_format($currentLoadingUnloadingCharges, 2) }}</td>
                                                 <td>₹{{ number_format($batchGst, 2) }}</td>
                                                 <td><strong>₹{{ number_format($batchGrandTotal, 2) }}</strong></td>
                                                 <td>
@@ -747,7 +759,8 @@
                                                 (float) $batch->subtotal +
                                                 $currentFittingCharges +
                                                 $currentDeliveryCharges +
-                                                $currentPackingCharges;
+                                                $currentPackingCharges +
+                                                $currentLoadingUnloadingCharges;
                                             $batchDiscount = min($currentDiscount, $batchBeforeDiscount);
                                             $batchTaxable = max($batchBeforeDiscount - $batchDiscount, 0);
                                             $batchGst =
@@ -766,7 +779,12 @@
                                             <th colspan="10" class="text-end">Packing Charges</th>
                                             <th colspan="2">₹{{ number_format($currentPackingCharges, 2) }}</th>
                                         </tr>
+                                         <tr>
+                                            <th colspan="10" class="text-end">Loading and Unloading Charges</th>
+                                            <th colspan="2">₹{{ number_format($currentLoadingUnloadingCharges, 2) }}</th>
+                                        </tr>
                                         <tr>
+
                                             <th colspan="10" class="text-end">Discount</th>
                                             <th colspan="2">- ₹{{ number_format($batchDiscount, 2) }}</th>
                                         </tr>
@@ -938,7 +956,8 @@
                 const fitting = parseFloat($('#iFittingCharges').val()) || 0;
                 const delivery = parseFloat($('#deliveryCharges').val()) || 0;
                 const packing = parseFloat($('#packingCharges').val()) || 0;
-                const baseAmount = subtotal + fitting + delivery + packing;
+                const loadingUnloading = parseFloat($('#loadingUnloadingCharges').val()) || 0;
+                const baseAmount = subtotal + fitting + delivery + packing + loadingUnloading;
                 // 17-04-2026
 
                 const isDiscountApplicable = $('#isDiscountApplicable').val() === '1';
@@ -1147,7 +1166,7 @@
             });
 
             $(document).on('input change',
-                '.quantity, .decHeight, .decWidth, .calc-multiple, .decRatePerSqft, .unit-of-measurement, #iFittingCharges, #deliveryCharges, #packingCharges, .row-product-select, #isDiscountApplicable, #discountAmount, #isGstApplicable',
+                '.quantity, .decHeight, .decWidth, .calc-multiple, .decRatePerSqft, .unit-of-measurement, #iFittingCharges, #deliveryCharges, #packingCharges, #loadingUnloadingCharges, .row-product-select, #isDiscountApplicable, #discountAmount, #isGstApplicable',
                 function() {
                     toggleDiscountBox();
                     recalculateTotals();

@@ -463,6 +463,7 @@ class LeadController extends Controller
                 ? 'required|numeric|min:0'
                 : 'nullable|numeric|min:0',
             'packing_charges'                          => 'nullable|numeric|min:0',
+            'loading_unloading_charges'                => 'nullable|numeric|min:0',
         ];
 
         $data = $request->validate($rules);
@@ -535,7 +536,8 @@ class LeadController extends Controller
             $fittingCharges = (float) ($data['iFittingCharges'] ?? 0);
             $deliveryCharges = (float) ($data['delivery_charges'] ?? 0);
             $packingCharges = (float) ($data['packing_charges'] ?? 0);
-            $baseAmount = $subtotal + $fittingCharges + $deliveryCharges + $packingCharges;
+            $loadingUnloadingCharges = (float) ($data['loading_unloading_charges'] ?? 0);
+            $baseAmount = $subtotal + $fittingCharges + $deliveryCharges + $packingCharges + $loadingUnloadingCharges;
 
             $discountApplicable = (int) $data['isDiscountApplicable'] === 1;
             $rawDiscount = (float) ($data['discount_amount'] ?? 0);
@@ -561,6 +563,7 @@ class LeadController extends Controller
                 'decGstAmount'          => $gstAmount,
                 'delivery_charges'      => $deliveryCharges ?? 0,
                 'packing_charges'       => $packingCharges,
+                'loading_unloading_charges' => $loadingUnloadingCharges,
             ]);
 
             LeadHistory::create([

@@ -316,8 +316,11 @@
                                              @php
                                                     $subtotalAmount = (float) $activeQuotations->sum('iAmount');
                                                     $fittingCharges = (float) ($lead->iFittingCharges ?? 0);
-                                                    $discountAmount = ((int) ($lead->isDiscountApplicable ?? 0) === 1) ? (float) ($lead->decDiscountAmount ?? 0) : 0;
-                                                    $amountAfterDiscount = max(($subtotalAmount + $fittingCharges) - $discountAmount, 0);
+
+                                                    $deliveryCharges = (float) ($lead->delivery_charges ?? 0);
+                                                    $packingCharges = (float) ($lead->packing_charges ?? 0);
+                                                    $loadingUnloadingCharges = (float) ($lead->loading_unloading_charges ?? 0);                                                    $discountAmount = ((int) ($lead->isDiscountApplicable ?? 0) === 1) ? (float) ($lead->decDiscountAmount ?? 0) : 0;
+                                                    $amountAfterDiscount = max(($subtotalAmount + $fittingCharges + $deliveryCharges + $packingCharges + $loadingUnloadingCharges) - $discountAmount, 0);
                                                     $gstAmount = ((int) ($lead->isGstApplicable ?? 0) === 1) ? (float) ($lead->decGstAmount ?? 0) : 0;
                                                 @endphp
 
@@ -332,7 +335,26 @@
                                                             <th>₹{{ number_format($fittingCharges, 2) }}</th>
                                                         </tr>
                                                     @endif
-                                                    @if((int) ($lead->isDiscountApplicable ?? 0) === 1 && $discountAmount > 0)
+
+                                                    @if($deliveryCharges > 0)
+                                                        <tr>
+                                                            <th colspan="8" class="text-end">Delivery Charges</th>
+                                                            <th>₹{{ number_format($deliveryCharges, 2) }}</th>
+                                                        </tr>
+                                                    @endif
+                                                    @if($packingCharges > 0)
+                                                        <tr>
+                                                            <th colspan="8" class="text-end">Packing Charges</th>
+                                                            <th>₹{{ number_format($packingCharges, 2) }}</th>
+                                                        </tr>
+                                                    @endif
+                                                    @if($loadingUnloadingCharges > 0)
+                                                        <tr>
+                                                            <th colspan="8" class="text-end">Loading and Unloading Charges</th>
+                                                            <th>₹{{ number_format($loadingUnloadingCharges, 2) }}</th>
+                                                        </tr>
+                                                    @endif
+                                                                                                        @if((int) ($lead->isDiscountApplicable ?? 0) === 1 && $discountAmount > 0)
                                                         <tr>
                                                             <th colspan="8" class="text-end">Discount</th>
                                                             <th>- ₹{{ number_format($discountAmount, 2) }}</th>

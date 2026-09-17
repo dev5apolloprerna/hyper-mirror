@@ -142,6 +142,8 @@
                         <tr><th colspan="11" class="text-end total-label">Subtotal</th><th colspan="2" class="total-value">₹{{ number_format($latestQuotationSubtotal, 2) }}</th></tr>
                         <tr><th colspan="11" class="text-end total-label">Fitting Charges</th><th colspan="2" class="total-value">₹{{ number_format($latestQuotationFitting, 2) }}</th></tr>
                         <tr><th colspan="11" class="text-end total-label">Delivery Charges</th><th colspan="2" class="total-value">₹{{ number_format($latestQuotationDelivery, 2) }}</th></tr>
+                        <tr><th colspan="11" class="text-end total-label">Packing Charges</th><th colspan="2" class="total-value">₹{{ number_format($latestQuotationPacking, 2) }}</th></tr>
+                        <tr><th colspan="11" class="text-end total-label">Loading and Unloading Charges</th><th colspan="2" class="total-value">₹{{ number_format($latestQuotationLoadingUnloading, 2) }}</th></tr>
                         <tr><th colspan="11" class="text-end total-label">Discount</th><th colspan="2" class="total-value">- ₹{{ number_format($latestQuotationDiscount, 2) }}</th></tr>
                         <tr><th colspan="11" class="text-end total-label">Taxable Amount</th><th colspan="2" class="total-value">₹{{ number_format($latestQuotationTaxable, 2) }}</th></tr>
                         <tr><th colspan="11" class="text-end total-label">GST</th><th colspan="2" class="total-value">₹{{ number_format($latestQuotationGst, 2) }}</th></tr>

@@ -39,6 +39,7 @@
                         @php
                             $DeliveryCharges = (float) ($lead->delivery_charges ?? 0);
                             $packingCharges = (float) ($lead->packing_charges ?? 0);
+                            $loadingUnloadingCharges = (float) ($lead->loading_unloading_charges ?? 0);
                             $subtotalAmount = (float) $lead->quotations->sum('iAmount');
                             $totalSqft = (float) $lead->quotations->sum('decTotalSqft');
                             $totalQty = (float) $lead->quotations->sum('quantity');
@@ -47,7 +48,7 @@
                                 (int) ($lead->isDiscountApplicable ?? 0) === 1
                                     ? (float) ($lead->decDiscountAmount ?? 0)
                                     : 0;
-                            $amountAfterDiscount = max($subtotalAmount + $fittingCharges + $DeliveryCharges + $packingCharges - $discountAmount, 0);
+                            $amountAfterDiscount = max($subtotalAmount + $fittingCharges + $DeliveryCharges + $packingCharges + $loadingUnloadingCharges - $discountAmount, 0);
                             $gstAmount =
                                 (int) ($lead->isGstApplicable ?? 0) === 1
                                     ? (float) ($lead->decGstAmount ?? $amountAfterDiscount * 0.18)
@@ -246,6 +247,12 @@
                                                     <tr>
                                                         <th colspan="9" class="text-end">Packing Charges</th>
                                                         <th colspan="3">₹{{ number_format($packingCharges, 2) }}</th>
+                                                    </tr>
+                                                @endif
+                                                @if ($loadingUnloadingCharges > 0)
+                                                    <tr>
+                                                        <th colspan="9" class="text-end">Loading and Unloading Charges</th>
+                                                        <th colspan="3">₹{{ number_format($loadingUnloadingCharges, 2) }}</th>
                                                     </tr>
                                                 @endif
                                                 @if ((int) ($lead->isDiscountApplicable ?? 0) === 1)
