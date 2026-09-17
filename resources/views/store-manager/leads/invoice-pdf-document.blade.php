@@ -228,8 +228,10 @@
         $totalQty = (float) $lead->quotations->sum('quantity');
         $fittingCharges = (float) ($lead->iFittingCharges ?? 0);
         $deliveryCharges = (float) ($lead->delivery_charges ?? 0);
+        $packingCharges = (float) ($lead->packing_charges ?? 0);
+        $loadingUnloadingCharges = (float) ($lead->loading_unloading_charges ?? 0);
         $discountAmount = (float) ($lead->decDiscountAmount ?? 0);
-        $amountAfterDiscount = max($subtotalAmount + $fittingCharges + $deliveryCharges - $discountAmount, 0);
+        $amountAfterDiscount = max($subtotalAmount + $fittingCharges + $deliveryCharges + $packingCharges + $loadingUnloadingCharges - $discountAmount, 0);
         $gstAmount =
             (int) ($lead->isGstApplicable ?? 0) === 1
                 ? (float) ($lead->decGstAmount ?? $amountAfterDiscount * 0.18)
@@ -418,6 +420,18 @@
                             <tr>
                                 <td>Delivery Charges</td>
                                 <td class="text-right">₹{{ number_format($deliveryCharges, 2) }}</td>
+                            </tr>
+                        @endif
+                        @if ($packingCharges > 0)
+                            <tr>
+                                <td>Packing Charges</td>
+                                <td class="text-right">₹{{ number_format($packingCharges, 2) }}</td>
+                            </tr>
+                        @endif
+                        @if ($loadingUnloadingCharges > 0)
+                            <tr>
+                                <td>Loading and Unloading Charges</td>
+                                <td class="text-right">₹{{ number_format($loadingUnloadingCharges, 2) }}</td>
                             </tr>
                         @endif
                         @if ($discountAmount > 0)

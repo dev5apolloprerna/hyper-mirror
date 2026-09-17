@@ -198,9 +198,14 @@ class LeadReportController extends Controller
         $latestQuotationSubtotal = (float) $latestQuotations->sum('iAmount');
         $latestQuotationFitting = (float) ($lead->iFittingCharges ?? 0);
         $latestQuotationDelivery = (float) ($lead->delivery_charges ?? 0);
+        $latestQuotationPacking = (float) ($lead->packing_charges ?? 0);
+        $latestQuotationLoadingUnloading = (float) ($lead->loading_unloading_charges ?? 0);
+
         $latestQuotationBeforeDiscount = $latestQuotationSubtotal
             + $latestQuotationFitting
-            + $latestQuotationDelivery;
+            + $latestQuotationDelivery
+            + $latestQuotationPacking
+            + $latestQuotationLoadingUnloading;
         $latestQuotationDiscount = (int) ($lead->isDiscountApplicable ?? 0) === 1
             ? min((float) ($lead->decDiscountAmount ?? 0), $latestQuotationBeforeDiscount)
             : 0;
@@ -221,6 +226,8 @@ class LeadReportController extends Controller
             'latestQuotationSubtotal',
             'latestQuotationFitting',
             'latestQuotationDelivery',
+            'latestQuotationPacking',
+            'latestQuotationLoadingUnloading',
             'latestQuotationDiscount',
             'latestQuotationTaxable',
             'latestQuotationGst',
